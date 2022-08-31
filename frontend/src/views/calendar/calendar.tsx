@@ -19,7 +19,9 @@ function Calendar() {
     const [modifyObject, setModifyObject] = useState(undefined as string | undefined);
     const [tasks, setTasks] = useState([
         new Task("task1", new Date("2022-08-29"), "12:00", "14:00", "red"),
-        new Task("task2", new Date("2022-08-31"), "10:30", "11:35", "yellow")
+        new Task("task2", new Date("2022-08-31"), "10:30", "11:35", "yellow"),
+        new Task("task3", new Date("2022-08-30"), "14:30", "18:39", "blue"),
+        new Task("task4", new Date("2022-08-28"), "14:30", "18:39", "green"),
     ]);
     const [refs, setRefs] = useState(new Map() as Map<number, Map<number, RefObject<HTMLDivElement>[]>>);
     const dayMapping: Map<number, string> = new Map([[0, "monday"], [1, "tuesday"], [2, "wednesday"], [3, "thursday"], [4, "friday"], [5, "saturday"], [6, "sunday"]]);
@@ -32,6 +34,7 @@ function Calendar() {
         let needsUpdate = false;
         tasks.forEach((task: Task)=>{
             const oldParams = {x: task.x, y: task.y, width: task.width, height: task.height};
+            task.calcOverlapping(tasks);
             task.init((store.getState() as RootState).weekViewState);
             if(oldParams.x !== task.x || oldParams.y !== task.y || oldParams.width !== task.width || oldParams.height !== task.height) {
                 needsUpdate = true;
@@ -79,8 +82,8 @@ function Calendar() {
     ));
 
     const tasksList = tasks.map((value: Task)=>(
-        <CalendarTask top={value.y} left={value.x} width={value.width} height={value.height} color={value.color}
-            grabbed={(position: Position)=>{ 
+        <CalendarTask top={value.y} left={value.x + value.getLeftPadding()} width={value.width - value.getLeftPadding() - value.getRightPadding()} height={value.height} color={value.color} zIndex={value.zIndex}
+            grabbed={(position: Position)=>{
                 setStartMovePos(position); 
                 setGrabbed(true); 
                 setModifyObject(value.id);
@@ -117,14 +120,28 @@ function Calendar() {
         setTasks([...tasks]);
     }
 
-    function grabActionFinalizer(currentPos: Position) {
+    function grabActionFinalizer() {
         setGrabbed(false);
         const task = tasks.find((value: Task)=>{ return value.id === modifyObject; });
         if(task === undefined) { return; }
-        const cell = findCell(currentPos);
+
+        const getMajorityCell = (): CellInfo | undefined =>{
+            const firstCell = findCell(new Position(task.x, task.y));
+            if(firstCell === undefined) { return undefined; }
+            const secondCell = findCell(new Position(task.x + task.width, task.y));
+            if(secondCell === undefined) { return undefined; }
+
+            if(task.x - firstCell.x < secondCell.x - task.x) {
+                return firstCell;
+            }
+            return secondCell;
+        };
+
+        const cell = getMajorityCell();
         if(cell === undefined) { return; }
         task.setPosition(new Position(cell.x, cell.y));
         task.day = cell.day;
+        tasks.forEach((value: Task)=> value.calcOverlapping(tasks));
         setTasks([...tasks]);
     }
 
@@ -139,30 +156,30 @@ function Calendar() {
         setTasks([...tasks]);
     }
 
-    function resizeActionFinalizer(currentPos: Position) {
+    function resizeActionFinalizer() {
         const dir = resizeAction.direction;
         setResize({state: false, direction: undefined});
         const task = tasks.find((value: Task)=>{ return value.id === modifyObject; });
         if(task === undefined) { return; }
-        const targetCell = findCell(currentPos);
-        if(targetCell === undefined) { return; }
-        const diffVert = currentPos.y - targetCell.y;
         if(dir === ResizeDir.up) {
-            task.resizeUp(diffVert);
+            const targetCell = findCell(new Position(task.x, task.y));
+            if(targetCell === undefined) { return; }
+            task.resizeUp(targetCell.y - task.y);
+        } else {
+            const targetCell = findCell(new Position(task.x, task.y + task.height));
+            if(targetCell === undefined) { return; }
+            task.resizeDown((targetCell.y + targetCell.height) - (task.y + task.height));
         }
-        else {
-            task.resizeDown(diffVert);
-        }
+        tasks.forEach((value: Task)=> value.calcOverlapping(tasks));
         setTasks([...tasks]);
     }
 
     return (
         <div className="day-view" 
-            onMouseUp={(event)=>{
+            onMouseUp={()=>{
                 if(!isGrabbed && !resizeAction.state) { return; }
-                const currentPos = new Position(event.pageX, event.pageY);
-                if(isGrabbed) { grabActionFinalizer(currentPos); }
-                if(resizeAction.state) { resizeActionFinalizer(currentPos); }
+                if(isGrabbed) { grabActionFinalizer(); }
+                if(resizeAction.state) { resizeActionFinalizer(); }
             }}
             onMouseMove={(event)=>{
                 if(!isGrabbed && !resizeAction.state) { return; }

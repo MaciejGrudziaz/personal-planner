@@ -14,6 +14,7 @@ interface Props {
     width: number;
     height: number;
     color: string;
+    zIndex: number;
 
     grabbed(startPos: Position): void;
     resize(startPos: Position, direction: ResizeDir): void;
@@ -36,6 +37,8 @@ export class Task {
     width: number = 0;
     height: number = 0;
     color: string;
+    zIndex: number = 0;
+    padding: number = 0;
 
     day: number;
     startTime: string;
@@ -49,6 +52,18 @@ export class Task {
         this.startTime = startTime;
         this.endTime = endTime;
         this.color = color;
+    }
+
+    addPadding(offset: number) {
+        this.padding += parseFloat(getComputedStyle(document.documentElement).fontSize) / 2 + offset;
+    }
+
+    getLeftPadding(): number {
+        return 3.25 * parseFloat(getComputedStyle(document.documentElement).fontSize) + this.padding;
+    }
+
+    getRightPadding(): number {
+        return this.padding;
     }
 
     setPosition(position: Position) {
@@ -90,6 +105,23 @@ export class Task {
         return parseInt((parseInt(values[1]) / 15).toFixed());
     }
 
+    calcOverlapping(tasks: Task[]) {
+        this.padding = 0;
+        tasks.forEach((task: Task)=>{
+            if(task.id === this.id) { return; }
+            if(this.x > task.x - this.minHeight / 10 && this.x < task.x + task.width + this.minHeight / 10) {
+                if(this.y < task.y - this.minHeight / 10 || this.y > task.y + task.height - this.minHeight / 10) { return; }
+                if(this.y > task.y - this.minHeight /2 && this.y < task.y + this.minHeight /2 && this.height > task.height) { return; }
+                console.log(`${this.id} is inside ${task.id}`);
+                const offset = (task.padding !== 0 && task.padding > this.padding) ? task.padding - this.padding : 0;
+                this.addPadding(offset);
+                if(this.zIndex > task.zIndex) { return; }
+                this.zIndex = task.zIndex + 1;
+
+            }
+        });
+    }
+
     init(weekView: WeekViewState) {
         const day = weekView.days.find((day: DayState)=>{ return day.day === this.day; });
         if(day === undefined) { return; }
@@ -113,19 +145,20 @@ export class Task {
 }
 
 function CalendarTask(props: Props) {
+    const padding = 0.3 * parseFloat(getComputedStyle(document.documentElement).fontSize);
     return (
         <>
-        <div className="bar" style={{left: props.left, top: props.top - 5, width: props.width}} 
+        <div className="bar" style={{left: props.left, top: props.top, width: props.width, zIndex: props.zIndex + 1}} 
             onMouseDown={(event)=>{
                 props.resize(new Position(event.pageX, event.pageY), ResizeDir.up);
             }}
         />
-        <div className="task" style={{top: props.top, left: props.left, width: props.width, height: props.height, backgroundColor: props.color}} 
+        <div className="task" style={{top: props.top, left: props.left, width: props.width, height: props.height, backgroundColor: props.color, zIndex: props.zIndex}} 
             onMouseDown={(event)=>{
                 props.grabbed(new Position(event.pageX, event.pageY));
             }}
         />
-        <div className="bar" style={{left: props.left, top: props.top + props.height, width: props.width}}
+        <div className="bar" style={{left: props.left, top: props.top + props.height - padding, width: props.width, zIndex: props.zIndex + 1}}
             onMouseDown={(event)=>{
                 props.resize(new Position(event.pageX, event.pageY), ResizeDir.down);
             }}

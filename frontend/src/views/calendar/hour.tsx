@@ -16,7 +16,6 @@ function Hour(props: Props) {
     const thirdQuarterRef = useRef() as RefObject<HTMLDivElement>;
     const fourthQuarterRef = useRef() as RefObject<HTMLDivElement>;
     const [isInitialized, setInit] = useState(false);
-    const dispatch = useDispatch();
 
     useEffect(()=>{
         if(isInitialized) { return; }
