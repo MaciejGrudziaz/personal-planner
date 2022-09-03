@@ -139,8 +139,22 @@ function Calendar() {
 
         const cell = getMajorityCell();
         if(cell === undefined) { return; }
+        const taskBasePos = new Position(task.x, task.y);
         task.setPosition(new Position(cell.x, cell.y));
-        task.day = cell.day;
+
+        const endCell = findCell(new Position(task.x, task.y + task.height - task.minHeight / 2));
+        if(endCell === undefined) {
+            task.setPosition(taskBasePos);
+            return;
+        }
+        let endHour = endCell.hour;
+        let endQuarter = endCell.quarter + 1;
+        if(endQuarter === 4) {
+            endHour += 1;
+            endQuarter = 0;
+        }
+        task.updateTime(cell.day, cell.hour, cell.quarter, endHour, endQuarter);
+
         tasks.forEach((value: Task)=> value.calcOverlapping(tasks));
         setTasks([...tasks]);
     }
@@ -161,6 +175,9 @@ function Calendar() {
         setResize({state: false, direction: undefined});
         const task = tasks.find((value: Task)=>{ return value.id === modifyObject; });
         if(task === undefined) { return; }
+        const taskBasePos = new Position(task.x, task.y);
+        const taskBaseHeight = task.height;
+
         if(dir === ResizeDir.up) {
             const targetCell = findCell(new Position(task.x, task.y));
             if(targetCell === undefined) { return; }
@@ -170,6 +187,22 @@ function Calendar() {
             if(targetCell === undefined) { return; }
             task.resizeDown((targetCell.y + targetCell.height) - (task.y + task.height));
         }
+
+        const baseCell = findCell(new Position(task.x, task.y + task.minHeight / 2));
+        const endCell = findCell(new Position(task.x, task.y + task.height - task.minHeight / 2));
+        if(baseCell === undefined || endCell === undefined) {
+            task.setPosition(taskBasePos);
+            task.height = taskBaseHeight;
+            return;
+        }
+        let endHour = endCell.hour;
+        let endQuarter = endCell.quarter + 1;
+        if(endQuarter === 4) {
+            endHour += 1;
+            endQuarter = 0;
+        }
+        task.updateTime(baseCell.day, baseCell.hour, baseCell.quarter, endHour, endQuarter);
+
         tasks.forEach((value: Task)=> value.calcOverlapping(tasks));
         setTasks([...tasks]);
     }

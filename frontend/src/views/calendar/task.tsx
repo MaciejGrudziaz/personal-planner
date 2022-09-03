@@ -105,6 +105,12 @@ export class Task {
         return parseInt((parseInt(values[1]) / 15).toFixed());
     }
 
+    updateTime(day: number, startHour: number, startQuarter: number, endHour: number, endQuarter: number) {
+        this.day = day;
+        this.startTime = `${startHour}:${startQuarter * 15}`;
+        this.endTime = `${endHour}:${endQuarter * 15}`;
+    }
+
     calcOverlapping(tasks: Task[]) {
         this.padding = 0;
         tasks.forEach((task: Task)=>{
