@@ -1,26 +1,20 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, {useState} from 'react';
+import Calendar from './views/calendar/calendar';
+
+const getFirstDayOfTheWeek = (date: Date): Date => {
+    let day = date.getDay();
+    day = (day === 0) ? 6 : day - 1;
+    const msInDay = 1000 * 60 * 60 * 24;
+    return new Date(date.getTime() - (day * msInDay));
+}
+
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+    const [weekStartDate, setWeekStartDate] = useState(getFirstDayOfTheWeek(new Date(Date.now())));
+
+    return (
+        <Calendar weekStartDate={weekStartDate} changeWeek={(baseDate: Date)=>setWeekStartDate(baseDate)} />
+    );
 }
 
 export default App;

@@ -7,6 +7,7 @@ import './day.css';
 interface Props {
     day: number;
     dayName: string;
+    date: Date;
     updateRefs(hour: number, refs: RefObject<HTMLDivElement>[]): void;
 }
 
@@ -69,10 +70,15 @@ function Day(props: Props) {
         }} />)
     });
 
+    const getDate = (): string => {
+        const day = props.date.getDate();
+        const month = props.date.getMonth() + 1;
+        return `${day}.${(month < 10) ? '0' + month : month}`;
+    }
 
     return (
         <div className="day">
-            <div>{props.dayName}</div>
+            <div><b>{props.dayName}</b> {getDate()}</div>
             <div>
                 {hoursList}
             </div>

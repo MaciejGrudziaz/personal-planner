@@ -49,7 +49,7 @@ export class Task {
 
     constructor(id: string, date: Date, startTime: string, endTime: string, color: string) {
         this.id = id;
-        this.day = date.getDay();
+        this.day = (date.getDay() === 0) ? 6 : date.getDay() - 1;
         this.startTime = startTime;
         this.endTime = endTime;
         this.color = color;

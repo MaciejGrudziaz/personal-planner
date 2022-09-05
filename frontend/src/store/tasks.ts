@@ -1,4 +1,4 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, current, PayloadAction } from '@reduxjs/toolkit';
 
 export interface TaskState {
     id: string;
@@ -37,7 +37,11 @@ export function findTasksForWeek(dayInTheWeek: Date, state: TasksState): TaskSta
     day = (day - 1 < 0) ? day = 6 : day - 1;
     const msInDay = 1000 * 60 * 60 * 24;
     const startDate = new Date(dayInTheWeek.getTime() - (day * msInDay));
+    startDate.setHours(0)
+    startDate.setMinutes(0);
     const endDate = new Date(dayInTheWeek.getTime() + ((6 - day) * msInDay));
+    endDate.setHours(23);
+    endDate.setMinutes(59);
 
     const yearTasks = state.years.find((value: YearTasks) => value.year === dayInTheWeek.getFullYear());
     if(yearTasks === undefined) { return []; }
@@ -46,7 +50,8 @@ export function findTasksForWeek(dayInTheWeek: Date, state: TasksState): TaskSta
 
     return monthTasks.tasks.filter((value: TaskState) => {
         const taskDate = new Date(value.day);
-        return taskDate >= startDate && taskDate <= endDate;
+        const testValue = taskDate >= startDate && taskDate <= endDate;
+        return testValue;
     });
 }
 
@@ -99,13 +104,18 @@ export const tasksSlice = createSlice({
             const taskDate = new Date(newTask.day);
             const year = taskDate.getFullYear();
             const month = taskDate.getMonth();
-            let currentTask = findTask(newTask.id, year, month, state);
+            const currentTask = findTask(newTask.id, year, month, state);
             if(currentTask === undefined) {
                 insertTask(state, newTask);
-                return;
+                return state;
             }
-            currentTask = newTask;
-            return;
+            currentTask.day = newTask.day;
+            currentTask.startTime = newTask.startTime;
+            currentTask.endTime = newTask.endTime;
+            currentTask.basicInfo = newTask.basicInfo;
+            currentTask.description = newTask.description;
+            currentTask.category = newTask.category;
+            return state;
         }
     }
 })

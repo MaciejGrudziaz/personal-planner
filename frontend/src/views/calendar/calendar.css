@@ -5,3 +5,8 @@
     justify-content: space-around;
 }
 
+.change-week-btn {
+    width: 3rem;
+    margin: 0.5rem 0.5rem;
+}
+

@@ -13,6 +13,7 @@ interface ResizeAction {
 
 interface Props {
     weekStartDate: Date;
+    changeWeek(baseDate: Date): void;
 }
 
 export interface CellInfo {
@@ -54,14 +55,13 @@ function Calendar(props: Props) {
 
     const fetchTasks = ()=>{
         const tasksState = (store.getState() as RootState).tasksState;
-        const date = new Date("2022-08-29");
-
         while(tasks.length > 0) { tasks.pop(); }
-        findTasksForWeek(date, tasksState).forEach((taskInfo: TaskState) => {
+        findTasksForWeek(props.weekStartDate, tasksState).forEach((taskInfo: TaskState) => {
             const task = new Task(taskInfo.id, new Date(taskInfo.day), taskInfo.startTime, taskInfo.endTime, taskInfo.category)
             task.init(cells);
             tasks.push(task);
         });
+        tasks.forEach((task: Task)=>task.calcOverlapping(tasks));
         setTasks([...tasks]);
     }
 
@@ -69,8 +69,8 @@ function Calendar(props: Props) {
         let needsUpdate = false;
         tasks.forEach((task: Task)=>{
             const oldParams = {x: task.x, y: task.y, width: task.width, height: task.height};
-            task.calcOverlapping(tasks);
             task.init(cells);
+            task.calcOverlapping(tasks);
             if(oldParams.x !== task.x || oldParams.y !== task.y || oldParams.width !== task.width || oldParams.height !== task.height) {
                 needsUpdate = true;
             }
@@ -97,8 +97,13 @@ function Calendar(props: Props) {
         updateTasks();
     };
 
+    const calcDate = (day: number): Date => {
+        const msInDay = 1000 * 60 * 60 * 24;
+        return new Date(props.weekStartDate.getTime() + (day * msInDay));
+    }
+
     const daysList = Array.from(dayMapping.entries()).map((value: [number, string]) => (
-        <Day day={value[0]} dayName={value[1]} updateRefs={(hour: number, quarterRefs: RefObject<HTMLDivElement>[])=>{
+        <Day day={value[0]} dayName={value[1]} date={calcDate(value[0])} updateRefs={(hour: number, quarterRefs: RefObject<HTMLDivElement>[])=>{
             const day = cells.get(value[0]);
             if(day === undefined) {
                 cells.set(value[0], new Map([[hour, [
@@ -249,22 +254,32 @@ function Calendar(props: Props) {
     }
 
     return (
-        <div className="day-view" 
-            onMouseUp={()=>{
-                if(!isGrabbed && !resizeAction.state) { return; }
-                if(isGrabbed) { grabActionFinalizer(); }
-                if(resizeAction.state) { resizeActionFinalizer(); }
-            }}
-            onMouseMove={(event)=>{
-                if(!isGrabbed && !resizeAction.state) { return; }
-                const currentPos = new Position(event.pageX, event.pageY);
-                if(isGrabbed) { grabActionHandler(currentPos); }
-                if(resizeAction.state) { resizeActionHandler(currentPos); }
-            }}
-        >
-            {daysList}
-            {tasksList}
-        </div>
+        <>
+            <button type="button" className="change-week-btn" onClick={()=>{
+                init(false);
+                props.changeWeek(calcDate(-7));
+            }}>-</button>
+            <button type="button" className="change-week-btn" onClick={()=>{
+                init(false);
+                props.changeWeek(calcDate(7));
+            }}>+</button>
+            <div className="day-view" 
+                onMouseUp={()=>{
+                    if(!isGrabbed && !resizeAction.state) { return; }
+                    if(isGrabbed) { grabActionFinalizer(); }
+                    if(resizeAction.state) { resizeActionFinalizer(); }
+                }}
+                onMouseMove={(event)=>{
+                    if(!isGrabbed && !resizeAction.state) { return; }
+                    const currentPos = new Position(event.pageX, event.pageY);
+                    if(isGrabbed) { grabActionHandler(currentPos); }
+                    if(resizeAction.state) { resizeActionHandler(currentPos); }
+                }}
+            >
+                {daysList}
+                {tasksList}
+            </div>
+        </>
     );
 }
 
