@@ -1,7 +1,6 @@
 import React, {RefObject, useEffect, useState, useRef} from 'react';
 import {useDispatch, useSelector} from 'react-redux';
 import {Position} from './task';
-import {updateCells, CellInfo} from '../../store/week-view';
 import HourView from './hour';
 import './day.css';
 
@@ -63,19 +62,6 @@ export class Hour {
 function Day(props: Props) {
     const startHour = 4;
     const hours = Array.from(Array(24).keys()).splice(startHour);
-
-    // useEffect(()=>{
-    //     hours.forEach((hour: Hour)=>{
-    //         hour.cells.forEach((cell: Cell)=>{
-    //             if(cell.isInside(props.currentGrabbedMousePos) && (props.isItemGrabbed || props.isItemResized)) {
-    //                 props.bindToCell(cell.getPosition());
-    //                 cell.highlight();
-    //                 return;
-    //             }
-    //             cell.changeToDefaultState();
-    //         })
-    //     });
-    // }, [props.currentGrabbedMousePos, props.isItemGrabbed, props.isItemResized]);
 
     const hoursList = hours.map((hour: number) => {
         return (<HourView day={props.day} hour={hour} updateRefs={(refs: RefObject<HTMLDivElement>[])=>{

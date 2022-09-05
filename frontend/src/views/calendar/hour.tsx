@@ -1,7 +1,6 @@
 import React, {RefObject, useRef, useEffect, useState} from 'react';
 import { useDispatch } from 'react-redux';
 import { Position } from './task';
-import { updateCells, CellInfo } from '../../store/week-view';
 import './hour.css';
 
 interface Props {

@@ -1,6 +1,5 @@
 import React, {RefObject, useState, useEffect} from 'react';
 import {Hour, Cell} from './day';
-import {WeekViewState, DayState, HourState, CellState} from '../../store/week-view';
 import {CellInfo} from './calendar';
 import {TaskState} from '../../store/tasks';
 import './task.css';
