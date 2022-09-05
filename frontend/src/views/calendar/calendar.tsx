@@ -3,39 +3,74 @@ import {useDispatch, useSelector, useStore} from 'react-redux';
 import {RootState} from '../../store/store';
 import Day, {Hour, Cell} from './day';
 import CalendarTask, {Task, Position, ResizeDir} from './task';
-import {updateCells, CellInfo, WeekViewState, DayState, HourState, CellState, isPointInsideCell} from '../../store/week-view';
+import {updateTask, TaskState, findTasksForWeek} from '../../store/tasks';
 import './calendar.css';
-import {WriteFileCallback} from 'typescript';
 
 interface ResizeAction {
     state: boolean;
     direction: ResizeDir | undefined;
 }
 
-function Calendar() {
+interface Props {
+    weekStartDate: Date;
+}
+
+export interface CellInfo {
+    day: number;
+    hour: number;
+    quarter: number;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    ref: RefObject<HTMLDivElement>;
+}
+
+function isPointInsideCell(cell: CellInfo, point: Position) {
+    return point.x >= cell.x && point.x <= cell.x + cell.width
+        && point.y >= cell.y && point.y <= cell.y + cell.height;
+}
+
+function Calendar(props: Props) {
     const [isGrabbed, setGrabbed] = useState(false);
     const [resizeAction, setResize] = useState({state: false, direction: undefined} as ResizeAction);
     const [startMovePos, setStartMovePos] = useState(new Position(0, 0));
     const [modifyObject, setModifyObject] = useState(undefined as string | undefined);
-    const [tasks, setTasks] = useState([
-        new Task("task1", new Date("2022-08-29"), "12:00", "14:00", "red"),
-        new Task("task2", new Date("2022-08-31"), "10:30", "11:35", "yellow"),
-        new Task("task3", new Date("2022-08-30"), "14:30", "18:39", "blue"),
-        new Task("task4", new Date("2022-08-28"), "14:30", "18:39", "green"),
-    ]);
-    const [refs, setRefs] = useState(new Map() as Map<number, Map<number, RefObject<HTMLDivElement>[]>>);
+    const [tasks, setTasks] = useState(new Array() as Task[]);
+    const [cells, setCells] = useState(new Map() as Map<number, Map<number, CellInfo[]>>);
+    const [isInitialized, init] = useState(false);
     const dayMapping: Map<number, string> = new Map([[0, "monday"], [1, "tuesday"], [2, "wednesday"], [3, "thursday"], [4, "friday"], [5, "saturday"], [6, "sunday"]]);
 
     const store = useStore();
     const dispatch = useDispatch();
-    const [isInitialized, init] = useState(false);
+
+    useEffect(()=>{
+        if(isInitialized) { return; }
+        window.addEventListener('resize', updateCellsInStore);
+        updateCellsInStore();
+        fetchTasks();
+        init(true);
+    });
+
+    const fetchTasks = ()=>{
+        const tasksState = (store.getState() as RootState).tasksState;
+        const date = new Date("2022-08-29");
+
+        while(tasks.length > 0) { tasks.pop(); }
+        findTasksForWeek(date, tasksState).forEach((taskInfo: TaskState) => {
+            const task = new Task(taskInfo.id, new Date(taskInfo.day), taskInfo.startTime, taskInfo.endTime, taskInfo.category)
+            task.init(cells);
+            tasks.push(task);
+        });
+        setTasks([...tasks]);
+    }
 
     const updateTasks = ()=>{
         let needsUpdate = false;
         tasks.forEach((task: Task)=>{
             const oldParams = {x: task.x, y: task.y, width: task.width, height: task.height};
             task.calcOverlapping(tasks);
-            task.init((store.getState() as RootState).weekViewState);
+            task.init(cells);
             if(oldParams.x !== task.x || oldParams.y !== task.y || oldParams.width !== task.width || oldParams.height !== task.height) {
                 needsUpdate = true;
             }
@@ -46,38 +81,43 @@ function Calendar() {
     };
 
     const updateCellsInStore = ()=>{
-        const cellsInfo: CellInfo[] = [];
-        refs.forEach((hourMap: Map<number, RefObject<HTMLDivElement>[]>, day: number)=>{
-            hourMap.forEach((quarterRefs: RefObject<HTMLDivElement>[], hour: number)=>{
-                quarterRefs.forEach((ref: RefObject<HTMLDivElement>, quarter: number)=>{
-                    const el = ref.current;
+        cells.forEach((hourMap: Map<number, CellInfo[]>, day: number)=>{
+            hourMap.forEach((quarters: CellInfo[], hour: number)=>{
+                quarters.forEach((cell: CellInfo, quarter: number)=>{
+                    const el = cell.ref.current;
                     if(el === null) { return; }
-                    cellsInfo.push({day: day, hour: hour, quarter: quarter, x: el.offsetLeft, y: el.offsetTop, width: el.offsetWidth, height: el.offsetHeight});
+                    cell.x = el.offsetLeft;
+                    cell.y = el.offsetTop;
+                    cell.width = el.offsetWidth;
+                    cell.height = el.offsetHeight;
                 });
             });
         });
-        dispatch(updateCells(cellsInfo));
+        setCells(cells);
+        updateTasks();
     };
-
-    useEffect(()=>{
-        if(isInitialized) { return; }
-        window.addEventListener('resize', updateCellsInStore);
-        store.subscribe(updateTasks);
-        updateCellsInStore();
-        init(true);
-    });
 
     const daysList = Array.from(dayMapping.entries()).map((value: [number, string]) => (
         <Day day={value[0]} dayName={value[1]} updateRefs={(hour: number, quarterRefs: RefObject<HTMLDivElement>[])=>{
-            const refDay = refs.get(value[0]);
-            if(refDay === undefined) {
-                const refHour = new Map() as Map<number, RefObject<HTMLDivElement>[]>;
-                refHour.set(hour, quarterRefs);
-                refs.set(value[0], refHour);
+            const day = cells.get(value[0]);
+            if(day === undefined) {
+                cells.set(value[0], new Map([[hour, [
+                    {day: value[0], hour: hour, quarter: 0, x: 0, y: 0, width: 0, height: 0, ref: quarterRefs[0]},
+                    {day: value[0], hour: hour, quarter: 1, x: 0, y: 0, width: 0, height: 0, ref: quarterRefs[1]},
+                    {day: value[0], hour: hour, quarter: 2, x: 0, y: 0, width: 0, height: 0, ref: quarterRefs[2]},
+                    {day: value[0], hour: hour, quarter: 3, x: 0, y: 0, width: 0, height: 0, ref: quarterRefs[3]},
+                ]]]));
+                setCells(cells);
                 return;
             }
-            refDay.set(hour, quarterRefs);
-            setRefs({...refs});
+            day.set(hour, [
+                {day: value[0], hour: hour, quarter: 0, x: 0, y: 0, width: 0, height: 0, ref: quarterRefs[0]},
+                {day: value[0], hour: hour, quarter: 1, x: 0, y: 0, width: 0, height: 0, ref: quarterRefs[1]},
+                {day: value[0], hour: hour, quarter: 2, x: 0, y: 0, width: 0, height: 0, ref: quarterRefs[2]},
+                {day: value[0], hour: hour, quarter: 3, x: 0, y: 0, width: 0, height: 0, ref: quarterRefs[3]},
+            ]);
+            setCells(cells);
+            //setRefs({...refs});
         }}/>
     ));
 
@@ -99,19 +139,18 @@ function Calendar() {
 
     const findCell = (point: Position): CellInfo | undefined => {
         let targetCell: CellInfo | undefined = undefined;
-        const weekViewState = (store.getState() as RootState).weekViewState;
-        weekViewState.days.forEach((day: DayState)=>{
-            day.hours.forEach((hour: HourState)=>{
-                hour.cells.forEach((cell: CellState)=>{
+        cells.forEach((hours: Map<number, CellInfo[]>, day: number)=>{
+            hours.forEach((quarters: CellInfo[], hour: number)=>{
+                quarters.forEach((cell: CellInfo)=>{
                     if(!isPointInsideCell(cell, point)) { return; }
-                    targetCell = {day: day.day, hour: hour.hour, quarter: cell.quarter, x: cell.x, y: cell.y, width: cell.width, height: cell.height};
+                    targetCell = cell;
                 });
             });
         });
         return targetCell;
     }
 
-    function grabActionHandler(currentPos: Position) {
+    const grabActionHandler = (currentPos: Position)=>{
         const diff = new Position(currentPos.x - startMovePos.x, currentPos.y - startMovePos.y);
         setStartMovePos(currentPos);
         const task = tasks.find((value: Task)=>{ return value.id === modifyObject; });
@@ -120,7 +159,7 @@ function Calendar() {
         setTasks([...tasks]);
     }
 
-    function grabActionFinalizer() {
+    const grabActionFinalizer = ()=>{
         setGrabbed(false);
         const task = tasks.find((value: Task)=>{ return value.id === modifyObject; });
         if(task === undefined) { return; }
@@ -154,12 +193,13 @@ function Calendar() {
             endQuarter = 0;
         }
         task.updateTime(cell.day, cell.hour, cell.quarter, endHour, endQuarter);
+        dispatch(updateTask(task.toTaskState(props.weekStartDate)));
 
         tasks.forEach((value: Task)=> value.calcOverlapping(tasks));
         setTasks([...tasks]);
     }
 
-    function resizeActionHandler(currentPos: Position) {
+    const resizeActionHandler = (currentPos: Position)=>{
         const diff = new Position(currentPos.x - startMovePos.x, currentPos.y - startMovePos.y);
         setStartMovePos(currentPos);
         const task = tasks.find((value: Task)=>{ return value.id === modifyObject; });
@@ -170,7 +210,7 @@ function Calendar() {
         setTasks([...tasks]);
     }
 
-    function resizeActionFinalizer() {
+    const resizeActionFinalizer = ()=>{
         const dir = resizeAction.direction;
         setResize({state: false, direction: undefined});
         const task = tasks.find((value: Task)=>{ return value.id === modifyObject; });
@@ -203,6 +243,7 @@ function Calendar() {
         }
         task.updateTime(baseCell.day, baseCell.hour, baseCell.quarter, endHour, endQuarter);
 
+        dispatch(updateTask(task.toTaskState(props.weekStartDate)));
         tasks.forEach((value: Task)=> value.calcOverlapping(tasks));
         setTasks([...tasks]);
     }

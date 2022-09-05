@@ -1,6 +1,8 @@
 import React, {RefObject, useState, useEffect} from 'react';
 import {Hour, Cell} from './day';
 import {WeekViewState, DayState, HourState, CellState} from '../../store/week-view';
+import {CellInfo} from './calendar';
+import {TaskState} from '../../store/tasks';
 import './task.css';
 
 export enum ResizeDir {
@@ -66,6 +68,11 @@ export class Task {
         return this.padding;
     }
 
+    getDate(baseDate: Date): Date {
+        const msInDay = 1000 * 60 * 60 * 24;
+        return new Date(baseDate.getTime() + this.day * msInDay);
+    }
+
     setPosition(position: Position) {
         this.x = position.x;
         this.y = position.y;
@@ -128,12 +135,16 @@ export class Task {
         });
     }
 
-    init(weekView: WeekViewState) {
-        const day = weekView.days.find((day: DayState)=>{ return day.day === this.day; });
+    init(weekView: Map<number, Map<number, CellInfo[]>>) {
+        //const day = weekView.days.find((day: DayState)=>{ return day.day === this.day; });
+        const day = weekView.get(this.day);
         if(day === undefined) { return; }
-        const startHour = day.hours.find((hour: HourState)=>{ return hour.hour === this.getHour(this.startTime); });
+        //const startHour = day.hours.find((hour: HourState)=>{ return hour.hour === this.getHour(this.startTime); });
+        const startHourValue = this.getHour(this.startTime);
+        if(startHourValue === undefined) { return; }
+        const startHour = day.get(startHourValue);
         if(startHour === undefined) { return; }
-        const startCell = startHour.cells.find((cell: CellState)=>{ return cell.quarter === this.getHourQuarter(this.startTime); });
+        const startCell = startHour.find((cell: CellInfo)=>{ return cell.quarter === this.getHourQuarter(this.startTime); });
         if(startCell === undefined) { return; }
         const pos = new Position(startCell.x, startCell.y);
         const width = startCell.width;
@@ -141,12 +152,19 @@ export class Task {
         this.y = pos.y;
         this.width = width;
 
-        const endHour = day.hours.find((hour: HourState)=>{ return hour.hour === this.getHour(this.endTime); });
+        const endHourValue = this.getHour(this.endTime);
+        if(endHourValue === undefined) { return; }
+        // const endHour = day.hours.find((hour: HourState)=>{ return hour.hour === this.getHour(this.endTime); });
+        const endHour = day.get(endHourValue);
         if(endHour === undefined) { return; }
-        const endCell = endHour.cells.find((cell: CellState)=>{ return cell.quarter === this.getHourQuarter(this.endTime); });
+        const endCell = endHour.find((cell: CellInfo)=>{ return cell.quarter === this.getHourQuarter(this.endTime); });
         if(endCell === undefined) { return; }
         const endPos = new Position(endCell.x, endCell.y);
         this.height = endPos.y - pos.y;
+    }
+
+    toTaskState(baseDate: Date): TaskState {
+        return {id: this.id, day: this.getDate(baseDate).toISOString(), startTime: this.startTime, endTime: this.endTime, basicInfo: "", description: "", category: this.color};
     }
 }
 

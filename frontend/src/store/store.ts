@@ -1,9 +1,9 @@
 import { configureStore, ThunkAction, Action } from '@reduxjs/toolkit';
-import weekViewReducer from './week-view';
+import tasksReducer from './tasks';
 
 export const store = configureStore({
   reducer: {
-    weekViewState: weekViewReducer,
+    tasksState: tasksReducer,
   },
 });
 

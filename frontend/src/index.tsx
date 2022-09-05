@@ -13,7 +13,7 @@ const root = ReactDOM.createRoot(
 root.render(
   <React.StrictMode>
     <Provider store={store}>
-      <Calendar/>
+      <Calendar weekStartDate={new Date("2022-08-29")}/>
     </Provider>
   </React.StrictMode>
 );
