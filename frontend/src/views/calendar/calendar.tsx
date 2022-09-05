@@ -3,6 +3,7 @@ import {useDispatch, useSelector, useStore} from 'react-redux';
 import {RootState} from '../../store/store';
 import Day, {Hour, Cell} from './day';
 import CalendarTask, {Task, Position, ResizeDir} from './task';
+import CurrentTimePointer, {PointerState} from './current-time-pointer';
 import {updateTask, TaskState, findTasksForWeek} from '../../store/tasks';
 import './calendar.css';
 
@@ -39,6 +40,7 @@ function Calendar(props: Props) {
     const [modifyObject, setModifyObject] = useState(undefined as string | undefined);
     const [tasks, setTasks] = useState(new Array() as Task[]);
     const [cells, setCells] = useState(new Map() as Map<number, Map<number, CellInfo[]>>);
+    const [pointerState, setPointerState] = useState(undefined as undefined | PointerState);
     const [isInitialized, init] = useState(false);
     const dayMapping: Map<number, string> = new Map([[0, "monday"], [1, "tuesday"], [2, "wednesday"], [3, "thursday"], [4, "friday"], [5, "saturday"], [6, "sunday"]]);
 
@@ -94,8 +96,20 @@ function Calendar(props: Props) {
             });
         });
         setCells(cells);
+        updateTimePointer();
         updateTasks();
     };
+
+    const updateTimePointer = ()=>{
+        const currentDate = new Date(Date.now() + 1000 * 60 * 60 * 8);
+        const matchingCell = findCellByTime(currentDate);
+        if(matchingCell === undefined) {
+            setPointerState(undefined);
+            return;
+        }
+        const verticalOffset = parseInt(((currentDate.getMinutes() - matchingCell.quarter * 15) / 15 * matchingCell.height).toFixed());
+        setPointerState({width: matchingCell.width, x: matchingCell.x, y: matchingCell.y + verticalOffset});
+    }
 
     const calcDate = (day: number): Date => {
         const msInDay = 1000 * 60 * 60 * 24;
@@ -149,6 +163,32 @@ function Calendar(props: Props) {
                 quarters.forEach((cell: CellInfo)=>{
                     if(!isPointInsideCell(cell, point)) { return; }
                     targetCell = cell;
+                });
+            });
+        });
+        return targetCell;
+    }
+
+    const findCellByTime = (date: Date): CellInfo | undefined => {
+        const msInDay = 1000 * 60 * 60 * 24;
+        const endDate = new Date(props.weekStartDate.getTime() + 7 * msInDay);
+        if(date < props.weekStartDate || date > endDate) {
+            return undefined;
+        }
+
+        const day = (date.getDay() === 0) ? 6 : date.getDay() - 1;
+        const hour = date.getHours();
+        const minutes = date.getMinutes();
+        let targetCell: CellInfo | undefined = undefined;
+        cells.forEach((hours: Map<number, CellInfo[]>, dayVal: number)=>{
+            hours.forEach((quarters: CellInfo[], hourVal: number)=>{
+                quarters.forEach((cell: CellInfo)=>{
+                    if(day != dayVal || hour != hourVal) {
+                        return;
+                    }
+                    if(minutes > cell.quarter * 15 && minutes < (cell.quarter + 1) * 15) {
+                        targetCell = cell;
+                    }
                 });
             });
         });
@@ -276,6 +316,7 @@ function Calendar(props: Props) {
                     if(resizeAction.state) { resizeActionHandler(currentPos); }
                 }}
             >
+                <CurrentTimePointer state={pointerState} />
                 {daysList}
                 {tasksList}
             </div>
