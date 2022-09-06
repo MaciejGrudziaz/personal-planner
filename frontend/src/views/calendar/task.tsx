@@ -55,12 +55,12 @@ export class Task {
         this.color = color;
     }
 
-    addPadding(offset: number) {
-        this.padding += parseFloat(getComputedStyle(document.documentElement).fontSize) / 2 + offset;
+    addPadding() {
+        this.padding += parseFloat(getComputedStyle(document.documentElement).fontSize) / 2;
     }
 
     getLeftPadding(): number {
-        return 3.25 * parseFloat(getComputedStyle(document.documentElement).fontSize) + this.padding;
+        return 3 * parseFloat(getComputedStyle(document.documentElement).fontSize) + this.padding;
     }
 
     getRightPadding(): number {
@@ -117,21 +117,22 @@ export class Task {
         this.endTime = `${endHour}:${endQuarter * 15}`;
     }
 
-    calcOverlapping(tasks: Task[]) {
+    calcOverlapping(tasks: Task[]): boolean {
         this.padding = 0;
+        let zIndexChanged = false;
         tasks.forEach((task: Task)=>{
             if(task.id === this.id) { return; }
             if(this.x > task.x - this.minHeight / 10 && this.x < task.x + task.width + this.minHeight / 10) {
                 if(this.y < task.y - this.minHeight / 10 || this.y > task.y + task.height - this.minHeight / 10) { return; }
                 if(this.y > task.y - this.minHeight /2 && this.y < task.y + this.minHeight /2 && this.height > task.height) { return; }
-                console.log(`${this.id} is inside ${task.id}`);
-                const offset = (task.padding !== 0 && task.padding > this.padding) ? task.padding - this.padding : 0;
-                this.addPadding(offset);
+                this.addPadding();
                 if(this.zIndex > task.zIndex) { return; }
+                zIndexChanged = true;
                 this.zIndex = task.zIndex + 1;
 
             }
         });
+        return zIndexChanged;
     }
 
     init(weekView: Map<number, Map<number, CellInfo[]>>) {

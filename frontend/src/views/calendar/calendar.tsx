@@ -63,8 +63,21 @@ function Calendar(props: Props) {
             task.init(cells);
             tasks.push(task);
         });
-        tasks.forEach((task: Task)=>task.calcOverlapping(tasks));
+        calcOverlapping();
         setTasks([...tasks]);
+    }
+
+    const calcOverlapping = ()=>{
+        let retry = true;
+        let retryId = 1;
+        while(retry) {
+            console.log(`retry ${retryId}`);
+            retry = false;
+            tasks.forEach((task: Task)=>{
+                if(task.calcOverlapping(tasks)) { retry = true; }
+            });
+            retryId += 1;
+        }
     }
 
     const updateTasks = ()=>{
@@ -72,11 +85,12 @@ function Calendar(props: Props) {
         tasks.forEach((task: Task)=>{
             const oldParams = {x: task.x, y: task.y, width: task.width, height: task.height};
             task.init(cells);
-            task.calcOverlapping(tasks);
+            // task.calcOverlapping(tasks);
             if(oldParams.x !== task.x || oldParams.y !== task.y || oldParams.width !== task.width || oldParams.height !== task.height) {
                 needsUpdate = true;
             }
         });
+        calcOverlapping();
         if(needsUpdate) { 
             setTasks([...tasks]); 
         }
@@ -101,14 +115,19 @@ function Calendar(props: Props) {
     };
 
     const updateTimePointer = ()=>{
-        const currentDate = new Date(Date.now() + 1000 * 60 * 60 * 8);
+        const currentDate = new Date(Date.now());
         const matchingCell = findCellByTime(currentDate);
         if(matchingCell === undefined) {
             setPointerState(undefined);
             return;
         }
+        const baseCell = findCellByTime(props.weekStartDate);
+        if(baseCell === undefined) {
+            setPointerState(undefined);
+            return;
+        }
         const verticalOffset = parseInt(((currentDate.getMinutes() - matchingCell.quarter * 15) / 15 * matchingCell.height).toFixed());
-        setPointerState({width: matchingCell.width, x: matchingCell.x, y: matchingCell.y + verticalOffset});
+        setPointerState({width: matchingCell.width, x: matchingCell.x, y: matchingCell.y + verticalOffset, baseX: baseCell.x});
     }
 
     const calcDate = (day: number): Date => {
@@ -136,7 +155,6 @@ function Calendar(props: Props) {
                 {day: value[0], hour: hour, quarter: 3, x: 0, y: 0, width: 0, height: 0, ref: quarterRefs[3]},
             ]);
             setCells(cells);
-            //setRefs({...refs});
         }}/>
     ));
 
@@ -240,7 +258,7 @@ function Calendar(props: Props) {
         task.updateTime(cell.day, cell.hour, cell.quarter, endHour, endQuarter);
         dispatch(updateTask(task.toTaskState(props.weekStartDate)));
 
-        tasks.forEach((value: Task)=> value.calcOverlapping(tasks));
+        calcOverlapping();
         setTasks([...tasks]);
     }
 
@@ -289,7 +307,7 @@ function Calendar(props: Props) {
         task.updateTime(baseCell.day, baseCell.hour, baseCell.quarter, endHour, endQuarter);
 
         dispatch(updateTask(task.toTaskState(props.weekStartDate)));
-        tasks.forEach((value: Task)=> value.calcOverlapping(tasks));
+        calcOverlapping();
         setTasks([...tasks]);
     }
 
@@ -303,7 +321,7 @@ function Calendar(props: Props) {
                 init(false);
                 props.changeWeek(calcDate(7));
             }}>+</button>
-            <div className="day-view" 
+            <div className="calendar-view" 
                 onMouseUp={()=>{
                     if(!isGrabbed && !resizeAction.state) { return; }
                     if(isGrabbed) { grabActionFinalizer(); }

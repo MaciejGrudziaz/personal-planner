@@ -3,25 +3,3 @@
     display: block;
 }
 
-.hour-row {
-    border: 1px solid black;
-}
-
-.quarter-row {
-    height: 1rem;
-    border: 1px solid #aaa;
-    padding-left: 3.5rem;
-    padding-right: 0.5rem;
-    padding-top: 0.2rem;
-    padding-bottom: 0.2rem;
-}
-
-.task {
-    position: absolute;
-    top: 40px;
-    left: 40px;
-    width: 10rem;
-    height: 10rem;
-    background-color: blue;
-}
-

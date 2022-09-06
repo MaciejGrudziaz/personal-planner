@@ -3,11 +3,11 @@
 }
 
 .quarter-row {
-    height: 1rem;
+    height: 1em;
     border: 1px solid #aaa;
-    padding-left: 3.5rem;
+    padding-left: 3rem;
     padding-right: 0.5rem;
-    padding-top: 0.2rem;
-    padding-bottom: 0.2rem;
+    padding-top: 0.1rem;
+    padding-bottom: 0.1rem;
 }
 

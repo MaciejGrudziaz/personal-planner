@@ -6,6 +6,7 @@ export interface PointerState {
     width: number;
     x: number;
     y: number;
+    baseX: number;
 }
 
 interface Props {
@@ -23,7 +24,10 @@ function CurrentTimePointer(props: Props) {
             return (<></>);
         }
         return (
-            <div className="time-pointer" style={{width: props.state.width, top: props.state.y, left: props.state.x}} />
+            <>
+                <div className="time-pointer" style={{width: props.state.x - props.state.baseX, top: props.state.y, left: props.state.baseX, borderTopStyle: "dashed"}} />
+                <div className="time-pointer" style={{width: props.state.width, top: props.state.y, left: props.state.x, borderTopWidth: "0.2rem"}} />
+            </>
         );
     }
     return (

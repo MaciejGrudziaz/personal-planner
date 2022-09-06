@@ -1,6 +1,9 @@
 .time-pointer {
-    height: 0.2rem;
-    background-color: red;
+    height: 0;
+    border-width: 0;
+    border-top-width: 0.15rem;
+    border-top-style: solid;
+    border-top-color: red;
     position: absolute;
     z-index: 1000000;
 }
