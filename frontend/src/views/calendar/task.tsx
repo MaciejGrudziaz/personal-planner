@@ -108,7 +108,7 @@ export class Task {
         if(time === undefined) { return undefined; }
         const values = time.split(":");
         if(values.length < 2) { return undefined; }
-        return parseInt((parseInt(values[1]) / 15).toFixed());
+        return Math.floor(parseInt(values[1]) / 15);
     }
 
     updateTime(day: number, startHour: number, startQuarter: number, endHour: number, endQuarter: number) {

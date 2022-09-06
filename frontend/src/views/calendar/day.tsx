@@ -1,14 +1,18 @@
 import React, {RefObject, useEffect, useState, useRef} from 'react';
 import {useDispatch, useSelector} from 'react-redux';
 import {Position} from './task';
-import HourView from './hour';
+import HourView, {CellBasicInfo} from './hour';
 import './day.css';
 
 interface Props {
     day: number;
     dayName: string;
     date: Date;
+    selectedCells: CellBasicInfo[];
     updateRefs(hour: number, refs: RefObject<HTMLDivElement>[]): void;
+    startSelection(day: number, hour: number, quarter: number): void;
+    endSelection(day: number, hour: number, quarter: number): void;
+    hoverOverCell(day: number, hour: number, quarter: number): void;
 }
 
 export class Cell {
@@ -61,13 +65,20 @@ export class Hour {
 }
 
 function Day(props: Props) {
+    useEffect(()=>{
+        console.log("update day");
+    });
+
     const startHour = 4;
     const hours = Array.from(Array(24).keys()).splice(startHour);
 
     const hoursList = hours.map((hour: number) => {
-        return (<HourView day={props.day} hour={hour} updateRefs={(refs: RefObject<HTMLDivElement>[])=>{
-            props.updateRefs(hour, refs);
-        }} />)
+        return (<HourView day={props.day} hour={hour} selectedCells={props.selectedCells}
+            updateRefs={(refs: RefObject<HTMLDivElement>[])=>props.updateRefs(hour, refs)}
+            startSelection={(day: number, hour: number, quarter: number)=>props.startSelection(day, hour, quarter)}
+            endSelection={(day: number, hour: number, quarter: number)=>props.endSelection(day, hour, quarter)}
+            hoverOverCell={(day: number, hour: number, quarter: number)=>props.hoverOverCell(day, hour, quarter)}
+        />)
     });
 
     const getDate = (): string => {
@@ -78,7 +89,7 @@ function Day(props: Props) {
 
     return (
         <div className="day">
-            <div style={{fontSize: "1rem"}}><b>{props.dayName}</b> {getDate()}</div>
+            <div style={{fontSize: "1rem", userSelect: "none"}}><b>{props.dayName}</b> {getDate()}</div>
             <div>
                 {hoursList}
             </div>

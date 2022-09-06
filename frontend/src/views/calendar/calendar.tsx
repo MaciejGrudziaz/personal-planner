@@ -2,6 +2,7 @@ import React, {RefObject, useEffect, useState} from 'react';
 import {useDispatch, useSelector, useStore} from 'react-redux';
 import {RootState} from '../../store/store';
 import Day, {Hour, Cell} from './day';
+import {CellBasicInfo} from './hour';
 import CalendarTask, {Task, Position, ResizeDir} from './task';
 import CurrentTimePointer, {PointerState} from './current-time-pointer';
 import {updateTask, TaskState, findTasksForWeek} from '../../store/tasks';
@@ -47,6 +48,7 @@ function Calendar(props: Props) {
     const [cells, setCells] = useState(new Map() as Map<number, Map<number, CellInfo[]>>);
     const [pointerState, setPointerState] = useState(undefined as undefined | PointerState);
     const [calendarFont, setCalendarFont] = useState({size: 12, changed: false} as FontState);
+    const [selectedCells, setSelectedCells] = useState([] as CellBasicInfo[]);
     const [isInitialized, init] = useState(false);
     const dayMapping: Map<number, string> = new Map([[0, "monday"], [1, "tuesday"], [2, "wednesday"], [3, "thursday"], [4, "friday"], [5, "saturday"], [6, "sunday"]]);
 
@@ -144,7 +146,7 @@ function Calendar(props: Props) {
             setPointerState(undefined);
             return;
         }
-        const verticalOffset = parseInt(((currentDate.getMinutes() - matchingCell.quarter * 15) / 15 * matchingCell.height).toFixed());
+        const verticalOffset = Math.floor((currentDate.getMinutes() - matchingCell.quarter * 15) / 15 * matchingCell.height);
         setPointerState({width: matchingCell.width, x: matchingCell.x, y: matchingCell.y + verticalOffset, baseX: baseCell.x});
     }
 
@@ -153,27 +155,62 @@ function Calendar(props: Props) {
         return new Date(props.weekStartDate.getTime() + (day * msInDay));
     }
 
+    const calcSelectedCells = (currentCell: CellBasicInfo): CellBasicInfo[] => {
+        const firstCell = selectedCells[0];
+        const cells = [] as CellBasicInfo[];
+        let startQuarter = firstCell.hour * 4 + firstCell.quarter;
+        let endQuarter = currentCell.hour * 4 + currentCell.quarter;
+        let dir = 0;
+        if(currentCell.hour < firstCell.hour || (currentCell.hour === firstCell.hour && currentCell.quarter < firstCell.quarter)) {
+            dir = 1;
+        }
+        if(dir === 0) {
+            for(let q = startQuarter; q <= endQuarter; q+=1) {
+                cells.push({day: firstCell.day, hour: Math.floor(q/4), quarter: q % 4});
+            }
+        } else {
+            for(let q = startQuarter; q >= endQuarter; q-=1) {
+                cells.push({day: firstCell.day, hour: Math.floor(q/4), quarter: q % 4});
+            }
+        }
+        return cells;
+    }
+
     const daysList = Array.from(dayMapping.entries()).map((value: [number, string]) => (
-        <Day day={value[0]} dayName={value[1]} date={calcDate(value[0])} updateRefs={(hour: number, quarterRefs: RefObject<HTMLDivElement>[])=>{
-            const day = cells.get(value[0]);
-            if(day === undefined) {
-                cells.set(value[0], new Map([[hour, [
+        <Day day={value[0]} dayName={value[1]} date={calcDate(value[0])} selectedCells={selectedCells}
+            updateRefs={(hour: number, quarterRefs: RefObject<HTMLDivElement>[])=>{
+                const day = cells.get(value[0]);
+                if(day === undefined) {
+                    cells.set(value[0], new Map([[hour, [
+                        {day: value[0], hour: hour, quarter: 0, x: 0, y: 0, width: 0, height: 0, ref: quarterRefs[0]},
+                        {day: value[0], hour: hour, quarter: 1, x: 0, y: 0, width: 0, height: 0, ref: quarterRefs[1]},
+                        {day: value[0], hour: hour, quarter: 2, x: 0, y: 0, width: 0, height: 0, ref: quarterRefs[2]},
+                        {day: value[0], hour: hour, quarter: 3, x: 0, y: 0, width: 0, height: 0, ref: quarterRefs[3]},
+                    ]]]));
+                    setCells(cells);
+                    return;
+                }
+                day.set(hour, [
                     {day: value[0], hour: hour, quarter: 0, x: 0, y: 0, width: 0, height: 0, ref: quarterRefs[0]},
                     {day: value[0], hour: hour, quarter: 1, x: 0, y: 0, width: 0, height: 0, ref: quarterRefs[1]},
                     {day: value[0], hour: hour, quarter: 2, x: 0, y: 0, width: 0, height: 0, ref: quarterRefs[2]},
                     {day: value[0], hour: hour, quarter: 3, x: 0, y: 0, width: 0, height: 0, ref: quarterRefs[3]},
-                ]]]));
+                ]);
                 setCells(cells);
-                return;
-            }
-            day.set(hour, [
-                {day: value[0], hour: hour, quarter: 0, x: 0, y: 0, width: 0, height: 0, ref: quarterRefs[0]},
-                {day: value[0], hour: hour, quarter: 1, x: 0, y: 0, width: 0, height: 0, ref: quarterRefs[1]},
-                {day: value[0], hour: hour, quarter: 2, x: 0, y: 0, width: 0, height: 0, ref: quarterRefs[2]},
-                {day: value[0], hour: hour, quarter: 3, x: 0, y: 0, width: 0, height: 0, ref: quarterRefs[3]},
-            ]);
-            setCells(cells);
-        }}/>
+            }}
+            startSelection={(day: number, hour: number, quarter: number)=>{
+                setSelectedCells([{day: day, hour: hour, quarter: quarter}]);
+            }}
+            endSelection={(day: number, hour: number, quarter: number)=>{
+                if(selectedCells.length === 0) { return; }
+                const cells = calcSelectedCells({day: day, hour: hour, quarter: quarter});
+                setSelectedCells([]);
+            }}
+            hoverOverCell={(day: number, hour: number, quarter: number)=>{
+                if(selectedCells.length === 0) { return; }
+                setSelectedCells(calcSelectedCells({day: day, hour: hour, quarter: quarter}));
+            }}
+        />
     ));
 
     const tasksList = tasks.map((value: Task)=>(
