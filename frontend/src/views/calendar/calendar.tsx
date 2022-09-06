@@ -33,6 +33,11 @@ function isPointInsideCell(cell: CellInfo, point: Position) {
         && point.y >= cell.y && point.y <= cell.y + cell.height;
 }
 
+interface FontState {
+    size: number;
+    changed: boolean;
+}
+
 function Calendar(props: Props) {
     const [isGrabbed, setGrabbed] = useState(false);
     const [resizeAction, setResize] = useState({state: false, direction: undefined} as ResizeAction);
@@ -41,6 +46,7 @@ function Calendar(props: Props) {
     const [tasks, setTasks] = useState(new Array() as Task[]);
     const [cells, setCells] = useState(new Map() as Map<number, Map<number, CellInfo[]>>);
     const [pointerState, setPointerState] = useState(undefined as undefined | PointerState);
+    const [calendarFont, setCalendarFont] = useState({size: 12, changed: false} as FontState);
     const [isInitialized, init] = useState(false);
     const dayMapping: Map<number, string> = new Map([[0, "monday"], [1, "tuesday"], [2, "wednesday"], [3, "thursday"], [4, "friday"], [5, "saturday"], [6, "sunday"]]);
 
@@ -48,7 +54,15 @@ function Calendar(props: Props) {
     const dispatch = useDispatch();
 
     useEffect(()=>{
-        if(isInitialized) { return; }
+        console.log("redraw");
+        if(isInitialized) {
+            if(calendarFont.changed) {
+                updateCellsInStore();
+                setCalendarFont({size: calendarFont.size, changed: false});
+            }
+            // updateCellsInStore();
+            return; 
+        }
         window.addEventListener('resize', updateCellsInStore);
         updateCellsInStore();
         fetchTasks();
@@ -95,6 +109,10 @@ function Calendar(props: Props) {
             setTasks([...tasks]); 
         }
     };
+
+    const updateCalendarFontSize = (diff: number)=>{
+        setCalendarFont({size: calendarFont.size + diff, changed: true});
+    }
 
     const updateCellsInStore = ()=>{
         cells.forEach((hourMap: Map<number, CellInfo[]>, day: number)=>{
@@ -313,15 +331,19 @@ function Calendar(props: Props) {
 
     return (
         <>
-            <button type="button" className="change-week-btn" onClick={()=>{
-                init(false);
-                props.changeWeek(calcDate(-7));
-            }}>-</button>
-            <button type="button" className="change-week-btn" onClick={()=>{
-                init(false);
-                props.changeWeek(calcDate(7));
-            }}>+</button>
-            <div className="calendar-view" 
+            <div className="btn-row">
+                <button type="button" className="change-week-btn" onClick={()=>{
+                    init(false);
+                    props.changeWeek(calcDate(-7));
+                }}>&lt;&lt;</button>
+                <button type="button" className="change-week-btn" onClick={()=>{
+                    init(false);
+                    props.changeWeek(calcDate(7));
+                }}>&gt;&gt;</button>
+                <button type="button" className="change-week-btn" onClick={()=>updateCalendarFontSize(-1)}>-</button>
+                <button type="button" className="change-week-btn" onClick={()=>updateCalendarFontSize(1)}>+</button>
+            </div>
+            <div className="calendar-view" style={{fontSize: `${calendarFont.size}pt`}}
                 onMouseUp={()=>{
                     if(!isGrabbed && !resizeAction.state) { return; }
                     if(isGrabbed) { grabActionFinalizer(); }

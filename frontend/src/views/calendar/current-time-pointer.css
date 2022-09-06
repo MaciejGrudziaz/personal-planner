@@ -1,7 +1,7 @@
 .time-pointer {
     height: 0;
     border-width: 0;
-    border-top-width: 0.15rem;
+    border-top-width: 0.2rem;
     border-top-style: solid;
     border-top-color: red;
     position: absolute;

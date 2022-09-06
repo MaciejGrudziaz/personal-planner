@@ -26,7 +26,7 @@ function CurrentTimePointer(props: Props) {
         return (
             <>
                 <div className="time-pointer" style={{width: props.state.x - props.state.baseX, top: props.state.y, left: props.state.baseX, borderTopStyle: "dashed"}} />
-                <div className="time-pointer" style={{width: props.state.width, top: props.state.y, left: props.state.x, borderTopWidth: "0.2rem"}} />
+                <div className="time-pointer" style={{width: props.state.width, top: props.state.y, left: props.state.x, borderTopWidth: "0.3rem"}} />
             </>
         );
     }

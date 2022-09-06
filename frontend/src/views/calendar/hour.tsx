@@ -24,7 +24,7 @@ function Hour(props: Props) {
 
     return (
         <div key={props.hour} className="hour-row">
-            <div ref={firsQuarterRef} className="quarter-row"><span style={{marginLeft: "-3rem"}}>{props.hour}:00</span></div>
+            <div ref={firsQuarterRef} className="quarter-row"><span style={{marginLeft: "-3em"}}>{props.hour}:00</span></div>
             <div ref={secondQuarterRef} className="quarter-row"/>
             <div ref={thirdQuarterRef} className="quarter-row"/>
             <div ref={fourthQuarterRef} className="quarter-row"/>

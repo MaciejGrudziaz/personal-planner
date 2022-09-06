@@ -78,7 +78,7 @@ function Day(props: Props) {
 
     return (
         <div className="day">
-            <div><b>{props.dayName}</b> {getDate()}</div>
+            <div style={{fontSize: "1rem"}}><b>{props.dayName}</b> {getDate()}</div>
             <div>
                 {hoursList}
             </div>

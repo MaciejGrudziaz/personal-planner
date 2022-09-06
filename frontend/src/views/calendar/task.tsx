@@ -56,11 +56,11 @@ export class Task {
     }
 
     addPadding() {
-        this.padding += parseFloat(getComputedStyle(document.documentElement).fontSize) / 2;
+        this.padding += this.minHeight / 2;
     }
 
     getLeftPadding(): number {
-        return 3 * parseFloat(getComputedStyle(document.documentElement).fontSize) + this.padding;
+        return 3 * this.minHeight + this.padding;
     }
 
     getRightPadding(): number {
@@ -148,9 +148,16 @@ export class Task {
         if(startCell === undefined) { return; }
         const pos = new Position(startCell.x, startCell.y);
         const width = startCell.width;
+
+        const startCellEl = startCell.ref.current;
+        if(startCellEl === null) { return; }
+
         this.x = pos.x;
         this.y = pos.y;
         this.width = width;
+        this.minHeight = parseFloat(getComputedStyle(startCellEl).fontSize);
+        console.log(`fontSize: ${this.minHeight}`);
+        //this.minHeight = startCellEl.style.fontSize;
 
         const endHourValue = this.getHour(this.endTime);
         if(endHourValue === undefined) { return; }
@@ -169,7 +176,7 @@ export class Task {
 }
 
 function CalendarTask(props: Props) {
-    const padding = 0.3 * parseFloat(getComputedStyle(document.documentElement).fontSize);
+    // const padding = 0.3 * parseFloat(getComputedStyle(document.documentElement).fontSize);
     return (
         <>
         <div className="bar" style={{left: props.left, top: props.top, width: props.width, zIndex: props.zIndex + 1}} 
@@ -182,7 +189,7 @@ function CalendarTask(props: Props) {
                 props.grabbed(new Position(event.pageX, event.pageY));
             }}
         />
-        <div className="bar" style={{left: props.left, top: props.top + props.height - padding, width: props.width, zIndex: props.zIndex + 1}}
+        <div className="bar" style={{left: props.left, top: props.top + props.height, width: props.width, zIndex: props.zIndex + 1}}
             onMouseDown={(event)=>{
                 props.resize(new Position(event.pageX, event.pageY), ResizeDir.down);
             }}
