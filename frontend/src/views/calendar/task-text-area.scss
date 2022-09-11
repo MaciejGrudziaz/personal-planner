@@ -1,0 +1,17 @@
+.task-text-area {
+    padding: 0.5rem 0.5rem;
+    width: 100%;
+    height: 100%;
+}
+
+textarea {
+    all: unset;
+    white-space: pre-line;
+}
+
+textarea,
+.task-text-area:hover {
+    background-color: #ddd;
+}
+
+

@@ -2,7 +2,8 @@ import React, {RefObject, useEffect, useState} from 'react';
 import {useDispatch, useSelector, useStore} from 'react-redux';
 import {RootState} from '../../store/store';
 import Day, {Hour, Cell} from './day';
-import {CellBasicInfo} from './hour';
+import TaskWnd from './task-wnd';
+import {CellBasicInfo, extractDate, extractStartTime, extractEndTime} from './hour';
 import CalendarTask, {Task, Position, ResizeDir} from './task';
 import CurrentTimePointer, {PointerState} from './current-time-pointer';
 import {updateTask, TaskState, findTasksForWeek} from '../../store/tasks';
@@ -39,6 +40,14 @@ interface FontState {
     changed: boolean;
 }
 
+interface WndTaskInfo {
+    id: string | undefined;
+    date: Date | undefined;
+    startTime: string | undefined;
+    endTime: string | undefined;
+    show: boolean;
+}
+
 function Calendar(props: Props) {
     const [isGrabbed, setGrabbed] = useState(false);
     const [resizeAction, setResize] = useState({state: false, direction: undefined} as ResizeAction);
@@ -49,6 +58,7 @@ function Calendar(props: Props) {
     const [pointerState, setPointerState] = useState(undefined as undefined | PointerState);
     const [calendarFont, setCalendarFont] = useState({size: 12, changed: false} as FontState);
     const [selectedCells, setSelectedCells] = useState([] as CellBasicInfo[]);
+    const [wndTaskInfo, setWndTaskInfo] = useState({id: undefined, date: undefined, startTime: undefined, endTime: undefined, show: false} as WndTaskInfo);
     const [isInitialized, init] = useState(false);
     const dayMapping: Map<number, string> = new Map([[0, "monday"], [1, "tuesday"], [2, "wednesday"], [3, "thursday"], [4, "friday"], [5, "saturday"], [6, "sunday"]]);
 
@@ -56,13 +66,11 @@ function Calendar(props: Props) {
     const dispatch = useDispatch();
 
     useEffect(()=>{
-        console.log("redraw");
         if(isInitialized) {
             if(calendarFont.changed) {
                 updateCellsInStore();
-                setCalendarFont({size: calendarFont.size, changed: false});
+                setCalendarFont({...calendarFont, changed: false});
             }
-            // updateCellsInStore();
             return; 
         }
         window.addEventListener('resize', updateCellsInStore);
@@ -180,22 +188,18 @@ function Calendar(props: Props) {
         <Day day={value[0]} dayName={value[1]} date={calcDate(value[0])} selectedCells={selectedCells}
             updateRefs={(hour: number, quarterRefs: RefObject<HTMLDivElement>[])=>{
                 const day = cells.get(value[0]);
-                if(day === undefined) {
-                    cells.set(value[0], new Map([[hour, [
-                        {day: value[0], hour: hour, quarter: 0, x: 0, y: 0, width: 0, height: 0, ref: quarterRefs[0]},
-                        {day: value[0], hour: hour, quarter: 1, x: 0, y: 0, width: 0, height: 0, ref: quarterRefs[1]},
-                        {day: value[0], hour: hour, quarter: 2, x: 0, y: 0, width: 0, height: 0, ref: quarterRefs[2]},
-                        {day: value[0], hour: hour, quarter: 3, x: 0, y: 0, width: 0, height: 0, ref: quarterRefs[3]},
-                    ]]]));
-                    setCells(cells);
-                    return;
-                }
-                day.set(hour, [
+                const hourCells = [
                     {day: value[0], hour: hour, quarter: 0, x: 0, y: 0, width: 0, height: 0, ref: quarterRefs[0]},
                     {day: value[0], hour: hour, quarter: 1, x: 0, y: 0, width: 0, height: 0, ref: quarterRefs[1]},
                     {day: value[0], hour: hour, quarter: 2, x: 0, y: 0, width: 0, height: 0, ref: quarterRefs[2]},
                     {day: value[0], hour: hour, quarter: 3, x: 0, y: 0, width: 0, height: 0, ref: quarterRefs[3]},
-                ]);
+                ];
+                if(day === undefined) {
+                    cells.set(value[0], new Map([[hour, hourCells]]));
+                    setCells(cells);
+                    return;
+                }
+                day.set(hour, hourCells);
                 setCells(cells);
             }}
             startSelection={(day: number, hour: number, quarter: number)=>{
@@ -203,7 +207,11 @@ function Calendar(props: Props) {
             }}
             endSelection={(day: number, hour: number, quarter: number)=>{
                 if(selectedCells.length === 0) { return; }
+                const nextCellVal = hour * 4 + quarter + 1;
+                hour = Math.floor(nextCellVal / 4);
+                quarter = nextCellVal % 4;
                 const cells = calcSelectedCells({day: day, hour: hour, quarter: quarter});
+                setWndTaskInfo({id: undefined, date: extractDate(props.weekStartDate, cells), startTime: extractStartTime(cells), endTime: extractEndTime(cells), show: true});
                 setSelectedCells([]);
             }}
             hoverOverCell={(day: number, hour: number, quarter: number)=>{
@@ -394,6 +402,9 @@ function Calendar(props: Props) {
                 }}
             >
                 <CurrentTimePointer state={pointerState} />
+                <TaskWnd id={wndTaskInfo.id} date={wndTaskInfo.date} startTime={wndTaskInfo.startTime} endTime={wndTaskInfo.endTime} show={wndTaskInfo.show} 
+                    hide={()=>setWndTaskInfo({...wndTaskInfo, show: false})}
+                />
                 {daysList}
                 {tasksList}
             </div>

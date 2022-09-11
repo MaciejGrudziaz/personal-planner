@@ -1,0 +1,17 @@
+.task-input {
+    height: 2rem;
+    line-height: 2rem;
+}
+
+input {
+    all: unset;
+    font-size: 1rem;
+    max-height: 2rem;
+    line-height: 2rem;
+}
+
+input,
+.task-input:hover {
+    background-color: #ddd;
+}
+

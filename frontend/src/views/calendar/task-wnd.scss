@@ -1,0 +1,40 @@
+.task-wnd {
+    position: fixed;
+    width: 45rem;
+    height: 25rem;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-left: auto;
+    border: 5px solid black;
+    background-color: white;
+    z-index: 1000002;
+    display: block;
+    font-size: 1rem;
+}
+
+.task-extended-container,
+.task-line-container {
+    margin: 0.5rem 0.5rem;
+    display: flex;
+}
+
+.task-extended-container{
+    height: calc(100% - 7rem);
+}
+
+.task-line-container {
+    height: 2rem;
+    line-height: 2rem;
+}
+
+.bckg-diffusion {
+    z-index: 1000001;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: black;
+    opacity: 0.5;
+}
+

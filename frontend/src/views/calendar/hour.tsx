@@ -19,6 +19,32 @@ export interface CellBasicInfo {
     quarter: number;
 }
 
+export function extractDate(baseDate: Date, cells: CellBasicInfo[]): Date | undefined {
+    if(cells.length === 0) { return undefined; }
+    const msInDay = 1000 * 60 * 60 * 24;
+    return new Date(baseDate.getTime() + cells[0].day * msInDay);
+}
+
+export function extractStartTime(cells: CellBasicInfo[]): string | undefined {
+    if(cells.length === 0) { return undefined; }
+    const firstCell = cells[0];
+    const lastCell = cells[cells.length - 1];
+    if(firstCell.hour * 4 + firstCell.quarter < lastCell.hour * 4 + lastCell.quarter) {
+        return `${firstCell.hour}:${firstCell.quarter * 15}`;
+    }
+    return `${lastCell.hour}:${lastCell.quarter * 15}`;
+}
+
+export function extractEndTime(cells: CellBasicInfo[]): string | undefined {
+    if(cells.length === 0) { return undefined; }
+    const firstCell = cells[0];
+    const lastCell = cells[cells.length - 1];
+    if(firstCell.hour * 4 + firstCell.quarter > lastCell.hour * 4 + lastCell.quarter) {
+        return `${firstCell.hour}:${firstCell.quarter * 15}`;
+    }
+    return `${lastCell.hour}:${lastCell.quarter * 15}`;
+}
+
 function Hour(props: Props) {
     const firsQuarterRef = useRef() as RefObject<HTMLDivElement>;
     const secondQuarterRef = useRef() as RefObject<HTMLDivElement>;
