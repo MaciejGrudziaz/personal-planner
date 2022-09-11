@@ -20,8 +20,8 @@ function TaskTextArea(props: Props) {
         setEdit(false);
     };
 
-    const formatText = ()=>props.initValue.split("\n").map((line: string)=>(
-        <div>{line}</div>
+    const formatText = ()=>props.initValue.split("\n").map((line: string, id: number)=>(
+        <div key={id}>{line}</div>
     ));
 
     if(isEdit) {

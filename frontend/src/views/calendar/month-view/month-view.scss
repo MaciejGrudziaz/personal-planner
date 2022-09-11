@@ -1,0 +1,46 @@
+.month-view {
+    font-size: 1rem;
+    position: absolute;
+    background-color: white;
+    border: 0.15rem solid black;
+}
+
+.week-row {
+    display: flex;
+}
+
+.header-cell,
+.empty-cell,
+.day-cell {
+    width: 1.5rem;
+    height: 1.5rem;
+    border: 0.05rem solid black;
+    box-sizing: border-box;
+    display: block;
+    text-align: center;
+    user-select: none;
+}
+
+.day-cell:hover {
+    background-color: #0f0;
+}
+
+.empty-cell {
+    opacity: 0;
+}
+
+.header-cell {
+    font-size: 0.7rem;
+    height: 1rem;
+    border: none;
+}
+
+.title-row {
+    display: flex;
+    padding: 0.5rem 0.1rem;
+}
+
+.month-title {
+    margin: 0 auto;
+}
+

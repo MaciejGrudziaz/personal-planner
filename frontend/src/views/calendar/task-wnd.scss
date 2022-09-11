@@ -19,7 +19,7 @@
 }
 
 .task-extended-container{
-    height: calc(100% - 7rem);
+    height: calc(100% - 9.5rem);
 }
 
 .task-line-container {
@@ -36,5 +36,13 @@
     height: 100%;
     background-color: black;
     opacity: 0.5;
+}
+
+.task-date {
+    padding: 0 0.5rem;
+}
+
+.task-date:hover {
+    background-color: #ddd;
 }
 

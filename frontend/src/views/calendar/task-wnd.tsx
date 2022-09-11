@@ -1,6 +1,7 @@
-import React, {KeyboardEvent, useEffect, useState, useReducer} from 'react';
+import React, {KeyboardEvent, useEffect, useState, useReducer, useRef, RefObject} from 'react';
 import TaskInput, {TaskInputStyle} from './task-input';
 import TaskTextArea from './task-text-area';
+import CalendarMonthView from './month-view/month-view';
 import {useStore, useDispatch} from 'react-redux';
 import {TaskState} from '../../store/tasks';
 import './task-wnd.scss';
@@ -105,7 +106,8 @@ function setNewEndMinute(task: TaskState, endMinute: string): string {
 
 function TaskWnd(props: Props) {
     const [task, setTask] = useState(createDefaultTaskState(props));
-    const [isInitialized, init] = useState(false);
+    const [showCalendar, setShowCalendar] = useState(false);
+    const dateInputRef = useRef() as RefObject<HTMLDivElement>;
     const store = useStore();
     const dispatch = useDispatch();
 
@@ -117,20 +119,59 @@ function TaskWnd(props: Props) {
     });
 
     useEffect(()=>{
+        if(!props.show) {
+            setShowCalendar(false);
+        }
+    }, [props.show]);
+
+    useEffect(()=>{
         setTask(createDefaultTaskState(props));
     }, [props.id, props.date, props.startTime, props.endTime]);
 
     const hideWindowEvent = (ev: globalThis.KeyboardEvent)=>{
         if(!props.show) { return; }
         if(ev.key === "Escape") {
+            if(showCalendar) {
+                setShowCalendar(false);
+                return;
+            }
             props.hide();
         }
+    }
+
+    const toggleCalendar = (e: React.MouseEvent<HTMLDivElement>) => {
+        setShowCalendar(!showCalendar);
+        e.stopPropagation();
     }
 
     const timeInputStyle = {
         width: "1.75rem",
         textAlign: "center"
     } as TaskInputStyle;
+
+    const popupCalendar = ()=>{
+        if(!showCalendar) {
+            return (<></>);
+        }
+        const el = dateInputRef.current;
+        if(el === null) {
+            return (<></>);
+        }
+
+        const date = new Date(task.day);
+        if(date === undefined) {
+            return (<></>);
+        }
+
+        return (
+            <CalendarMonthView x={el.offsetLeft} y={el.offsetTop + el.offsetHeight} day={date.getDate()} month={date.getMonth()} year={date.getFullYear()} 
+                selectDay={(date: number, month: number, year: number)=>{
+                    setTask({...task, day: `${year}-${month + 1}-${date}`});
+                    setShowCalendar(false);
+                }}
+            />
+        );
+    }
 
     if(!props.show) {
         return (<></>);
@@ -139,7 +180,7 @@ function TaskWnd(props: Props) {
     return (
         <>
             <div className="bckg-diffusion" onClick={()=>props.hide()}/>
-            <div className="task-wnd">
+            <div className="task-wnd" onClick={()=>setShowCalendar(false)}>
                 <div className="task-line-container">
                     <TaskInput style={{width: "100%", padding: "0 0.5rem"}} initValue={task.basicInfo} 
                         setValue={(val: string)=>setTask({...task, basicInfo: val})} 
@@ -171,6 +212,11 @@ function TaskWnd(props: Props) {
                         }}
                     />
                 </div>
+                <div className="task-line-container">
+                    <div style={{margin: "0 0.5rem"}}><b>date:</b></div>
+                    <div ref={dateInputRef} onClick={toggleCalendar} className="task-date">{task.day}</div>
+                </div>
+                {popupCalendar()}
                 <div className="task-extended-container">
                     <TaskTextArea initValue={task.description} setValue={(val: string)=>{
                         setTask({...task, description: val});

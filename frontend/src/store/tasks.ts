@@ -1,5 +1,16 @@
 import { createSlice, current, PayloadAction } from '@reduxjs/toolkit';
 
+export interface TaskTime {
+    hour: number;
+    minute: number;
+}
+
+export interface TaskDate {
+    day: number;    // 1 - 31
+    month: number;  // 0 - 11
+    year: number;   // 4 digit
+}
+
 export interface TaskState {
     id: string;
     day: string;
