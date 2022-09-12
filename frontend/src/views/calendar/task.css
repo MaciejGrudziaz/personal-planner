@@ -1,5 +1,13 @@
 .task {
+    font-size: 1rem;
+    padding: 0.15rem 0.5rem;
     position: absolute;
+    border-width: 0.15rem;
+    border-style: solid;
+    box-sizing: border-box;
+    border-radius: 0.2rem;
+    overflow: hidden;
+    user-select: none;
 }
 
 .bar {

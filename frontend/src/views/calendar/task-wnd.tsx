@@ -152,10 +152,6 @@ function TaskWnd(props: Props) {
         setShowCalendar(false);
     }
 
-    const openCalendar = ()=>{
-        setShowCalendar(true);
-    }
-
     const saveTask = ()=>{
         dispatch(updateTask(task));
         props.save();

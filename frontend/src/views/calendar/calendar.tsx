@@ -232,7 +232,7 @@ function Calendar(props: Props) {
     ));
 
     const tasksList = tasks.map((value: Task)=>(
-        <CalendarTask top={value.y} left={value.x + value.getLeftPadding()} width={value.width - value.getLeftPadding() - value.getRightPadding()} height={value.height} category={value.category} zIndex={value.zIndex}
+        <CalendarTask top={value.y} left={value.x + value.getLeftPadding()} width={value.width - value.getLeftPadding() - value.getRightPadding()} height={value.height} basicInfo={value.basicInfo} category={value.category} zIndex={value.zIndex}
             grabbed={(position: Position)=>{
                 setStartMovePos(position); 
                 setGrabbed(true); 

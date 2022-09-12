@@ -15,11 +15,12 @@ interface Props {
     width: number;
     height: number;
     category: TaskCategory;
+    basicInfo: string;
     zIndex: number;
 
     grabbed(startPos: Position): void;
     resize(startPos: Position, direction: ResizeDir): void;
-    selected?(): void;
+    selected(): void;
 }
 
 export class Position {
@@ -175,9 +176,18 @@ export class Task {
 function getColor(category: TaskCategory): string {
     switch(category.value) {
         case "simple":
-            return "blue";
+            return "#e9c46a";
         case "important":
-            return "red";
+            return "#e76f51";
+    }
+}
+
+function getBorderColor(category: TaskCategory): string {
+    switch(category.value) {
+        case "simple":
+            return "#926F16";
+        case "important":
+            return "#621E0D";
     }
 }
 
@@ -196,7 +206,7 @@ function CalendarTask(props: Props) {
                 props.resize(new Position(event.pageX, event.pageY), ResizeDir.up);
             }}
         />
-        <div className="task" style={{top: props.top, left: props.left, width: props.width, height: props.height, backgroundColor: getColor(props.category), zIndex: props.zIndex}} 
+        <div className="task" style={{top: props.top, left: props.left, width: props.width, height: props.height, borderColor: getBorderColor(props.category), backgroundColor: getColor(props.category), zIndex: props.zIndex}} 
             onMouseDown={(event)=>{
                 props.grabbed(new Position(event.pageX, event.pageY));
             }}
@@ -211,7 +221,9 @@ function CalendarTask(props: Props) {
                     setTimeout(resetClick, 500);
                 }
             }}
-        />
+        >
+            {props.basicInfo}
+        </div>
         <div className="bar" style={{left: props.left, top: props.top + props.height, width: props.width, zIndex: props.zIndex + 1}}
             onMouseDown={(event)=>{
                 props.resize(new Position(event.pageX, event.pageY), ResizeDir.down);
