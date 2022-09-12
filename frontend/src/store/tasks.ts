@@ -140,7 +140,6 @@ export const tasksSlice = createSlice({
     initialState,
     reducers: {
         updateTask: (state, action: PayloadAction<TaskState>) => {
-            console.log("store tasks update");
             const newTask = action.payload;
             if(newTask.id === "") {
                 newTask.id = generateId(newTask);
@@ -157,6 +156,10 @@ export const tasksSlice = createSlice({
             currentTask.description = newTask.description;
             currentTask.category = newTask.category;
             return state;
+        },
+        deleteTask: (state, action: PayloadAction<string>) => {
+            const taskId = action.payload;
+            
         }
     }
 })

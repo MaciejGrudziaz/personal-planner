@@ -77,6 +77,7 @@ function Calendar(props: Props) {
             return; 
         }
         window.addEventListener('resize', updateCellsInStore);
+        setTimeout(()=>updateTimePointerWithInterval(60 * 1000), 60 * 1000);
         updateCellsInStore();
         fetchTasks();
         init(true);
@@ -152,13 +153,20 @@ function Calendar(props: Props) {
             setPointerState(undefined);
             return;
         }
-        const baseCell = findCellByTime(props.weekStartDate);
+        const firstDayOfTheWeekDate = props.weekStartDate;
+        firstDayOfTheWeekDate.setHours(12);
+        const baseCell = findCellByTime(firstDayOfTheWeekDate);
         if(baseCell === undefined) {
             setPointerState(undefined);
             return;
         }
         const verticalOffset = Math.floor((currentDate.getMinutes() - matchingCell.quarter * 15) / 15 * matchingCell.height);
         setPointerState({width: matchingCell.width, x: matchingCell.x, y: matchingCell.y + verticalOffset, baseX: baseCell.x});
+    }
+
+    const updateTimePointerWithInterval = (intervalInMs: number)=>{
+        updateTimePointer();
+        setTimeout(()=>updateTimePointerWithInterval(intervalInMs), intervalInMs);
     }
 
     const calcDate = (day: number): Date => {
@@ -281,7 +289,7 @@ function Calendar(props: Props) {
                     if(day != dayVal || hour != hourVal) {
                         return;
                     }
-                    if(minutes > cell.quarter * 15 && minutes < (cell.quarter + 1) * 15) {
+                    if(minutes >= cell.quarter * 15 && minutes < (cell.quarter + 1) * 15) {
                         targetCell = cell;
                     }
                 });

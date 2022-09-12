@@ -5,7 +5,12 @@ const getFirstDayOfTheWeek = (date: Date): Date => {
     let day = date.getDay();
     day = (day === 0) ? 6 : day - 1;
     const msInDay = 1000 * 60 * 60 * 24;
-    return new Date(date.getTime() - (day * msInDay));
+    const startDate = new Date(date.getTime() - (day * msInDay));
+    startDate.setHours(0);
+    startDate.setMinutes(0);
+    startDate.setSeconds(0);
+    startDate.setMilliseconds(0);
+    return startDate;
 }
 
 
