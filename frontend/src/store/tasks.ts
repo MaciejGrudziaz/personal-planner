@@ -23,6 +23,10 @@ export function parseDateToBuiltin(date: TaskDate): Date {
     return new Date(date.year, date.month, date.day);
 }
 
+export interface TaskCategory {
+    value: "simple" | "important";
+}
+
 export interface TaskState {
     id: string;
     date: TaskDate;
@@ -30,7 +34,7 @@ export interface TaskState {
     endTime: TaskTime;
     basicInfo: string;
     description: string;
-    category: string;
+    category: TaskCategory;
 }
 
 interface MonthTasks {
@@ -47,12 +51,16 @@ interface TasksState {
     years: YearTasks[];
 }
 
-function findTask(id: string, year: number, month: number, state: TasksState): TaskState | undefined {
-    const yearTasks = state.years.find((value: YearTasks) => value.year === year);
-    if(yearTasks === undefined) { return undefined; }
-    const monthTasks = yearTasks.months.find((value: MonthTasks) => value.month === month);
-    if(monthTasks === undefined) { return undefined; }
-    return monthTasks.tasks.find((value: TaskState) => value.id === id);
+function findTask(id: string, state: TasksState): TaskState | undefined {
+    for(let i = 0; i < state.years.length; i += 1) {
+        for(let j = 0; j < state.years[i].months.length; j += 1) {
+            const found = state.years[i].months[j].tasks.find((val: TaskState) => val.id === id);
+            if(found !== undefined) {
+                return found;
+            }
+        }
+    }
+    return undefined;
 }
 
 export function findTasksForWeek(date: Date, state: TasksState): TaskState[] {
@@ -82,10 +90,16 @@ export function findTasksForWeek(date: Date, state: TasksState): TaskState[] {
     });
 }
 
+function generateId(task: TaskState): string {
+    const id = task.date.year ^ task.date.month ^ task.date.day ^ task.startTime.hour ^ task.startTime.minute ^ task.endTime.hour ^ task.endTime.minute;
+    console.log(id);
+    return id.toFixed();
+}
+
 function insertTask(state: TasksState, task: TaskState) {
-    const taskDate = parseDateToBuiltin(task.date);
-    const year = taskDate.getFullYear();
-    const month = taskDate.getMonth();
+    // const taskDate = parseDateToBuiltin(task.date);
+    const year = task.date.year;
+    const month = task.date.month;
     const yearTasks = state.years.find((value: YearTasks) => value.year === year);
     if(yearTasks === undefined) {
         state.years.push({year: year, months: [{month: month, tasks: [task]}]});
@@ -111,10 +125,10 @@ const initialState: TasksState  = {
             {
                 month: 8,
                 tasks: [
-                    {id: "task1", date: {year: 2022, month: 8, day: 12}, startTime: {hour: 12, minute: 0}, endTime: {hour: 14, minute:0}, basicInfo: "task 1 basic info", description: "task 1 description", category: "red"},
-                    {id: "task2", date: {year: 2022, month: 8, day: 13}, startTime: {hour: 10, minute: 30}, endTime: {hour: 11, minute: 35}, basicInfo: "task 2 basic info", description: "task 2 description", category: "yellow"},
-                    {id: "task3", date: {year: 2022, month: 8, day: 14}, startTime: {hour: 14, minute: 30}, endTime: {hour: 18, minute: 30}, basicInfo: "task 3 basicInfo", description: "task 3 description", category: "blue"},
-                    {id: "task4", date: {year: 2022, month: 8, day: 15}, startTime: {hour: 14, minute: 30}, endTime: {hour: 18, minute: 39}, basicInfo: "task 4 basic info", description: "task 4 description", category: "green"},
+                    {id: "task1", date: {year: 2022, month: 8, day: 12}, startTime: {hour: 12, minute: 0}, endTime: {hour: 14, minute:0}, basicInfo: "task 1 basic info", description: "task 1 description", category: {value: "important"}},
+                    {id: "task2", date: {year: 2022, month: 8, day: 13}, startTime: {hour: 10, minute: 30}, endTime: {hour: 11, minute: 35}, basicInfo: "task 2 basic info", description: "task 2 description", category: {value: "simple"}},
+                    {id: "task3", date: {year: 2022, month: 8, day: 14}, startTime: {hour: 14, minute: 30}, endTime: {hour: 18, minute: 30}, basicInfo: "task 3 basicInfo", description: "task 3 description", category: {value: "simple"}},
+                    {id: "task4", date: {year: 2022, month: 8, day: 15}, startTime: {hour: 14, minute: 30}, endTime: {hour: 18, minute: 39}, basicInfo: "task 4 basic info", description: "task 4 description", category: {value: "simple"}},
                 ]
             }
         ]
@@ -128,10 +142,10 @@ export const tasksSlice = createSlice({
         updateTask: (state, action: PayloadAction<TaskState>) => {
             console.log("store tasks update");
             const newTask = action.payload;
-            const taskDate = parseDateToBuiltin(newTask.date);
-            const year = taskDate.getFullYear();
-            const month = taskDate.getMonth();
-            const currentTask = findTask(newTask.id, year, month, state);
+            if(newTask.id === "") {
+                newTask.id = generateId(newTask);
+            }
+            const currentTask = findTask(newTask.id, state);
             if(currentTask === undefined) {
                 insertTask(state, newTask);
                 return state;

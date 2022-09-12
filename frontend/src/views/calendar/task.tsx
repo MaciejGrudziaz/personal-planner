@@ -1,7 +1,7 @@
 import React, {RefObject, useState, useEffect} from 'react';
 import {Hour, Cell} from './day';
 import {CellInfo} from './calendar';
-import {TaskDate, TaskState, TaskTime} from '../../store/tasks';
+import {TaskDate, TaskState, TaskTime, TaskCategory} from '../../store/tasks';
 import './task.css';
 
 export enum ResizeDir {
@@ -14,11 +14,12 @@ interface Props {
     left: number;
     width: number;
     height: number;
-    color: string;
+    category: TaskCategory;
     zIndex: number;
 
     grabbed(startPos: Position): void;
     resize(startPos: Position, direction: ResizeDir): void;
+    selected?(): void;
 }
 
 export class Position {
@@ -37,7 +38,6 @@ export class Task {
     y: number = 0;
     width: number = 0;
     height: number = 0;
-    color: string;
     zIndex: number = 0;
     padding: number = 0;
 
@@ -45,14 +45,20 @@ export class Task {
     startTime: TaskTime;
     endTime: TaskTime;
 
+    basicInfo: string;
+    description: string;
+    category: TaskCategory;
+
     minHeight: number = parseFloat(getComputedStyle(document.documentElement).fontSize);
 
-    constructor(id: string, date: Date, startTime: TaskTime, endTime: TaskTime, color: string) {
+    constructor(id: string, date: Date, startTime: TaskTime, endTime: TaskTime, basicInfo: string, description: string, category: TaskCategory) {
         this.id = id;
         this.dayOfWeek = (date.getDay() === 0) ? 6 : date.getDay() - 1;
         this.startTime = startTime;
         this.endTime = endTime;
-        this.color = color;
+        this.basicInfo = basicInfo;
+        this.description = description;
+        this.category = category;
     }
 
     addPadding() {
@@ -105,10 +111,8 @@ export class Task {
 
     updateTime(dayOfWeek: number, startHour: number, startQuarter: number, endHour: number, endQuarter: number) {
         this.dayOfWeek = dayOfWeek;
-        this.startTime.hour = startHour;
-        this.startTime.minute = startQuarter * 15;
-        this.endTime.hour = endHour;
-        this.endTime.minute = endQuarter * 15;
+        this.startTime = {hour: startHour, minute: startQuarter * 15};
+        this.endTime = {hour: endHour, minute: endQuarter * 15};
     }
 
     calcOverlapping(tasks: Task[]): boolean {
@@ -164,12 +168,27 @@ export class Task {
     }
 
     toTaskState(baseDate: Date): TaskState {
-        return {id: this.id, date: this.getDate(baseDate), startTime: this.startTime, endTime: this.endTime, basicInfo: "", description: "", category: this.color};
+        return {id: this.id, date: this.getDate(baseDate), startTime: this.startTime, endTime: this.endTime, basicInfo: "", description: "", category: this.category};
+    }
+}
+
+function getColor(category: TaskCategory): string {
+    switch(category.value) {
+        case "simple":
+            return "blue";
+        case "important":
+            return "red";
     }
 }
 
 function CalendarTask(props: Props) {
     // const padding = 0.3 * parseFloat(getComputedStyle(document.documentElement).fontSize);
+    const [clickRecorded, setClickRecord] = useState(false);
+
+    const resetClick = () => {
+        setClickRecord(false);
+    }
+
     return (
         <>
         <div className="bar" style={{left: props.left, top: props.top, width: props.width, zIndex: props.zIndex + 1}} 
@@ -177,9 +196,20 @@ function CalendarTask(props: Props) {
                 props.resize(new Position(event.pageX, event.pageY), ResizeDir.up);
             }}
         />
-        <div className="task" style={{top: props.top, left: props.left, width: props.width, height: props.height, backgroundColor: props.color, zIndex: props.zIndex}} 
+        <div className="task" style={{top: props.top, left: props.left, width: props.width, height: props.height, backgroundColor: getColor(props.category), zIndex: props.zIndex}} 
             onMouseDown={(event)=>{
                 props.grabbed(new Position(event.pageX, event.pageY));
+            }}
+            onClick={()=>{
+                if(clickRecorded) {
+                    if(props.selected) {
+                        props.selected();
+                    }
+                    resetClick();
+                } else {
+                    setClickRecord(true);
+                    setTimeout(resetClick, 500);
+                }
             }}
         />
         <div className="bar" style={{left: props.left, top: props.top + props.height, width: props.width, zIndex: props.zIndex + 1}}

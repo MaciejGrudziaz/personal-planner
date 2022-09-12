@@ -3,7 +3,7 @@ import TaskInput, {TaskInputStyle} from './task-input';
 import TaskTextArea from './task-text-area';
 import CalendarMonthView from './month-view/month-view';
 import {useStore, useDispatch} from 'react-redux';
-import {TaskState, TaskDate, TaskTime, parseDateToBuiltin, parseDateToStr} from '../../store/tasks';
+import {TaskState, TaskDate, TaskTime, TaskCategory, parseDateToBuiltin, parseDateToStr, updateTask} from '../../store/tasks';
 import './task-wnd.scss';
 
 interface Props {
@@ -11,9 +11,12 @@ interface Props {
     date: TaskDate | undefined;
     startTime: TaskTime | undefined;
     endTime: TaskTime | undefined;
+    basicInfo: string | undefined;
+    description: string | undefined;
     show: boolean;
 
     hide(): void;
+    save(): void;
 }
 
 function createDefaultTaskState(props: Props): TaskState {
@@ -23,15 +26,22 @@ function createDefaultTaskState(props: Props): TaskState {
         date: (props.date === undefined) ? {year: now.getFullYear(), month: now.getMonth(), day: now.getDate()} : props.date,
         startTime: (props.startTime === undefined) ? {hour: 0, minute: 0} : props.startTime,
         endTime: (props.endTime === undefined) ? {hour: 0, minute: 0} : props.endTime,
-        basicInfo: "",
-        description: "",
-        category: ""
+        basicInfo: (props.basicInfo === undefined) ? "" : props.basicInfo,
+        description: (props.description === undefined) ? "" : props.description,
+        category: {value: "simple"}
     };
 }
 
 function parseStringToFixedNumber(val: string): number | undefined {
     const num = parseInt(val);
     return isNaN(num) ? undefined : num;
+}
+
+function parseNumberToFixedLengthString(val: number): string {
+    if(val < 0 || val > 99) {
+        throw "This method only supports values in range [0, 99]";
+    }
+    return (val < 10) ? `0${val.toFixed()}` : val.toFixed();
 }
 
 function setNewStartHour(task: TaskState, val: string): TaskTime {
@@ -95,6 +105,11 @@ function TaskWnd(props: Props) {
     const store = useStore();
     const dispatch = useDispatch();
 
+    const timeInputStyle = {
+        width: "1.75rem",
+        textAlign: "center"
+    } as TaskInputStyle;
+
     useEffect(()=>{
         window.addEventListener('keydown', hideWindowEvent);
         return ()=>{
@@ -104,7 +119,7 @@ function TaskWnd(props: Props) {
 
     useEffect(()=>{
         if(!props.show) {
-            setShowCalendar(false);
+            hideCalendar();
         }
     }, [props.show]);
 
@@ -116,10 +131,10 @@ function TaskWnd(props: Props) {
         if(!props.show) { return; }
         if(ev.key === "Escape") {
             if(showCalendar) {
-                setShowCalendar(false);
+                hideCalendar();
                 return;
             }
-            props.hide();
+            hideWindow();
         }
     }
 
@@ -128,10 +143,24 @@ function TaskWnd(props: Props) {
         e.stopPropagation();
     }
 
-    const timeInputStyle = {
-        width: "1.75rem",
-        textAlign: "center"
-    } as TaskInputStyle;
+    const hideWindow = ()=>{
+        props.hide();
+        hideCalendar();
+    }
+
+    const hideCalendar = ()=>{
+        setShowCalendar(false);
+    }
+
+    const openCalendar = ()=>{
+        setShowCalendar(true);
+    }
+
+    const saveTask = ()=>{
+        dispatch(updateTask(task));
+        props.save();
+        hideWindow();
+    }
 
     const popupCalendar = ()=>{
         if(!showCalendar) {
@@ -151,7 +180,7 @@ function TaskWnd(props: Props) {
             <CalendarMonthView x={el.offsetLeft} y={el.offsetTop + el.offsetHeight} day={date.getDate()} month={date.getMonth()} year={date.getFullYear()} 
                 selectDay={(date: number, month: number, year: number)=>{
                     setTask({...task, date: {year: year, month: month, day: date}});
-                    setShowCalendar(false);
+                    hideCalendar();
                 }}
             />
         );
@@ -163,8 +192,8 @@ function TaskWnd(props: Props) {
 
     return (
         <>
-            <div className="bckg-diffusion" onClick={()=>props.hide()}/>
-            <div className="task-wnd" onClick={()=>setShowCalendar(false)}>
+            <div className="bckg-diffusion" onClick={hideWindow}/>
+            <div className="task-wnd" onClick={hideCalendar}>
                 <div className="task-line-container">
                     <TaskInput style={{width: "100%", padding: "0 0.5rem"}} initValue={task.basicInfo} 
                         setValue={(val: string)=>setTask({...task, basicInfo: val})} 
@@ -172,27 +201,26 @@ function TaskWnd(props: Props) {
                 </div>
                 <div className="task-line-container">
                     <div style={{margin: "0 0.5rem"}}><b>time:</b></div>
-                    <TaskInput style={timeInputStyle} initValue={task.startTime.hour.toFixed()} maxCharacterCount={2}
+                    <TaskInput style={timeInputStyle} initValue={parseNumberToFixedLengthString(task.startTime.hour)} maxCharacterCount={2}
                         setValue={(val: string)=>{
                             setTask({...task, startTime: setNewStartHour(task, val)});
                         }}
                     />
-                    <div>:</div>
-                    <TaskInput style={timeInputStyle} initValue={task.startTime.minute.toFixed()} maxCharacterCount={2}
+                    <div>:</div> <TaskInput style={timeInputStyle} initValue={parseNumberToFixedLengthString(task.startTime.minute)} maxCharacterCount={2}
                         setValue={(val: string)=>{
                             setTask({...task, startTime: setNewStartMinute(task, val)});
                         }}
                     />
                     <div style={{margin: "0 0.25rem"}}>-</div>
-                    <TaskInput style={timeInputStyle} initValue={task.endTime.hour.toFixed()} maxCharacterCount={2}
+                    <TaskInput style={timeInputStyle} initValue={parseNumberToFixedLengthString(task.endTime.hour)} maxCharacterCount={2}
                         setValue={(val: string)=>{
-                            setTask({...task, startTime: setNewEndHour(task, val)});
+                            setTask({...task, endTime: setNewEndHour(task, val)});
                         }}
                     />
                     <div>:</div>
-                    <TaskInput style={timeInputStyle} initValue={task.endTime.minute.toFixed()} maxCharacterCount={2}
+                    <TaskInput style={timeInputStyle} initValue={parseNumberToFixedLengthString(task.endTime.minute)} maxCharacterCount={2}
                         setValue={(val: string)=>{
-                            setTask({...task, startTime: setNewEndMinute(task, val)});
+                            setTask({...task, endTime: setNewEndMinute(task, val)});
                         }}
                     />
                 </div>
@@ -205,6 +233,15 @@ function TaskWnd(props: Props) {
                     <TaskTextArea initValue={task.description} setValue={(val: string)=>{
                         setTask({...task, description: val});
                     }}/>
+                </div>
+                <div className="task-line-container">
+                    <button className="task-action-btn"
+                        onClick={()=>{
+                            task.category = {value: "simple"};
+                            saveTask();
+                        }
+                    }>save</button>
+                    <button className="task-action-btn" onClick={hideWindow}>cancel</button>
                 </div>
             </div>
         </>

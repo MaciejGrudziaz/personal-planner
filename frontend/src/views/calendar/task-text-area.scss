@@ -1,7 +1,7 @@
 .task-text-area {
-    padding: 0.5rem 0.5rem;
-    width: 100%;
-    height: 100%;
+    padding: 0.5rem;
+    width: calc(100% - 1rem);
+    height: calc(100% - 1rem);
 }
 
 textarea {

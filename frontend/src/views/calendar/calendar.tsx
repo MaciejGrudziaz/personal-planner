@@ -45,6 +45,8 @@ interface WndTaskInfo {
     date: TaskDate | undefined;
     startTime: TaskTime | undefined;
     endTime: TaskTime | undefined;
+    basicInfo: string | undefined;
+    description: string | undefined;
     show: boolean;
 }
 
@@ -83,7 +85,7 @@ function Calendar(props: Props) {
         const tasksState = (store.getState() as RootState).tasksState;
         while(tasks.length > 0) { tasks.pop(); }
         findTasksForWeek(props.weekStartDate, tasksState).forEach((taskInfo: TaskState) => {
-            const task = new Task(taskInfo.id, parseDateToBuiltin(taskInfo.date), taskInfo.startTime, taskInfo.endTime, taskInfo.category)
+            const task = new Task(taskInfo.id, parseDateToBuiltin(taskInfo.date), taskInfo.startTime, taskInfo.endTime, taskInfo.basicInfo, taskInfo.description, taskInfo.category)
             task.init(cells);
             tasks.push(task);
         });
@@ -184,6 +186,14 @@ function Calendar(props: Props) {
         return cells;
     }
 
+    const showTaskWnd = ()=>{
+        setWndTaskInfo({...wndTaskInfo, show: true});
+    }
+
+    const hideTaskWnd = ()=>{
+        setWndTaskInfo({...wndTaskInfo, show: false});
+    }
+
     const daysList = Array.from(dayMapping.entries()).map((value: [number, string]) => (
         <Day day={value[0]} dayName={value[1]} date={calcDate(value[0])} selectedCells={selectedCells}
             updateRefs={(hour: number, quarterRefs: RefObject<HTMLDivElement>[])=>{
@@ -211,7 +221,7 @@ function Calendar(props: Props) {
                 hour = Math.floor(nextCellVal / 4);
                 quarter = nextCellVal % 4;
                 const cells = calcSelectedCells({day: day, hour: hour, quarter: quarter});
-                setWndTaskInfo({id: undefined, date: extractDate(props.weekStartDate, cells), startTime: extractStartTime(cells), endTime: extractEndTime(cells), show: true});
+                setWndTaskInfo({id: undefined, date: extractDate(props.weekStartDate, cells), startTime: extractStartTime(cells), endTime: extractEndTime(cells), basicInfo: undefined, description: undefined, show: true});
                 setSelectedCells([]);
             }}
             hoverOverCell={(day: number, hour: number, quarter: number)=>{
@@ -222,7 +232,7 @@ function Calendar(props: Props) {
     ));
 
     const tasksList = tasks.map((value: Task)=>(
-        <CalendarTask top={value.y} left={value.x + value.getLeftPadding()} width={value.width - value.getLeftPadding() - value.getRightPadding()} height={value.height} color={value.color} zIndex={value.zIndex}
+        <CalendarTask top={value.y} left={value.x + value.getLeftPadding()} width={value.width - value.getLeftPadding() - value.getRightPadding()} height={value.height} category={value.category} zIndex={value.zIndex}
             grabbed={(position: Position)=>{
                 setStartMovePos(position); 
                 setGrabbed(true); 
@@ -233,6 +243,9 @@ function Calendar(props: Props) {
                 setStartMovePos(position);
                 setResize({state: true, direction: direction});
                 setModifyObject(value.id);
+            }}
+            selected={()=>{
+                setWndTaskInfo({id: value.id, date: value.getDate(props.weekStartDate), startTime: value.startTime, endTime: value.endTime, basicInfo: value.basicInfo, description: value.description, show: true});
             }}
         />
     ));
@@ -402,8 +415,15 @@ function Calendar(props: Props) {
                 }}
             >
                 <CurrentTimePointer state={pointerState} />
-                <TaskWnd id={wndTaskInfo.id} date={wndTaskInfo.date} startTime={wndTaskInfo.startTime} endTime={wndTaskInfo.endTime} show={wndTaskInfo.show} 
-                    hide={()=>setWndTaskInfo({...wndTaskInfo, show: false})}
+                <TaskWnd id={wndTaskInfo.id}
+                    date={wndTaskInfo.date}
+                    startTime={wndTaskInfo.startTime}
+                    endTime={wndTaskInfo.endTime}
+                    basicInfo={wndTaskInfo.basicInfo}
+                    description={wndTaskInfo.description}
+                    show={wndTaskInfo.show}
+                    hide={hideTaskWnd}
+                    save={()=>fetchTasks()}
                 />
                 {daysList}
                 {tasksList}
