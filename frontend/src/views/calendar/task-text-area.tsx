@@ -54,7 +54,7 @@ function TaskTextArea(props: Props) {
     }
 
     return (
-        <div className="task-text-area" onClick={()=>openInput()}>
+        <div tabIndex={0} className="task-text-area" onClick={openInput} onFocus={openInput}>
             {formatText()}
         </div>
     );

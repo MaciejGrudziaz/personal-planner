@@ -64,7 +64,7 @@ function TaskInput(props: Props) {
     }
 
     return (
-        <div style={props.style} className="task-input" onClick={()=>openInput()}>
+        <div tabIndex={0} style={props.style} className="task-input" onClick={openInput} onFocus={openInput}>
             {props.initValue}
         </div>
     );

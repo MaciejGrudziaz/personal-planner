@@ -152,6 +152,10 @@ function TaskWnd(props: Props) {
         hideCalendar();
     }
 
+    const openCalendar = ()=>{
+        setShowCalendar(true);
+    }
+
     const hideCalendar = ()=>{
         setShowCalendar(false);
     }
