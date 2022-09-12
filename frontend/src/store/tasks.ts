@@ -5,17 +5,29 @@ export interface TaskTime {
     minute: number;
 }
 
+export function parseTimeToStr(time: TaskTime): string {
+    return `${(time.hour < 10) ? '0'+time.hour.toFixed() : time.hour}:${(time.minute < 10) ? '0'+time.minute.toFixed() : time.minute}`;
+}
+
 export interface TaskDate {
     day: number;    // 1 - 31
     month: number;  // 0 - 11
     year: number;   // 4 digit
 }
 
+export function parseDateToStr(date: TaskDate): string {
+    return `${date.year}-${(date.month < 9) ? '0'+(date.month + 1).toFixed() : (date.month + 1)}-${(date.day < 10) ? '0'+date.day.toFixed() : date.day}`;
+}
+
+export function parseDateToBuiltin(date: TaskDate): Date {
+    return new Date(date.year, date.month, date.day);
+}
+
 export interface TaskState {
     id: string;
-    day: string;
-    startTime: string;
-    endTime: string;
+    date: TaskDate;
+    startTime: TaskTime;
+    endTime: TaskTime;
     basicInfo: string;
     description: string;
     category: string;
@@ -43,31 +55,35 @@ function findTask(id: string, year: number, month: number, state: TasksState): T
     return monthTasks.tasks.find((value: TaskState) => value.id === id);
 }
 
-export function findTasksForWeek(dayInTheWeek: Date, state: TasksState): TaskState[] {
-    let day = dayInTheWeek.getDay();
-    day = (day - 1 < 0) ? day = 6 : day - 1;
+export function findTasksForWeek(date: Date, state: TasksState): TaskState[] {
+    let day = date.getDay();
+    day = (day === 0) ? day = 6 : day - 1;
     const msInDay = 1000 * 60 * 60 * 24;
-    const startDate = new Date(dayInTheWeek.getTime() - (day * msInDay));
+    const startDate = new Date(date.getTime() - (day * msInDay));
     startDate.setHours(0)
     startDate.setMinutes(0);
-    const endDate = new Date(dayInTheWeek.getTime() + ((6 - day) * msInDay));
+    startDate.setSeconds(0);
+    startDate.setMilliseconds(0);
+    const endDate = new Date(date.getTime() + ((6 - day) * msInDay));
     endDate.setHours(23);
     endDate.setMinutes(59);
+    endDate.setSeconds(59);
+    endDate.setMilliseconds(999);
 
-    const yearTasks = state.years.find((value: YearTasks) => value.year === dayInTheWeek.getFullYear());
+    const yearTasks = state.years.find((value: YearTasks) => value.year === date.getFullYear());
     if(yearTasks === undefined) { return []; }
-    const monthTasks = yearTasks.months.find((value: MonthTasks) => value.month === dayInTheWeek.getMonth());
+    const monthTasks = yearTasks.months.find((value: MonthTasks) => value.month === date.getMonth());
     if(monthTasks === undefined) { return []; }
 
     return monthTasks.tasks.filter((value: TaskState) => {
-        const taskDate = new Date(value.day);
+        const taskDate = parseDateToBuiltin(value.date);
         const testValue = taskDate >= startDate && taskDate <= endDate;
         return testValue;
     });
 }
 
 function insertTask(state: TasksState, task: TaskState) {
-    const taskDate = new Date(task.day);
+    const taskDate = parseDateToBuiltin(task.date);
     const year = taskDate.getFullYear();
     const month = taskDate.getMonth();
     const yearTasks = state.years.find((value: YearTasks) => value.year === year);
@@ -93,12 +109,12 @@ const initialState: TasksState  = {
         year: 2022,
         months: [
             {
-                month: 7,
+                month: 8,
                 tasks: [
-                    {id: "task1", day: "2022-08-29", startTime: "12:00", endTime: "14:00", basicInfo: "task 1 basic info", description: "task 1 description", category: "red"},
-                    {id: "task2", day: "2022-08-31", startTime: "10:30", endTime: "11:35", basicInfo: "task 2 basic info", description: "task 2 description", category: "yellow"},
-                    {id: "task3", day: "2022-08-30", startTime: "14:30", endTime: "18:39", basicInfo: "task 3 basicInfo", description: "task 3 description", category: "blue"},
-                    {id: "task4", day: "2022-08-29", startTime: "14:30", endTime: "18:39", basicInfo: "task 4 basic info", description: "task 4 description", category: "green"},
+                    {id: "task1", date: {year: 2022, month: 8, day: 12}, startTime: {hour: 12, minute: 0}, endTime: {hour: 14, minute:0}, basicInfo: "task 1 basic info", description: "task 1 description", category: "red"},
+                    {id: "task2", date: {year: 2022, month: 8, day: 13}, startTime: {hour: 10, minute: 30}, endTime: {hour: 11, minute: 35}, basicInfo: "task 2 basic info", description: "task 2 description", category: "yellow"},
+                    {id: "task3", date: {year: 2022, month: 8, day: 14}, startTime: {hour: 14, minute: 30}, endTime: {hour: 18, minute: 30}, basicInfo: "task 3 basicInfo", description: "task 3 description", category: "blue"},
+                    {id: "task4", date: {year: 2022, month: 8, day: 15}, startTime: {hour: 14, minute: 30}, endTime: {hour: 18, minute: 39}, basicInfo: "task 4 basic info", description: "task 4 description", category: "green"},
                 ]
             }
         ]
@@ -112,7 +128,7 @@ export const tasksSlice = createSlice({
         updateTask: (state, action: PayloadAction<TaskState>) => {
             console.log("store tasks update");
             const newTask = action.payload;
-            const taskDate = new Date(newTask.day);
+            const taskDate = parseDateToBuiltin(newTask.date);
             const year = taskDate.getFullYear();
             const month = taskDate.getMonth();
             const currentTask = findTask(newTask.id, year, month, state);
@@ -120,7 +136,7 @@ export const tasksSlice = createSlice({
                 insertTask(state, newTask);
                 return state;
             }
-            currentTask.day = newTask.day;
+            currentTask.date = newTask.date;
             currentTask.startTime = newTask.startTime;
             currentTask.endTime = newTask.endTime;
             currentTask.basicInfo = newTask.basicInfo;

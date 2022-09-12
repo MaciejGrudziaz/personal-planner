@@ -1,6 +1,7 @@
 import React, {RefObject, useRef, useEffect, useState} from 'react';
 import { useDispatch } from 'react-redux';
 import { Position } from './task';
+import { TaskDate, TaskTime } from '../../store/tasks';
 import './hour.css';
 
 interface Props {
@@ -19,30 +20,31 @@ export interface CellBasicInfo {
     quarter: number;
 }
 
-export function extractDate(baseDate: Date, cells: CellBasicInfo[]): Date | undefined {
+export function extractDate(baseDate: Date, cells: CellBasicInfo[]): TaskDate | undefined {
     if(cells.length === 0) { return undefined; }
     const msInDay = 1000 * 60 * 60 * 24;
-    return new Date(baseDate.getTime() + cells[0].day * msInDay);
+    const newDate = new Date(baseDate.getTime() + cells[0].day * msInDay);
+    return {year: newDate.getFullYear(), month: newDate.getMonth(), day: newDate.getDate()};
 }
 
-export function extractStartTime(cells: CellBasicInfo[]): string | undefined {
+export function extractStartTime(cells: CellBasicInfo[]): TaskTime | undefined {
     if(cells.length === 0) { return undefined; }
     const firstCell = cells[0];
     const lastCell = cells[cells.length - 1];
     if(firstCell.hour * 4 + firstCell.quarter < lastCell.hour * 4 + lastCell.quarter) {
-        return `${firstCell.hour}:${firstCell.quarter * 15}`;
+        return {hour: firstCell.hour, minute: firstCell.quarter * 15};
     }
-    return `${lastCell.hour}:${lastCell.quarter * 15}`;
+    return {hour: lastCell.hour, minute: lastCell.quarter * 15};
 }
 
-export function extractEndTime(cells: CellBasicInfo[]): string | undefined {
+export function extractEndTime(cells: CellBasicInfo[]): TaskTime | undefined {
     if(cells.length === 0) { return undefined; }
     const firstCell = cells[0];
     const lastCell = cells[cells.length - 1];
     if(firstCell.hour * 4 + firstCell.quarter > lastCell.hour * 4 + lastCell.quarter) {
-        return `${firstCell.hour}:${firstCell.quarter * 15}`;
+        return {hour: firstCell.hour, minute: firstCell.quarter * 15};
     }
-    return `${lastCell.hour}:${lastCell.quarter * 15}`;
+    return {hour: lastCell.hour, minute: lastCell.quarter * 15};
 }
 
 function Hour(props: Props) {

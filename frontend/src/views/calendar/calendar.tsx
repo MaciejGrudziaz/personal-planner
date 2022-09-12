@@ -6,7 +6,7 @@ import TaskWnd from './task-wnd';
 import {CellBasicInfo, extractDate, extractStartTime, extractEndTime} from './hour';
 import CalendarTask, {Task, Position, ResizeDir} from './task';
 import CurrentTimePointer, {PointerState} from './current-time-pointer';
-import {updateTask, TaskState, findTasksForWeek} from '../../store/tasks';
+import {updateTask, TaskState, findTasksForWeek, parseDateToBuiltin, TaskDate, TaskTime} from '../../store/tasks';
 import './calendar.css';
 
 interface ResizeAction {
@@ -42,9 +42,9 @@ interface FontState {
 
 interface WndTaskInfo {
     id: string | undefined;
-    date: Date | undefined;
-    startTime: string | undefined;
-    endTime: string | undefined;
+    date: TaskDate | undefined;
+    startTime: TaskTime | undefined;
+    endTime: TaskTime | undefined;
     show: boolean;
 }
 
@@ -83,7 +83,7 @@ function Calendar(props: Props) {
         const tasksState = (store.getState() as RootState).tasksState;
         while(tasks.length > 0) { tasks.pop(); }
         findTasksForWeek(props.weekStartDate, tasksState).forEach((taskInfo: TaskState) => {
-            const task = new Task(taskInfo.id, new Date(taskInfo.day), taskInfo.startTime, taskInfo.endTime, taskInfo.category)
+            const task = new Task(taskInfo.id, parseDateToBuiltin(taskInfo.date), taskInfo.startTime, taskInfo.endTime, taskInfo.category)
             task.init(cells);
             tasks.push(task);
         });

@@ -140,7 +140,7 @@ function CalendarMonthView(props: Props) {
     }
 
     return (
-        <div className="month-view" style={{top: props.y, left: props.x}}>
+        <div className="month-view" style={{top: props.y, left: props.x}} onClick={(e: React.MouseEvent<HTMLDivElement>)=>e.stopPropagation()}>
             <div className="title-row">
                 <button onClick={selectPreviousYear}>&lt;&lt;</button>
                 <button onClick={selectPreviousMonth}>&lt;</button>

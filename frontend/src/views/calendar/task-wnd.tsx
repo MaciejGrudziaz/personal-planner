@@ -3,105 +3,89 @@ import TaskInput, {TaskInputStyle} from './task-input';
 import TaskTextArea from './task-text-area';
 import CalendarMonthView from './month-view/month-view';
 import {useStore, useDispatch} from 'react-redux';
-import {TaskState} from '../../store/tasks';
+import {TaskState, TaskDate, TaskTime, parseDateToBuiltin, parseDateToStr} from '../../store/tasks';
 import './task-wnd.scss';
 
 interface Props {
     id: string | undefined;
-    date: Date | undefined;
-    startTime: string | undefined;
-    endTime: string | undefined;
+    date: TaskDate | undefined;
+    startTime: TaskTime | undefined;
+    endTime: TaskTime | undefined;
     show: boolean;
 
     hide(): void;
 }
 
 function createDefaultTaskState(props: Props): TaskState {
-    const isoDate = (props.date === undefined) ?  undefined : props.date.toISOString().split("T").at(0) as string | undefined;
-
+    const now = new Date(Date.now());
     return {
         id: (props.id === undefined) ? "" : props.id,
-        day: (isoDate === undefined) ? "" : isoDate,
-        startTime: (props.startTime === undefined) ? "" : props.startTime,
-        endTime: (props.endTime === undefined) ? "" : props.endTime,
+        date: (props.date === undefined) ? {year: now.getFullYear(), month: now.getMonth(), day: now.getDate()} : props.date,
+        startTime: (props.startTime === undefined) ? {hour: 0, minute: 0} : props.startTime,
+        endTime: (props.endTime === undefined) ? {hour: 0, minute: 0} : props.endTime,
         basicInfo: "",
         description: "",
         category: ""
     };
 }
 
-function parseStringToFixedNumber(val: string, pos: number): string {
-    const splits = val.split(":");
-    if(splits.length !== 2 || isNaN(Number(splits[pos]))) {
-        return "00";
-    }
-    const num = parseInt(splits[pos]);
-    return (num < 10) ? `0${num}` : num.toFixed();
+function parseStringToFixedNumber(val: string): number | undefined {
+    const num = parseInt(val);
+    return isNaN(num) ? undefined : num;
 }
 
-function getStartHour(task: TaskState): string {
-    if(task.startTime === undefined) {
-        return "00";
+function setNewStartHour(task: TaskState, val: string): TaskTime {
+    const newHour = parseStringToFixedNumber(val);
+    if(newHour === undefined) { return task.startTime; }
+    if(newHour === task.endTime.hour) {
+        if(task.startTime.minute >= task.endTime.minute) {
+            return task.startTime;
+        }
+        return {...task.startTime, hour: newHour};
     }
-    return parseStringToFixedNumber(task.startTime, 0);
+    if(newHour > task.endTime.hour) {
+        return task.startTime;
+    }
+    return {...task.startTime, hour: newHour};
 }
 
-function getStartMinute(task: TaskState): string {
-    if(task.startTime === undefined) {
-        return "00";
+function setNewStartMinute(task: TaskState, val: string): TaskTime {
+    const newMinute = parseStringToFixedNumber(val);
+    if(newMinute === undefined) { return task.startTime; }
+    if(task.startTime.hour === task.endTime.hour) {
+        if(newMinute >= task.endTime.minute) {
+            return task.startTime;
+        }
+        return {...task.startTime, minute: newMinute};
     }
-    return parseStringToFixedNumber(task.startTime, 1);
+    return {...task.startTime, minute: newMinute};
 }
 
-function getEndHour(task: TaskState): string {
-    if(task.endTime === undefined) {
-        return "00";
+function setNewEndHour(task: TaskState, val: string): TaskTime {
+    const newHour = parseStringToFixedNumber(val);
+    if(newHour === undefined) { return task.endTime; }
+    if(newHour === task.endTime.hour) {
+        if(task.endTime.minute <= task.startTime.minute) {
+            return task.endTime;
+        }
+        return {...task.endTime, hour: newHour};
     }
-    return parseStringToFixedNumber(task.endTime, 0);
+    if(newHour <= task.endTime.hour) {
+        return task.endTime;
+    }
+    return {...task.endTime, hour: newHour};
 }
 
-function getEndMinute(task: TaskState): string {
-    if(task.endTime === undefined) {
-        return "00";
+function setNewEndMinute(task: TaskState, val: string): TaskTime {
+    const newMinute = parseStringToFixedNumber(val);
+    if(newMinute === undefined) { return task.endTime; }
+    if(task.startTime.hour === task.endTime.hour) {
+        if(newMinute <= task.startTime.minute) {
+            return task.endTime;
+        }
+        return {...task.endTime, minute: newMinute};
     }
-    return parseStringToFixedNumber(task.endTime, 1);
-}
-
-function replaceFixedNumberInTimeString(timeStr: string, newValue: string, pos: number): string {
-    const splits = timeStr.split(":");
-    if(splits.length !== 2) {
-        return "00:00";
-    }
-    splits[pos] = newValue;
-    return splits.join(":");
-}
-
-function setNewStartHour(task: TaskState, startHour: string): string {
-    if(task.startTime === undefined) {
-        return "00:00";
-    }
-    return replaceFixedNumberInTimeString(task.startTime, startHour, 0);
-}
-
-function setNewStartMinute(task: TaskState, startMinute: string): string {
-    if(task.startTime === undefined) {
-        return "00:00";
-    }
-    return replaceFixedNumberInTimeString(task.startTime, startMinute, 1);
-}
-
-function setNewEndHour(task: TaskState, endHour: string): string {
-    if(task.endTime === undefined) {
-        return "00:00";
-    }
-    return replaceFixedNumberInTimeString(task.endTime, endHour, 0);
-}
-
-function setNewEndMinute(task: TaskState, endMinute: string): string {
-    if(task.endTime === undefined) {
-        return "00:00";
-    }
-    return replaceFixedNumberInTimeString(task.endTime, endMinute, 1);
+    return {...task.endTime, minute: newMinute};
 }
 
 function TaskWnd(props: Props) {
@@ -158,7 +142,7 @@ function TaskWnd(props: Props) {
             return (<></>);
         }
 
-        const date = new Date(task.day);
+        const date = parseDateToBuiltin(task.date);
         if(date === undefined) {
             return (<></>);
         }
@@ -166,7 +150,7 @@ function TaskWnd(props: Props) {
         return (
             <CalendarMonthView x={el.offsetLeft} y={el.offsetTop + el.offsetHeight} day={date.getDate()} month={date.getMonth()} year={date.getFullYear()} 
                 selectDay={(date: number, month: number, year: number)=>{
-                    setTask({...task, day: `${year}-${month + 1}-${date}`});
+                    setTask({...task, date: {year: year, month: month, day: date}});
                     setShowCalendar(false);
                 }}
             />
@@ -188,25 +172,25 @@ function TaskWnd(props: Props) {
                 </div>
                 <div className="task-line-container">
                     <div style={{margin: "0 0.5rem"}}><b>time:</b></div>
-                    <TaskInput style={timeInputStyle} initValue={getStartHour(task)} maxCharacterCount={2}
+                    <TaskInput style={timeInputStyle} initValue={task.startTime.hour.toFixed()} maxCharacterCount={2}
                         setValue={(val: string)=>{
                             setTask({...task, startTime: setNewStartHour(task, val)});
                         }}
                     />
                     <div>:</div>
-                    <TaskInput style={timeInputStyle} initValue={getStartMinute(task)} maxCharacterCount={2}
+                    <TaskInput style={timeInputStyle} initValue={task.startTime.minute.toFixed()} maxCharacterCount={2}
                         setValue={(val: string)=>{
                             setTask({...task, startTime: setNewStartMinute(task, val)});
                         }}
                     />
                     <div style={{margin: "0 0.25rem"}}>-</div>
-                    <TaskInput style={timeInputStyle} initValue={getEndHour(task)} maxCharacterCount={2}
+                    <TaskInput style={timeInputStyle} initValue={task.endTime.hour.toFixed()} maxCharacterCount={2}
                         setValue={(val: string)=>{
                             setTask({...task, startTime: setNewEndHour(task, val)});
                         }}
                     />
                     <div>:</div>
-                    <TaskInput style={timeInputStyle} initValue={getEndMinute(task)} maxCharacterCount={2}
+                    <TaskInput style={timeInputStyle} initValue={task.endTime.minute.toFixed()} maxCharacterCount={2}
                         setValue={(val: string)=>{
                             setTask({...task, startTime: setNewEndMinute(task, val)});
                         }}
@@ -214,7 +198,7 @@ function TaskWnd(props: Props) {
                 </div>
                 <div className="task-line-container">
                     <div style={{margin: "0 0.5rem"}}><b>date:</b></div>
-                    <div ref={dateInputRef} onClick={toggleCalendar} className="task-date">{task.day}</div>
+                    <div ref={dateInputRef} onClick={toggleCalendar} className="task-date">{parseDateToStr(task.date)}</div>
                 </div>
                 {popupCalendar()}
                 <div className="task-extended-container">

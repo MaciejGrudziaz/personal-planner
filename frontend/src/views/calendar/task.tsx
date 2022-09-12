@@ -1,7 +1,7 @@
 import React, {RefObject, useState, useEffect} from 'react';
 import {Hour, Cell} from './day';
 import {CellInfo} from './calendar';
-import {TaskState} from '../../store/tasks';
+import {TaskDate, TaskState, TaskTime} from '../../store/tasks';
 import './task.css';
 
 export enum ResizeDir {
@@ -41,15 +41,15 @@ export class Task {
     zIndex: number = 0;
     padding: number = 0;
 
-    day: number;
-    startTime: string;
-    endTime: string;
+    dayOfWeek: number;
+    startTime: TaskTime;
+    endTime: TaskTime;
 
     minHeight: number = parseFloat(getComputedStyle(document.documentElement).fontSize);
 
-    constructor(id: string, date: Date, startTime: string, endTime: string, color: string) {
+    constructor(id: string, date: Date, startTime: TaskTime, endTime: TaskTime, color: string) {
         this.id = id;
-        this.day = (date.getDay() === 0) ? 6 : date.getDay() - 1;
+        this.dayOfWeek = (date.getDay() === 0) ? 6 : date.getDay() - 1;
         this.startTime = startTime;
         this.endTime = endTime;
         this.color = color;
@@ -67,9 +67,10 @@ export class Task {
         return this.padding;
     }
 
-    getDate(baseDate: Date): Date {
+    getDate(baseDate: Date): TaskDate {
         const msInDay = 1000 * 60 * 60 * 24;
-        return new Date(baseDate.getTime() + this.day * msInDay);
+        const date = new Date(baseDate.getTime() + this.dayOfWeek * msInDay);
+        return {year: date.getFullYear(), month: date.getMonth(), day: date.getDate()};
     }
 
     setPosition(position: Position) {
@@ -97,24 +98,17 @@ export class Task {
         }
     }
 
-    getHour(time: string): number | undefined {
+    getHourQuarter(time: TaskTime): number | undefined {
         if(time === undefined) { return undefined; }
-        const values = time.split(":");
-        if(values.length === 0) { return undefined; }
-        return parseInt(values[0]);
+        return Math.floor(time.minute / 15);
     }
 
-    getHourQuarter(time: string): number | undefined {
-        if(time === undefined) { return undefined; }
-        const values = time.split(":");
-        if(values.length < 2) { return undefined; }
-        return Math.floor(parseInt(values[1]) / 15);
-    }
-
-    updateTime(day: number, startHour: number, startQuarter: number, endHour: number, endQuarter: number) {
-        this.day = day;
-        this.startTime = `${startHour}:${startQuarter * 15}`;
-        this.endTime = `${endHour}:${endQuarter * 15}`;
+    updateTime(dayOfWeek: number, startHour: number, startQuarter: number, endHour: number, endQuarter: number) {
+        this.dayOfWeek = dayOfWeek;
+        this.startTime.hour = startHour;
+        this.startTime.minute = startQuarter * 15;
+        this.endTime.hour = endHour;
+        this.endTime.minute = endQuarter * 15;
     }
 
     calcOverlapping(tasks: Task[]): boolean {
@@ -137,12 +131,12 @@ export class Task {
 
     init(weekView: Map<number, Map<number, CellInfo[]>>) {
         //const day = weekView.days.find((day: DayState)=>{ return day.day === this.day; });
-        const day = weekView.get(this.day);
+        const day = weekView.get(this.dayOfWeek);
         if(day === undefined) { return; }
         //const startHour = day.hours.find((hour: HourState)=>{ return hour.hour === this.getHour(this.startTime); });
-        const startHourValue = this.getHour(this.startTime);
-        if(startHourValue === undefined) { return; }
-        const startHour = day.get(startHourValue);
+        // const startHourValue = this.getHour(this.startTime);
+        // if(startHourValue === undefined) { return; }
+        const startHour = day.get(this.startTime.hour);
         if(startHour === undefined) { return; }
         const startCell = startHour.find((cell: CellInfo)=>{ return cell.quarter === this.getHourQuarter(this.startTime); });
         if(startCell === undefined) { return; }
@@ -156,13 +150,12 @@ export class Task {
         this.y = pos.y;
         this.width = width;
         this.minHeight = parseFloat(getComputedStyle(startCellEl).fontSize);
-        console.log(`fontSize: ${this.minHeight}`);
         //this.minHeight = startCellEl.style.fontSize;
 
-        const endHourValue = this.getHour(this.endTime);
-        if(endHourValue === undefined) { return; }
+        // const endHourValue = this.getHour(this.endTime);
+        // if(endHourValue === undefined) { return; }
         // const endHour = day.hours.find((hour: HourState)=>{ return hour.hour === this.getHour(this.endTime); });
-        const endHour = day.get(endHourValue);
+        const endHour = day.get(this.endTime.hour);
         if(endHour === undefined) { return; }
         const endCell = endHour.find((cell: CellInfo)=>{ return cell.quarter === this.getHourQuarter(this.endTime); });
         if(endCell === undefined) { return; }
@@ -171,7 +164,7 @@ export class Task {
     }
 
     toTaskState(baseDate: Date): TaskState {
-        return {id: this.id, day: this.getDate(baseDate).toISOString(), startTime: this.startTime, endTime: this.endTime, basicInfo: "", description: "", category: this.color};
+        return {id: this.id, date: this.getDate(baseDate), startTime: this.startTime, endTime: this.endTime, basicInfo: "", description: "", category: this.color};
     }
 }
 
