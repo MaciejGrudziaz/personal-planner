@@ -2,6 +2,7 @@ import React, {KeyboardEvent, useEffect, useState, useReducer, useRef, RefObject
 import TaskInput, {TaskInputStyle} from './task-input';
 import TaskTextArea from './task-text-area';
 import CalendarMonthView from './month-view/month-view';
+import TaskDropdownSelect from './task-dropdown-select';
 import {useStore, useDispatch} from 'react-redux';
 import {TaskState, TaskDate, TaskTime, TaskCategory, parseDateToBuiltin, parseDateToStr, updateTask} from '../../store/tasks';
 import './task-wnd.scss';
@@ -13,6 +14,7 @@ interface Props {
     endTime: TaskTime | undefined;
     basicInfo: string | undefined;
     description: string | undefined;
+    category: TaskCategory | undefined;
     show: boolean;
 
     hide(): void;
@@ -28,7 +30,7 @@ function createDefaultTaskState(props: Props): TaskState {
         endTime: (props.endTime === undefined) ? {hour: 0, minute: 0} : props.endTime,
         basicInfo: (props.basicInfo === undefined) ? "" : props.basicInfo,
         description: (props.description === undefined) ? "" : props.description,
-        category: {value: "simple"}
+        category: (props.category === undefined) ? {value: "simple"} : props.category
     };
 }
 
@@ -109,6 +111,8 @@ function TaskWnd(props: Props) {
         width: "1.75rem",
         textAlign: "center"
     } as TaskInputStyle;
+
+    const categories = ["simple", "important"];
 
     useEffect(()=>{
         window.addEventListener('keydown', hideWindowEvent);
@@ -225,6 +229,17 @@ function TaskWnd(props: Props) {
                     <div ref={dateInputRef} onClick={toggleCalendar} className="task-date">{parseDateToStr(task.date)}</div>
                 </div>
                 {popupCalendar()}
+                <div className="task-line-container">
+                    <TaskDropdownSelect options={categories} initValue={task.category.value} label={"category"} 
+                        select={(val: string)=>{
+                            if(val !== "simple" && val !== "important") {
+                                return;
+                            }
+                            console.log(`select: ${val}`);
+                            setTask({...task, category: {value: val}});
+                        }}
+                    />
+                </div>
                 <div className="task-extended-container">
                     <TaskTextArea initValue={task.description} setValue={(val: string)=>{
                         setTask({...task, description: val});
@@ -233,7 +248,6 @@ function TaskWnd(props: Props) {
                 <div className="task-line-container">
                     <button className="task-action-btn"
                         onClick={()=>{
-                            task.category = {value: "simple"};
                             saveTask();
                         }
                     }>save</button>

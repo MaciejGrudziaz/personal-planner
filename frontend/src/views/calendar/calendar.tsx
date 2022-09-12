@@ -6,7 +6,7 @@ import TaskWnd from './task-wnd';
 import {CellBasicInfo, extractDate, extractStartTime, extractEndTime} from './hour';
 import CalendarTask, {Task, Position, ResizeDir} from './task';
 import CurrentTimePointer, {PointerState} from './current-time-pointer';
-import {updateTask, TaskState, findTasksForWeek, parseDateToBuiltin, TaskDate, TaskTime} from '../../store/tasks';
+import {updateTask, TaskState, findTasksForWeek, parseDateToBuiltin, TaskDate, TaskTime, TaskCategory} from '../../store/tasks';
 import './calendar.css';
 
 interface ResizeAction {
@@ -47,6 +47,7 @@ interface WndTaskInfo {
     endTime: TaskTime | undefined;
     basicInfo: string | undefined;
     description: string | undefined;
+    category: TaskCategory | undefined;
     show: boolean;
 }
 
@@ -221,7 +222,7 @@ function Calendar(props: Props) {
                 hour = Math.floor(nextCellVal / 4);
                 quarter = nextCellVal % 4;
                 const cells = calcSelectedCells({day: day, hour: hour, quarter: quarter});
-                setWndTaskInfo({id: undefined, date: extractDate(props.weekStartDate, cells), startTime: extractStartTime(cells), endTime: extractEndTime(cells), basicInfo: undefined, description: undefined, show: true});
+                setWndTaskInfo({id: undefined, date: extractDate(props.weekStartDate, cells), startTime: extractStartTime(cells), endTime: extractEndTime(cells), basicInfo: undefined, description: undefined, category: undefined, show: true});
                 setSelectedCells([]);
             }}
             hoverOverCell={(day: number, hour: number, quarter: number)=>{
@@ -245,7 +246,7 @@ function Calendar(props: Props) {
                 setModifyObject(value.id);
             }}
             selected={()=>{
-                setWndTaskInfo({id: value.id, date: value.getDate(props.weekStartDate), startTime: value.startTime, endTime: value.endTime, basicInfo: value.basicInfo, description: value.description, show: true});
+                setWndTaskInfo({id: value.id, date: value.getDate(props.weekStartDate), startTime: value.startTime, endTime: value.endTime, basicInfo: value.basicInfo, description: value.description, category: value.category, show: true});
             }}
         />
     ));
@@ -421,6 +422,7 @@ function Calendar(props: Props) {
                     endTime={wndTaskInfo.endTime}
                     basicInfo={wndTaskInfo.basicInfo}
                     description={wndTaskInfo.description}
+                    category={wndTaskInfo.category}
                     show={wndTaskInfo.show}
                     hide={hideTaskWnd}
                     save={()=>fetchTasks()}
