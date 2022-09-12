@@ -3,7 +3,7 @@
     border-width: 0;
     border-top-width: 0.15rem;
     border-top-style: solid;
-    border-top-color: red;
+    border-top-color: #d90429;
     position: absolute;
     z-index: 1000000;
 }

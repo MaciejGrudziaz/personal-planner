@@ -21,6 +21,7 @@ interface Props {
     grabbed(startPos: Position): void;
     resize(startPos: Position, direction: ResizeDir): void;
     selected(): void;
+    deleteTask(): void;
 }
 
 export class Position {
@@ -155,11 +156,7 @@ export class Task {
         this.y = pos.y;
         this.width = width;
         this.minHeight = parseFloat(getComputedStyle(startCellEl).fontSize);
-        //this.minHeight = startCellEl.style.fontSize;
 
-        // const endHourValue = this.getHour(this.endTime);
-        // if(endHourValue === undefined) { return; }
-        // const endHour = day.hours.find((hour: HourState)=>{ return hour.hour === this.getHour(this.endTime); });
         const endHour = day.get(this.endTime.hour);
         if(endHour === undefined) { return; }
         const endCell = endHour.find((cell: CellInfo)=>{ return cell.quarter === this.getHourQuarter(this.endTime); });
@@ -169,7 +166,7 @@ export class Task {
     }
 
     toTaskState(baseDate: Date): TaskState {
-        return {id: this.id, date: this.getDate(baseDate), startTime: this.startTime, endTime: this.endTime, basicInfo: "", description: "", category: this.category};
+        return {id: this.id, date: this.getDate(baseDate), startTime: this.startTime, endTime: this.endTime, basicInfo: this.basicInfo, description: this.description, category: this.category};
     }
 }
 
@@ -223,6 +220,7 @@ function CalendarTask(props: Props) {
             }}
         >
             {props.basicInfo}
+            <button className="task-btn" onClick={()=>props.deleteTask()}>X</button>
         </div>
         <div className="bar" style={{left: props.left, top: props.top + props.height, width: props.width, zIndex: props.zIndex + 1}}
             onMouseDown={(event)=>{

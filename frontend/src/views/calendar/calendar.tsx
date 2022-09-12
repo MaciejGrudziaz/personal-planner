@@ -6,7 +6,7 @@ import TaskWnd from './task-wnd';
 import {CellBasicInfo, extractDate, extractStartTime, extractEndTime} from './hour';
 import CalendarTask, {Task, Position, ResizeDir} from './task';
 import CurrentTimePointer, {PointerState} from './current-time-pointer';
-import {updateTask, TaskState, findTasksForWeek, parseDateToBuiltin, TaskDate, TaskTime, TaskCategory} from '../../store/tasks';
+import {updateTask, deleteTask, TaskState, findTasksForWeek, parseDateToBuiltin, TaskDate, TaskTime, TaskCategory} from '../../store/tasks';
 import './calendar.css';
 
 interface ResizeAction {
@@ -80,6 +80,7 @@ function Calendar(props: Props) {
         setTimeout(()=>updateTimePointerWithInterval(60 * 1000), 60 * 1000);
         updateCellsInStore();
         fetchTasks();
+        store.subscribe(fetchTasks);
         init(true);
     });
 
@@ -255,6 +256,9 @@ function Calendar(props: Props) {
             }}
             selected={()=>{
                 setWndTaskInfo({id: value.id, date: value.getDate(props.weekStartDate), startTime: value.startTime, endTime: value.endTime, basicInfo: value.basicInfo, description: value.description, category: value.category, show: true});
+            }}
+            deleteTask={()=>{
+                store.dispatch(deleteTask(value.id));
             }}
         />
     ));

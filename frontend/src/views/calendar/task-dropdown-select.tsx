@@ -11,8 +11,8 @@ interface Props {
 
 function TaskDropdownSelect(props: Props) {
     const options = () => {
-        return props.options.map((val: string) => (
-            <option value={val}>{val}</option>
+        return props.options.map((val: string, id: number) => (
+            <option key={id} value={val}>{val}</option>
         ));
     }
 
