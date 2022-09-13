@@ -37,10 +37,6 @@ export interface TaskState {
     category: TaskCategory;
 }
 
-function findTask(id: string, state: TaskState[]): TaskState | undefined {
-    return state.find((task: TaskState) => task.id === id);
-}
-
 export function findTasksForWeek(date: Date, state: TaskState[]): TaskState[] {
     let day = date.getDay();
     day = (day === 0) ? day = 6 : day - 1;
