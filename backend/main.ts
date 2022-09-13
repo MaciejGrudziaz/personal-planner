@@ -6,14 +6,11 @@ import {DBClient, initDBClient} from './db-client/client';
 
 const app = express();
 
-// const client = new Client({user: "mg", password: "1234", database: "personalplanner", host: "localhost", port: 5432});
-// client.connect().then(()=>console.log("connected"));
 initDBClient("mg", "1234", "localhost").then((client: DBClient | undefined) => {
     if(client === undefined) {
         console.log("client is undefined");
         return;
     }
-    client.fetchTasks({year: 2022, month: 9});
 });
 
 const schema = buildSchema(`
