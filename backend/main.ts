@@ -1,20 +1,16 @@
 import express from 'express';
-import { graphqlHTTP } from 'express-graphql';
-import { getGraphQLSchema } from './graphql/schema';
-import { buildSchema } from 'graphql';
-import { Client } from 'pg';
-import {DBClient, initDBClient} from './db-client/client';
+import { graphqlHTTP, Options } from 'express-graphql';
+import loadGraphQLSchema from './graphql/schema';
 
 const app = express();
 
-initDBClient("mg", "1234", "localhost").then((client: DBClient | undefined) => {
-    if(client === undefined) {
-        console.log("client is undefined");
-        return;
+loadGraphQLSchema({user: "mg", password: "1234", database: "personalplanner"}, "graphql/schema.graphql").then((schema: Options | undefined) => {
+    if(schema === undefined) {
+        console.error("Error encountered while initializing GraphQL schema, exiting process...");
+        process.exit(1);
     }
+    app.use("/", graphqlHTTP(schema));
 });
-
-app.use("/", graphqlHTTP(getGraphQLSchema()));
 
 const port = 8080;
 app.listen(port, ()=> {

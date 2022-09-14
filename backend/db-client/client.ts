@@ -1,15 +1,20 @@
 import { Client, QueryConfig, QueryArrayConfig, QueryResult } from 'pg';
+import { setTimeout } from 'timers/promises';
 
 export interface TaskTime {
     hour: number;
     minute: number;
 }
 
-function taskTimeToString(time: TaskTime | null): string | null{
+function numToFixedString(val: number): string {
+    return (val < 10) ? "0" + val.toFixed() : val.toFixed();
+}
+
+export function taskTimeToString(time: TaskTime | null): string | null{
     if(time === null) {
         return null;
     }
-    return `${(time.hour < 10) ? '0'+time.hour : time.hour}:${(time.minute < 10) ? '0'+time.minute : time.minute}:00`;
+    return `${numToFixedString(time.hour)}:${numToFixedString(time.minute)}:00`;
 }
 
 function taskTimeFromString(time: string): TaskTime | null {
@@ -38,7 +43,11 @@ function taskDateFromDate(date: Date): TaskDate {
 }
 
 function taskDateToDate(date: TaskDate): Date {
-    return new Date(date.year, date.month, date.day);
+    return new Date(date.year, date.month - 1, date.day);
+}
+
+export function taskDateToString(date: TaskDate): string {
+    return `${date.year}-${numToFixedString(date.month)}-${numToFixedString(date.day)}`;
 }
 
 export interface Task {
@@ -100,17 +109,33 @@ function parseTask(value: any): Task | undefined {
     };
 }
 
-interface FetchParams {
+export interface FetchParams {
     year?: number;
     month?: number;
-    id?: number;
+    id?: number[];
+}
+
+export interface ConnectionParams {
+    user: string;
+    password: string;
+    database: string;
+    host?: string;
+    port?: number;
 }
 
 export class DBClient {
+    params: ConnectionParams;
     client: Client;
 
-    constructor(user: string, password: string, database: string, host: string, port: number) {
-        this.client = new Client({user: user, password: password, database: database, host: host, port: port});
+    constructor(params: ConnectionParams) {
+        this.params = params;
+        this.client = new Client({
+            user: this.params.user, 
+            password: this.params.password, 
+            database: this.params.database, 
+            host: (this.params.host !== undefined) ? this.params.host : "localhost", 
+            port: (this.params.port !== undefined) ? this.params.port : 5432
+        });
     }
     async connect(): Promise<void> {
         await this.client.connect();
@@ -162,10 +187,10 @@ export class DBClient {
         };
     }
 
-    idQuery(id: number): QueryConfig {
+    idQuery(id: number[]): QueryConfig {
         return {
             name: "select-task-by-id",
-            text: "SELECT * FROM tasks WHERE id = $1",
+            text: "SELECT * FROM tasks WHERE id = ANY ($1)",
             values: [id]
         };
     }
@@ -251,29 +276,25 @@ export class DBClient {
     }
 }
 
-export async function initDBClient(user: string, password: string, host: string, retryCounter?: number): Promise<DBClient | undefined> {
+export async function initDBClient(params: ConnectionParams, retryCounter?: number): Promise<DBClient | undefined> {
     if(retryCounter === undefined) {
         retryCounter = 2;
     }
 
-    const client = new DBClient(user, password, "personalplanner", host, 5432);
-    let isOk = true;
-    await client.connect().catch((err) => {
-        console.error(`error connecting to database on ${host}\n`, err.stack);
-        isOk = false;
-    });
-
-    if(isOk) {
-        return client;
+    const client = new DBClient(params);
+    try {
+        await client.connect();
+    } catch(err: any) {
+        console.error(`Error connecting to database on ${params.host}\n`, err.stack);
+        if(retryCounter > 0) {
+            console.log("retrying...");
+            await setTimeout(5000);
+            return initDBClient(params, retryCounter - 1);
+        }
+        return undefined;
     }
 
-    if(retryCounter > 0) {
-        console.log("retrying...");
-        return initDBClient(user, password, host, retryCounter - 1);
-    }
-
-    return undefined;
+    console.log(`Connected to database at ${(params.host === undefined) ? "localhost" : params.host}:${(params.port === undefined) ? 5432 : params.port}`);
+    return client;
 }
-
-
 

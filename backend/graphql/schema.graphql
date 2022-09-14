@@ -1,0 +1,41 @@
+type Time {
+    hour: Int!
+    minute: Int!
+}
+
+type Date {
+    year: Int!
+    month: Int!
+    day: Int!
+}
+
+type Task {
+    id: Int!
+    start_time: Time
+    end_time: Time
+    date: Date!
+    basic_info: String
+    description: String
+    category: String!
+}
+
+type Query {
+    fetchTasks(month: Int, year: Int, id: [Int]): [Task]
+}
+
+input InputTime {
+    hour: Int!
+    minute: Int!
+}
+
+input InputDate {
+    year: Int!
+    month: Int!
+    day: Int!
+}
+
+type Mutation {
+    createTask(start_time: InputTime, end_time: InputTime, date: InputDate!, basic_info: String, description: String, category: String!): Int
+    updateTask(id: Int!, start_time: InputTime, end_time: InputTime, date: InputDate!, basic_info: String, description: String, category: String!): Boolean!
+    deleteTask(id: Int!): Boolean!
+}
