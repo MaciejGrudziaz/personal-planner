@@ -1,5 +1,6 @@
 mutation:
 curl -X POST localhost:8080/graphql -H 'content-type: application/json' --data '{"query": "mutation { deleteTask( id: 1 ) }" }'
+curl -X POST localhost:8080/graphql -H 'content-type: application/json' --data '{"query": "mutation { createTask( category: \"simple\", date: {year: 2022, month: 1, day: 1} ) }" }'
 
 query:
 curl -X POST localhost:8080/graphql -H 'content-type: application/json' --data '{"query": "{ fetchTasks( id: [1] ) { id } }" }'

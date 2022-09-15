@@ -6,7 +6,7 @@ import TaskWnd from './task-wnd';
 import {CellBasicInfo, extractDate, extractStartTime, extractEndTime} from './hour';
 import CalendarTask, {Task, Position, ResizeDir} from './task';
 import CurrentTimePointer, {PointerState} from './current-time-pointer';
-import {updateTask, deleteTask, TaskState, findTasksForWeek, parseDateToBuiltin, TaskDate, TaskTime, TaskCategory} from '../../store/tasks';
+import {fetchTasks as storeFetchTasks, updateTask, deleteTask, TaskState, findTasksForWeek, parseDateToBuiltin, TaskDate, TaskTime, TaskCategory} from '../../store/tasks';
 import './calendar.css';
 
 interface ResizeAction {
@@ -76,6 +76,9 @@ function Calendar(props: Props) {
             }
             return; 
         }
+
+        dispatch(storeFetchTasks());
+
         window.addEventListener('resize', updateCellsInStore);
         setTimeout(()=>updateTimePointerWithInterval(60 * 1000), 60 * 1000);
         updateCellsInStore();

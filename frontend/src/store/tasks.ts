@@ -1,4 +1,5 @@
 import { createSlice, current, PayloadAction, TaskResolved } from '@reduxjs/toolkit';
+import { fetchQuery } from './gql-client';
 
 export interface TaskTime {
     hour: number;
@@ -75,6 +76,23 @@ export const tasksSlice = createSlice({
     name: "tasks",
     initialState,
     reducers: {
+        fetchTasks: (state) => {
+            fetchQuery("http://localhost:8080/", 
+                `fetchTasks(id: [1]) { 
+                    id 
+                    start_time { hour minute }
+                    end_time { hour minute }
+                    date { year month day }
+                    basic_info
+                    description
+                    category
+                }`)
+            .then((res: Response) => res.json())
+            .then((data: any) => console.log(data))
+            .catch((err)=> console.log(err));
+
+            return state;
+        },
         updateTask: (state, action: PayloadAction<TaskState>) => {
             const newTask = action.payload;
             if(newTask.id === "") {
@@ -89,7 +107,7 @@ export const tasksSlice = createSlice({
     }
 })
 
-export const { updateTask, deleteTask } = tasksSlice.actions;
+export const { fetchTasks, updateTask, deleteTask } = tasksSlice.actions;
 
 export default tasksSlice.reducer;
 
