@@ -77,13 +77,9 @@ export const tasksSlice = createSlice({
     reducers: {
         addTasks: (state, action: PayloadAction<TaskState[]>) => {
             const tasks = action.payload;
-            return state.map((val: TaskState) => {
-                const task = tasks.find((secondVal: TaskState) => secondVal.id === val.id);
-                if(task === undefined) {
-                    return val;
-                }
-                return task;
-            });
+            return state
+                .filter((val: TaskState) => tasks.find((newTask: TaskState) => newTask.id === val.id) === undefined)
+                .concat(tasks);
         },
         updateTask: (state, action: PayloadAction<TaskState>) => {
             const newTask = action.payload;

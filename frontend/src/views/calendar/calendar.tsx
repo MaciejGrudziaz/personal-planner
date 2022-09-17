@@ -53,6 +53,7 @@ interface WndTaskInfo {
 }
 
 function Calendar(props: Props) {
+    const fetchTasksFromApi = useFetchTasks();
     const [isGrabbed, setGrabbed] = useState(false);
     const [resizeAction, setResize] = useState({state: false, direction: undefined} as ResizeAction);
     const [startMovePos, setStartMovePos] = useState(new Position(0, 0));
@@ -78,6 +79,7 @@ function Calendar(props: Props) {
             return; 
         }
         window.addEventListener('resize', updateCellsInStore);
+        fetchTasksFromApi();
         setTimeout(()=>updateTimePointerWithInterval(60 * 1000), 60 * 1000);
         updateCellsInStore();
         fetchTasks();

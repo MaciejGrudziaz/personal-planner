@@ -39,7 +39,7 @@ export interface TaskDate {
 }
 
 function taskDateFromDate(date: Date): TaskDate {
-    return {year: date.getFullYear(), month: date.getMonth(), day: date.getDate()};
+    return {year: date.getFullYear(), month: date.getMonth() + 1, day: date.getDate()};
 }
 
 function taskDateToDate(date: TaskDate): Date {
@@ -52,10 +52,10 @@ export function taskDateToString(date: TaskDate): string {
 
 export interface Task {
     id: number;
-    startTime: TaskTime | null;
-    endTime: TaskTime | null;
+    start_time: TaskTime | null;
+    end_time: TaskTime | null;
     date: TaskDate;
-    basicInfo: string;
+    basic_info: string;
     description: string;
     category: Category;
 }
@@ -100,10 +100,10 @@ function parseTask(value: any): Task | undefined {
 
     return {
         id: id,
-        startTime: (exists(value["start_time"])) ? taskTimeFromString(value["start_time"]) : null,
-        endTime: (exists(value["end_time"])) ? taskTimeFromString(value["end_time"]) : null,
+        start_time: (exists(value["start_time"])) ? taskTimeFromString(value["start_time"]) : null,
+        end_time: (exists(value["end_time"])) ? taskTimeFromString(value["end_time"]) : null,
         date: taskDateFromDate(date),
-        basicInfo: (exists(value["basic_info"])) ? value["basic_info"] : "",
+        basic_info: (exists(value["basic_info"])) ? value["basic_info"] : "",
         description: (exists(value["description"])) ? value["description"] : "",
         category: category,
     };
@@ -204,10 +204,10 @@ export class DBClient {
             ($1,         $2,       $3,   $4,         $5,          $6)
             RETURNING id`,
             values: [
-                taskTimeToString(task.startTime),
-                taskTimeToString(task.endTime),
+                taskTimeToString(task.start_time),
+                taskTimeToString(task.end_time),
                 taskDateToDate(task.date),
-                task.basicInfo,
+                task.basic_info,
                 task.description,
                 mapCategory(task.category)
             ],
@@ -241,10 +241,10 @@ export class DBClient {
                        category=$6
                    WHERE id=$7`,
             values: [
-                taskTimeToString(task.startTime),
-                taskTimeToString(task.endTime),
+                taskTimeToString(task.start_time),
+                taskTimeToString(task.end_time),
                 taskDateToDate(task.date),
-                task.basicInfo,
+                task.basic_info,
                 task.description,
                 mapCategory(task.category)
             ],

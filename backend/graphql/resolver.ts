@@ -19,10 +19,10 @@ function getResolver(db: DBClient): Resolver {
         createTask: async (args: any): Promise<number | null> => {
             const id = await db.insertTask({
                 id: -1,
-                startTime: (args.start_time === undefined) ? null : args.start_time,
-                endTime: (args.end_time === undefined) ? null : args.end_time,
+                start_time: (args.start_time === undefined) ? null : args.start_time,
+                end_time: (args.end_time === undefined) ? null : args.end_time,
                 date: args.date,
-                basicInfo: (args.basic_info) ? null : args.basic_info,
+                basic_info: (args.basic_info) ? null : args.basic_info,
                 description: (args.description) ? null : args.description,
                 category: args.category
             });
@@ -34,10 +34,10 @@ function getResolver(db: DBClient): Resolver {
         updateTask: async (args: any): Promise<boolean> => {
             return await db.updateTask({
                 id: args.id,
-                startTime: (args.start_time === undefined) ? null : args.start_time,
-                endTime: (args.end_time === undefined) ? null : args.end_time,
+                start_time: (args.start_time === undefined) ? null : args.start_time,
+                end_time: (args.end_time === undefined) ? null : args.end_time,
                 date: args.date,
-                basicInfo: (args.basic_info) ? null : args.basic_info,
+                basic_info: (args.basic_info) ? null : args.basic_info,
                 description: (args.description) ? null : args.description,
                 category: args.category
             });
