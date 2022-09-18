@@ -10,6 +10,7 @@ import {TaskState, findTasksForWeek, parseDateToBuiltin, TaskDate, TaskTime, Tas
 import {useFetchTasks} from '../../gql-client/tasks/fetch';
 import {useUpdateTask} from '../../gql-client/tasks/update';
 import {useDeleteTask} from '../../gql-client/tasks/delete';
+import {useUpdateCalendarViewFontSize} from '../../gql-client/config/update';
 import './calendar.css';
 
 interface ResizeAction {
@@ -58,6 +59,7 @@ function Calendar(props: Props) {
     const fetchTasksFromApi = useFetchTasks();
     const updateTask = useUpdateTask();
     const deleteTask = useDeleteTask();
+    const updateCalendarViewFontSize = useUpdateCalendarViewFontSize();
     const [isGrabbed, setGrabbed] = useState(false);
     const [resizeAction, setResize] = useState({state: false} as ResizeAction);
     const [startMovePos, setStartMovePos] = useState(new Position(0, 0));
@@ -82,14 +84,28 @@ function Calendar(props: Props) {
             }
             return; 
         }
-        window.addEventListener('resize', updateCellsInStore);
+
         fetchTasksFromApi({year: props.weekStartDate.getFullYear(), month: props.weekStartDate.getMonth() + 1});
-        setTimeout(()=>updateTimePointerWithInterval(60 * 1000), 60 * 1000);
         updateCellsInStore();
         fetchTasks();
-        store.subscribe(fetchTasks);
+        store.subscribe(storeUpdate);
         init(true);
+
+        window.addEventListener('resize', updateCellsInStore);
+        setTimeout(()=>updateTimePointerWithInterval(60 * 1000), 60 * 1000);
     });
+
+    const storeUpdate = ()=>{
+        fetchTasks();
+        updateConfig();
+    }
+
+    const updateConfig = ()=>{
+        const configState = (store.getState() as RootState).configState;
+        if(configState.calendarMonthView.fontSize !== calendarFont.size) {
+            setCalendarFont({size: configState.calendarMonthView.fontSize, changed: true});
+        }
+    }
 
     const fetchTasks = ()=>{
         const tasksState = (store.getState() as RootState).tasksState;
@@ -121,7 +137,6 @@ function Calendar(props: Props) {
         tasks.forEach((task: Task)=>{
             const oldParams = {x: task.x, y: task.y, width: task.width, height: task.height};
             task.init(cells);
-            // task.calcOverlapping(tasks);
             if(oldParams.x !== task.x || oldParams.y !== task.y || oldParams.width !== task.width || oldParams.height !== task.height) {
                 needsUpdate = true;
             }
@@ -133,7 +148,9 @@ function Calendar(props: Props) {
     };
 
     const updateCalendarFontSize = (diff: number)=>{
-        setCalendarFont({size: calendarFont.size + diff, changed: true});
+        const newFontSize = calendarFont.size + diff;
+        updateCalendarViewFontSize({size: newFontSize});
+        setCalendarFont({size: newFontSize, changed: true});
     }
 
     const updateCellsInStore = ()=>{

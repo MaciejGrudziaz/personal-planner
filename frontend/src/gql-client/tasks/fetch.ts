@@ -54,8 +54,6 @@ export function useFetchTasks(): ReturnFunc {
                     category: task.category
                 };
             })));
-
-            console.log("useFetchTasks: store updated");
             return true;
         } catch(err) {
             console.error(err);

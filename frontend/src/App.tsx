@@ -1,5 +1,6 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import Calendar from './views/calendar/calendar';
+import { useFetchConfig } from './gql-client/config/fetch';
 
 const getFirstDayOfTheWeek = (date: Date): Date => {
     let day = date.getDay();
@@ -16,6 +17,14 @@ const getFirstDayOfTheWeek = (date: Date): Date => {
 
 function App() {
     const [weekStartDate, setWeekStartDate] = useState(getFirstDayOfTheWeek(new Date(Date.now())));
+    const [isInitialized, setInit] = useState(false);
+    const fetchConfig = useFetchConfig();
+
+    useEffect(()=>{
+        if(isInitialized) { return; }
+        fetchConfig();
+        setInit(true);
+    });
 
     return (
         <Calendar weekStartDate={weekStartDate} changeWeek={(baseDate: Date)=>setWeekStartDate(getFirstDayOfTheWeek(baseDate))} />

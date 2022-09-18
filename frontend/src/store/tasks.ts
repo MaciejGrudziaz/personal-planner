@@ -23,9 +23,6 @@ export function parseDateToBuiltin(date: TaskDate): Date {
     return new Date(date.year, date.month, date.day);
 }
 
-// export interface TaskCategory {
-//     value: "simple" | "important";
-// }
 export type TaskCategory = "simple" | "important";
 
 export interface TaskState {
@@ -59,12 +56,7 @@ export function findTasksForWeek(date: Date, state: TaskState[]): TaskState[] {
     });
 }
 
-const initialState: TaskState[]  = [
-//                     {id: "task1", date: {year: 2022, month: 8, day: 12}, startTime: {hour: 12, minute: 0}, endTime: {hour: 14, minute:0}, basicInfo: "task 1 basic info", description: "task 1 description", category: {value: "important"}},
-//                     {id: "task2", date: {year: 2022, month: 8, day: 13}, startTime: {hour: 10, minute: 30}, endTime: {hour: 11, minute: 35}, basicInfo: "task 2 basic info", description: "task 2 description", category: {value: "simple"}},
-//                     {id: "task3", date: {year: 2022, month: 8, day: 14}, startTime: {hour: 14, minute: 30}, endTime: {hour: 18, minute: 30}, basicInfo: "task 3 basicInfo", description: "task 3 description", category: {value: "simple"}},
-//                     {id: "task4", date: {year: 2022, month: 8, day: 15}, startTime: {hour: 14, minute: 30}, endTime: {hour: 18, minute: 39}, basicInfo: "task 4 basic info", description: "task 4 description", category: {value: "simple"}},
-];
+const initialState: TaskState[]  = [];
 
 export const tasksSlice = createSlice({
     name: "tasks",

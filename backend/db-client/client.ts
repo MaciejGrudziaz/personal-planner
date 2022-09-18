@@ -1,113 +1,7 @@
 import { Client, QueryConfig, QueryArrayConfig, QueryResult } from 'pg';
+import { Task, parseTask, taskTimeToString, taskDateToDate, mapCategory } from '../data-types/task';
+import { Config, parseConfig } from '../data-types/config';
 import { setTimeout } from 'timers/promises';
-
-export interface TaskTime {
-    hour: number;
-    minute: number;
-}
-
-function numToFixedString(val: number): string {
-    return (val < 10) ? "0" + val.toFixed() : val.toFixed();
-}
-
-export function taskTimeToString(time: TaskTime | null): string | null{
-    if(time === null) {
-        return null;
-    }
-    return `${numToFixedString(time.hour)}:${numToFixedString(time.minute)}:00`;
-}
-
-function taskTimeFromString(time: string): TaskTime | null {
-    const splits = time.split(":");
-    if(splits.length < 2) {
-        console.log(`wrong time format ${time} (expected: hh:mm[:ss])`);
-        return null;
-    }
-    const hour = parseInt(splits[0]);
-    const minute = parseInt(splits[1]);
-    if(isNaN(hour) || isNaN(minute)) {
-        console.log(`wrong data format of time field: ${time}`);
-        return null;
-    }
-    return {hour: hour, minute: minute};
-}
-
-export interface TaskDate {
-    year: number;
-    month: number;
-    day: number;
-}
-
-function taskDateFromDate(date: Date): TaskDate {
-    return {year: date.getFullYear(), month: date.getMonth() + 1, day: date.getDate()};
-}
-
-function taskDateToDate(date: TaskDate): Date {
-    return new Date(date.year, date.month - 1, date.day);
-}
-
-export function taskDateToString(date: TaskDate): string {
-    return `${date.year}-${numToFixedString(date.month)}-${numToFixedString(date.day)}`;
-}
-
-export interface Task {
-    id: number;
-    start_time: TaskTime | null;
-    end_time: TaskTime | null;
-    date: TaskDate;
-    basic_info: string;
-    description: string;
-    category: Category;
-}
-
-type Category = "simple" | "important";
-
-function mapCategoryId(category: number): Category | undefined {
-    switch(category) {
-        case 0: return "simple";
-        case 1: return "important";
-    }
-    return undefined;
-}
-
-function mapCategory(category: Category): number {
-    switch(category) {
-        case "simple":
-            return 0;
-        case "important":
-            return 1;
-    }
-}
-
-function exists(val: any): boolean {
-    return val !== null && val !== undefined;
-}
-
-function parseTask(value: any): Task | undefined {
-    const id = value["id"] as number;
-    const categoryId = value["category"] as number;
-    const date = value["date"] as Date;
-    if(!exists(id) || !exists(categoryId) || !exists(date)) {
-        console.log("One of mandatory values ('id', 'category', 'date') is null or undefined");
-        return undefined;
-    }
-
-    const category = mapCategoryId(categoryId);
-    if(category === undefined) {
-        console.log(`Unrecognized category '${categoryId}'`);
-        return undefined;
-    }
-
-    return {
-        id: id,
-        start_time: (exists(value["start_time"])) ? taskTimeFromString(value["start_time"]) : null,
-        end_time: (exists(value["end_time"])) ? taskTimeFromString(value["end_time"]) : null,
-        date: taskDateFromDate(date),
-        basic_info: (exists(value["basic_info"])) ? value["basic_info"] : "",
-        description: (exists(value["description"])) ? value["description"] : "",
-        category: category,
-    };
-}
 
 export interface FetchParams {
     year?: number;
@@ -141,7 +35,7 @@ export class DBClient {
         await this.client.connect();
     }
 
-    async fetchTasks(params: FetchParams): Promise<Task[] | undefined> {
+    async fetchTasks(params: FetchParams): Promise<Task[] | null> {
         if(params.year !== undefined && params.month !== undefined) {
             return await this.fetchTasksWithQuery(this.singleMonthQuery(params.month, params.year));
         }
@@ -151,10 +45,10 @@ export class DBClient {
         if(params.id !== undefined) {
             return await this.fetchTasksWithQuery(this.idQuery(params.id));
         }
-        return undefined;
+        return null;
     }
 
-    async fetchTasksWithQuery(query: QueryConfig): Promise<Task[] | undefined> {
+    async fetchTasksWithQuery(query: QueryConfig): Promise<Task[] | null> {
         try {
             const result = await this.client.query(query);
             return result.rows
@@ -163,7 +57,7 @@ export class DBClient {
                 .map((val: Task | undefined) => val!);
         } catch(err: any) {
             console.error(err.stack);
-            return undefined;
+            return null;
         }
     }
 
@@ -195,7 +89,7 @@ export class DBClient {
         };
     }
 
-    async insertTask(task: Task): Promise<number | undefined> {
+    async insertTask(task: Task): Promise<number | null> {
         const query = {
             name: "insert-task",
             text: `INSERT INTO tasks 
@@ -216,16 +110,16 @@ export class DBClient {
         try {
             const result = await this.client.query(query);
             if(result.rows.length != 1) {
-                return undefined;
+                return null;
             }
             const id = result.rows[0]["id"] as number;
             if(id === null || id === undefined) {
-                return undefined;
+                return null;
             }
             return id;
         } catch(err: any) {
             console.log(err.stack);
-            return undefined;
+            return null;
         }
     }
 
@@ -252,8 +146,8 @@ export class DBClient {
         };
 
         try {
-            await this.client.query(query);
-            return true;
+            const res = await this.client.query(query);
+            return res.rowCount > 0;
         } catch(err: any) {
             console.error(err.stack);
             return false;
@@ -268,12 +162,67 @@ export class DBClient {
         };
 
         try {
-            await this.client.query(query);
-            return true;
+            const res = await this.client.query(query);
+            return res.rowCount > 0;
         } catch(err: any) {
             console.error(err.stack);
             return false;
         }
+    }
+
+    async fetchConfig(): Promise<Config | null> {
+        const query = {
+            name: "fetch-config",
+            text: "SELECT * FROM config",
+        };
+
+        try {
+            const result = await this.client.query(query);
+            return parseConfig(result.rows);
+        } catch(err: any) {
+            console.error(err.stack);
+            return null;
+        }
+    }
+
+    async updateConfig(name: string, val: string | number): Promise<boolean> {
+        const updateQueryInt = {
+            name: "update-config-val_i",
+            text: "UPDATE config SET val_i=$1 WHERE name=$2",
+            values: [val, name],
+        };
+        const updateQueryStr = {
+            name: "update-config-val_i",
+            text: "UPDATE config SET val_s=$1 WHERE name=$2",
+            values: [val, name],
+        };
+
+        try {
+            const res = (typeof val === "string") ? await this.client.query(updateQueryStr) : await this.client.query(updateQueryInt);
+            return res.rowCount > 0;
+        } catch(err: any) {
+            console.error(err.stack);
+        }
+
+        const insertQueryInt = {
+            name: "insert-config-val_i",
+            text: "INSERT INTO config (name, val_i) VALUES ($1, $2)",
+            values: [name, val],
+        };
+        const insertQueryStr = {
+            name: "insert-config-val_s",
+            text: "INSERT INTO config (name, val_s) VALUES ($1, $2)",
+            values: [name, val],
+        };
+
+        try {
+            const res = (typeof val === "string") ? await this.client.query(insertQueryStr) : await this.client.query(insertQueryInt);
+            return res.rowCount > 0;
+        } catch(err: any) {
+            console.error(err.stack);
+        }
+
+        return false;
     }
 }
 

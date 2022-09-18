@@ -10,3 +10,11 @@ CREATE TABLE tasks
     PRIMARY KEY(id)
 );
 
+CREATE TABLE config
+(
+    name varchar(50),
+    val_s varchar(100),
+    val_i integer,
+    PRIMARY KEY(name)
+);
+
