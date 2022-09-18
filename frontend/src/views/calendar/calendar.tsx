@@ -59,7 +59,7 @@ function Calendar(props: Props) {
     const updateTask = useUpdateTask();
     const deleteTask = useDeleteTask();
     const [isGrabbed, setGrabbed] = useState(false);
-    const [resizeAction, setResize] = useState({state: false, direction: undefined} as ResizeAction);
+    const [resizeAction, setResize] = useState({state: false} as ResizeAction);
     const [startMovePos, setStartMovePos] = useState(new Position(0, 0));
     const [modifyObject, setModifyObject] = useState(undefined as string | undefined);
     const [tasks, setTasks] = useState(new Array() as Task[]);
@@ -336,13 +336,15 @@ function Calendar(props: Props) {
         };
 
         const cell = getMajorityCell();
-        if(cell === undefined) { return; }
-        const taskBasePos = new Position(task.x, task.y);
+        if(cell === undefined) { 
+            updateCellsInStore();
+            return; 
+        }
         task.setPosition(new Position(cell.x, cell.y));
 
         const endCell = findCell(new Position(task.x, task.y + task.height - task.minHeight / 2));
         if(endCell === undefined) {
-            task.setPosition(taskBasePos);
+            updateCellsInStore();
             return;
         }
         let endHour = endCell.hour;
@@ -374,24 +376,27 @@ function Calendar(props: Props) {
         setResize({state: false, direction: undefined});
         const task = tasks.find((value: Task)=>{ return value.id === modifyObject; });
         if(task === undefined) { return; }
-        const taskBasePos = new Position(task.x, task.y);
-        const taskBaseHeight = task.height;
 
         if(dir === ResizeDir.up) {
             const targetCell = findCell(new Position(task.x, task.y));
-            if(targetCell === undefined) { return; }
+            if(targetCell === undefined) { 
+                updateCellsInStore();
+                return; 
+            }
             task.resizeUp(targetCell.y - task.y);
         } else {
             const targetCell = findCell(new Position(task.x, task.y + task.height));
-            if(targetCell === undefined) { return; }
+            if(targetCell === undefined) { 
+                updateCellsInStore();
+                return; 
+            }
             task.resizeDown((targetCell.y + targetCell.height) - (task.y + task.height));
         }
 
         const baseCell = findCell(new Position(task.x, task.y + task.minHeight / 2));
         const endCell = findCell(new Position(task.x, task.y + task.height - task.minHeight / 2));
         if(baseCell === undefined || endCell === undefined) {
-            task.setPosition(taskBasePos);
-            task.height = taskBaseHeight;
+            updateCellsInStore();
             return;
         }
         let endHour = endCell.hour;
