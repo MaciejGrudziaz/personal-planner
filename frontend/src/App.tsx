@@ -18,7 +18,7 @@ function App() {
     const [weekStartDate, setWeekStartDate] = useState(getFirstDayOfTheWeek(new Date(Date.now())));
 
     return (
-        <Calendar weekStartDate={weekStartDate} changeWeek={(baseDate: Date)=>setWeekStartDate(baseDate)} />
+        <Calendar weekStartDate={weekStartDate} changeWeek={(baseDate: Date)=>setWeekStartDate(getFirstDayOfTheWeek(baseDate))} />
     );
 }
 

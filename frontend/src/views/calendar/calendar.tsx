@@ -168,8 +168,15 @@ function Calendar(props: Props) {
             setPointerState(undefined);
             return;
         }
+        const lastDayOfTheWeekDate = calcDate(6);
+        lastDayOfTheWeekDate.setHours(12);
+        const endCell = findCellByTime(lastDayOfTheWeekDate);
+        if(endCell === undefined) {
+            setPointerState(undefined);
+            return;
+        }
         const verticalOffset = Math.floor((currentDate.getMinutes() - matchingCell.quarter * 15) / 15 * matchingCell.height);
-        setPointerState({width: matchingCell.width, x: matchingCell.x, y: matchingCell.y + verticalOffset, baseX: baseCell.x});
+        setPointerState({width: matchingCell.width, x: matchingCell.x, y: matchingCell.y + verticalOffset, baseX: baseCell.x, endX: endCell.x});
     }
 
     const updateTimePointerWithInterval = (intervalInMs: number)=>{
@@ -425,6 +432,10 @@ function Calendar(props: Props) {
                 }}>&gt;&gt;</button>
                 <button type="button" className="change-week-btn" onClick={()=>updateCalendarFontSize(-1)}>-</button>
                 <button type="button" className="change-week-btn" onClick={()=>updateCalendarFontSize(1)}>+</button>
+                <button type="button" className="change-week-btn" onClick={()=>{
+                    init(false);
+                    props.changeWeek(new Date(Date.now()));
+                }}>today</button>
             </div>
             <div className="calendar-view" style={{fontSize: `${calendarFont.size}pt`}}
                 onMouseUp={()=>{
