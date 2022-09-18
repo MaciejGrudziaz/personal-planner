@@ -3,8 +3,10 @@ import TaskInput, {TaskInputStyle} from './task-input';
 import TaskTextArea from './task-text-area';
 import CalendarMonthView from './month-view/month-view';
 import TaskDropdownSelect from './task-dropdown-select';
-import {useStore, useDispatch} from 'react-redux';
-import {TaskState, TaskDate, TaskTime, TaskCategory, parseDateToBuiltin, parseDateToStr, updateTask} from '../../store/tasks';
+import {useStore} from 'react-redux';
+import {TaskState, TaskDate, TaskTime, TaskCategory, parseDateToBuiltin, parseDateToStr} from '../../store/tasks';
+import {useUpdateTask} from '../../gql-client/tasks/update';
+import {useCreateTask} from '../../gql-client/tasks/create';
 import './task-wnd.scss';
 
 interface Props {
@@ -30,7 +32,7 @@ function createDefaultTaskState(props: Props): TaskState {
         endTime: (props.endTime === undefined) ? {hour: 0, minute: 0} : props.endTime,
         basicInfo: (props.basicInfo === undefined) ? "" : props.basicInfo,
         description: (props.description === undefined) ? "" : props.description,
-        category: (props.category === undefined) ? {value: "simple"} : props.category
+        category: (props.category === undefined) ? "simple" : props.category
     };
 }
 
@@ -101,11 +103,12 @@ function setNewEndMinute(task: TaskState, val: string): TaskTime {
 }
 
 function TaskWnd(props: Props) {
+    const updateTask = useUpdateTask();
+    const createTask = useCreateTask();
     const [task, setTask] = useState(createDefaultTaskState(props));
     const [showCalendar, setShowCalendar] = useState(false);
     const dateInputRef = useRef() as RefObject<HTMLDivElement>;
     const store = useStore();
-    const dispatch = useDispatch();
 
     const timeInputStyle = {
         width: "1.75rem",
@@ -161,7 +164,11 @@ function TaskWnd(props: Props) {
     }
 
     const saveTask = ()=>{
-        dispatch(updateTask(task));
+        if(task.id === "") {
+            createTask(task);
+        } else {
+            updateTask(task);
+        }
         props.save();
         hideWindow();
     }
@@ -234,13 +241,12 @@ function TaskWnd(props: Props) {
                 </div>
                 {popupCalendar()}
                 <div className="task-line-container">
-                    <TaskDropdownSelect options={categories} initValue={task.category.value} label={"category"} 
+                    <TaskDropdownSelect options={categories} initValue={task.category} label={"category"} 
                         select={(val: string)=>{
                             if(val !== "simple" && val !== "important") {
                                 return;
                             }
-                            console.log(`select: ${val}`);
-                            setTask({...task, category: {value: val}});
+                            setTask({...task, category: val});
                         }}
                     />
                 </div>

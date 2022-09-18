@@ -232,7 +232,7 @@ export class DBClient {
     async updateTask(task: Task): Promise<boolean> {
         const query = {
             name: "update-task",
-            text: `UDPATE tasks
+            text: `UPDATE tasks
                    SET start_time=$1,
                        end_time=$2,
                        date=$3,
@@ -246,7 +246,8 @@ export class DBClient {
                 taskDateToDate(task.date),
                 task.basic_info,
                 task.description,
-                mapCategory(task.category)
+                mapCategory(task.category),
+                task.id
             ],
         };
 

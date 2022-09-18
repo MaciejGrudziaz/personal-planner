@@ -23,9 +23,10 @@ export function parseDateToBuiltin(date: TaskDate): Date {
     return new Date(date.year, date.month, date.day);
 }
 
-export interface TaskCategory {
-    value: "simple" | "important";
-}
+// export interface TaskCategory {
+//     value: "simple" | "important";
+// }
+export type TaskCategory = "simple" | "important";
 
 export interface TaskState {
     id: string;
@@ -58,17 +59,11 @@ export function findTasksForWeek(date: Date, state: TaskState[]): TaskState[] {
     });
 }
 
-function generateId(task: TaskState): string {
-    const id = task.date.year ^ task.date.month ^ task.date.day ^ task.startTime.hour ^ task.startTime.minute ^ task.endTime.hour ^ task.endTime.minute;
-    console.log(id);
-    return id.toFixed();
-}
-
 const initialState: TaskState[]  = [
-                    {id: "task1", date: {year: 2022, month: 8, day: 12}, startTime: {hour: 12, minute: 0}, endTime: {hour: 14, minute:0}, basicInfo: "task 1 basic info", description: "task 1 description", category: {value: "important"}},
-                    {id: "task2", date: {year: 2022, month: 8, day: 13}, startTime: {hour: 10, minute: 30}, endTime: {hour: 11, minute: 35}, basicInfo: "task 2 basic info", description: "task 2 description", category: {value: "simple"}},
-                    {id: "task3", date: {year: 2022, month: 8, day: 14}, startTime: {hour: 14, minute: 30}, endTime: {hour: 18, minute: 30}, basicInfo: "task 3 basicInfo", description: "task 3 description", category: {value: "simple"}},
-                    {id: "task4", date: {year: 2022, month: 8, day: 15}, startTime: {hour: 14, minute: 30}, endTime: {hour: 18, minute: 39}, basicInfo: "task 4 basic info", description: "task 4 description", category: {value: "simple"}},
+//                     {id: "task1", date: {year: 2022, month: 8, day: 12}, startTime: {hour: 12, minute: 0}, endTime: {hour: 14, minute:0}, basicInfo: "task 1 basic info", description: "task 1 description", category: {value: "important"}},
+//                     {id: "task2", date: {year: 2022, month: 8, day: 13}, startTime: {hour: 10, minute: 30}, endTime: {hour: 11, minute: 35}, basicInfo: "task 2 basic info", description: "task 2 description", category: {value: "simple"}},
+//                     {id: "task3", date: {year: 2022, month: 8, day: 14}, startTime: {hour: 14, minute: 30}, endTime: {hour: 18, minute: 30}, basicInfo: "task 3 basicInfo", description: "task 3 description", category: {value: "simple"}},
+//                     {id: "task4", date: {year: 2022, month: 8, day: 15}, startTime: {hour: 14, minute: 30}, endTime: {hour: 18, minute: 39}, basicInfo: "task 4 basic info", description: "task 4 description", category: {value: "simple"}},
 ];
 
 export const tasksSlice = createSlice({
@@ -84,7 +79,7 @@ export const tasksSlice = createSlice({
         updateTask: (state, action: PayloadAction<TaskState>) => {
             const newTask = action.payload;
             if(newTask.id === "") {
-                newTask.id = generateId(newTask);
+                return state;
             }
             return state.filter((val: TaskState) => val.id !== newTask.id).concat(newTask);
         },

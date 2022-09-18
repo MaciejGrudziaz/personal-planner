@@ -171,7 +171,7 @@ export class Task {
 }
 
 function getColor(category: TaskCategory): string {
-    switch(category.value) {
+    switch(category) {
         case "simple":
             return "#e9c46a";
         case "important":
@@ -180,7 +180,7 @@ function getColor(category: TaskCategory): string {
 }
 
 function getBorderColor(category: TaskCategory): string {
-    switch(category.value) {
+    switch(category) {
         case "simple":
             return "#926F16";
         case "important":

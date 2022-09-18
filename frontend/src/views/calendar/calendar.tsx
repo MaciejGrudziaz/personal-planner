@@ -6,8 +6,10 @@ import TaskWnd from './task-wnd';
 import {CellBasicInfo, extractDate, extractStartTime, extractEndTime} from './hour';
 import CalendarTask, {Task, Position, ResizeDir} from './task';
 import CurrentTimePointer, {PointerState} from './current-time-pointer';
-import {updateTask, deleteTask, TaskState, findTasksForWeek, parseDateToBuiltin, TaskDate, TaskTime, TaskCategory} from '../../store/tasks';
-import {useFetchTasks} from '../../gql-client/queries';
+import {TaskState, findTasksForWeek, parseDateToBuiltin, TaskDate, TaskTime, TaskCategory} from '../../store/tasks';
+import {useFetchTasks} from '../../gql-client/tasks/fetch';
+import {useUpdateTask} from '../../gql-client/tasks/update';
+import {useDeleteTask} from '../../gql-client/tasks/delete';
 import './calendar.css';
 
 interface ResizeAction {
@@ -54,6 +56,8 @@ interface WndTaskInfo {
 
 function Calendar(props: Props) {
     const fetchTasksFromApi = useFetchTasks();
+    const updateTask = useUpdateTask();
+    const deleteTask = useDeleteTask();
     const [isGrabbed, setGrabbed] = useState(false);
     const [resizeAction, setResize] = useState({state: false, direction: undefined} as ResizeAction);
     const [startMovePos, setStartMovePos] = useState(new Position(0, 0));
@@ -79,7 +83,7 @@ function Calendar(props: Props) {
             return; 
         }
         window.addEventListener('resize', updateCellsInStore);
-        fetchTasksFromApi();
+        fetchTasksFromApi({year: props.weekStartDate.getFullYear(), month: props.weekStartDate.getMonth() + 1});
         setTimeout(()=>updateTimePointerWithInterval(60 * 1000), 60 * 1000);
         updateCellsInStore();
         fetchTasks();
@@ -261,7 +265,7 @@ function Calendar(props: Props) {
                 setWndTaskInfo({id: value.id, date: value.getDate(props.weekStartDate), startTime: value.startTime, endTime: value.endTime, basicInfo: value.basicInfo, description: value.description, category: value.category, show: true});
             }}
             deleteTask={()=>{
-                store.dispatch(deleteTask(value.id));
+                deleteTask(value.id);
             }}
         />
     ));
@@ -348,7 +352,7 @@ function Calendar(props: Props) {
             endQuarter = 0;
         }
         task.updateTime(cell.day, cell.hour, cell.quarter, endHour, endQuarter);
-        dispatch(updateTask(task.toTaskState(props.weekStartDate)));
+        updateTask(task.toTaskState(props.weekStartDate));
 
         calcOverlapping();
         setTasks([...tasks]);
@@ -398,7 +402,7 @@ function Calendar(props: Props) {
         }
         task.updateTime(baseCell.day, baseCell.hour, baseCell.quarter, endHour, endQuarter);
 
-        dispatch(updateTask(task.toTaskState(props.weekStartDate)));
+        updateTask(task.toTaskState(props.weekStartDate));
         calcOverlapping();
         setTasks([...tasks]);
     }

@@ -22,8 +22,8 @@ function getResolver(db: DBClient): Resolver {
                 start_time: (args.start_time === undefined) ? null : args.start_time,
                 end_time: (args.end_time === undefined) ? null : args.end_time,
                 date: args.date,
-                basic_info: (args.basic_info) ? null : args.basic_info,
-                description: (args.description) ? null : args.description,
+                basic_info: (args.basic_info === undefined) ? null : args.basic_info,
+                description: (args.description === undefined) ? null : args.description,
                 category: args.category
             });
             if(id === undefined) {
@@ -37,8 +37,8 @@ function getResolver(db: DBClient): Resolver {
                 start_time: (args.start_time === undefined) ? null : args.start_time,
                 end_time: (args.end_time === undefined) ? null : args.end_time,
                 date: args.date,
-                basic_info: (args.basic_info) ? null : args.basic_info,
-                description: (args.description) ? null : args.description,
+                basic_info: (args.basic_info === undefined) ? null : args.basic_info,
+                description: (args.description === undefined) ? null : args.description,
                 category: args.category
             });
         },
