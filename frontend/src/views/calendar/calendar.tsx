@@ -74,7 +74,6 @@ function Calendar(props: Props) {
     const dayMapping: Map<number, string> = new Map([[0, "monday"], [1, "tuesday"], [2, "wednesday"], [3, "thursday"], [4, "friday"], [5, "saturday"], [6, "sunday"]]);
 
     const store = useStore();
-    const dispatch = useDispatch();
 
     useEffect(()=>{
         if(isInitialized) {

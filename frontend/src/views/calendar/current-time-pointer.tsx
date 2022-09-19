@@ -1,6 +1,6 @@
 import React, {useEffect} from 'react';
 import {CellInfo} from './calendar';
-import './current-time-pointer.css';
+import './current-time-pointer.scss';
 
 export interface PointerState {
     width: number;

@@ -1,5 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import Calendar from './views/calendar/calendar';
+import SideMenu from './views/side-menu/side-menu';
 import { useFetchConfig } from './gql-client/config/fetch';
 
 const getFirstDayOfTheWeek = (date: Date): Date => {
@@ -27,7 +28,10 @@ function App() {
     });
 
     return (
-        <Calendar weekStartDate={weekStartDate} changeWeek={(baseDate: Date)=>setWeekStartDate(getFirstDayOfTheWeek(baseDate))} />
+        <>
+            <Calendar weekStartDate={weekStartDate} changeWeek={(baseDate: Date)=>setWeekStartDate(getFirstDayOfTheWeek(baseDate))} />
+            <SideMenu />
+        </>
     );
 }
 

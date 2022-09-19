@@ -1,11 +1,13 @@
 import { configureStore, ThunkAction, Action } from '@reduxjs/toolkit';
 import tasksReducer from './tasks';
 import configReducer from './config';
+import todosReducer from './todos';
 
 export const store = configureStore({
   reducer: {
     tasksState: tasksReducer,
     configState: configReducer,
+    todosState: todosReducer,
   },
 });
 

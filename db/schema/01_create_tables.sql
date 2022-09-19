@@ -18,3 +18,18 @@ CREATE TABLE config
     PRIMARY KEY(name)
 );
 
+CREATE TABLE todo_tasks
+(
+    id serial,
+    content varchar(150),
+    priority integer,
+    PRIMARY KEY(id)
+);
+
+CREATE TABLE done_tasks
+(
+    task_id integer,
+    PRIMARY KEY(task_id),
+    FOREIGN KEY(task_id) REFERENCES todo_tasks(id) ON DELETE CASCADE
+);
+
