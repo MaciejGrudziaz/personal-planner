@@ -6,20 +6,28 @@ import './todo-ticket.scss';
 interface Props {
     val: TodoTicketState
     mousePos?: Position;
-}
-
-interface MoveStatus {
-    isGrabbed: boolean;
-    position?: Position;
+    mouseDown: ()=>void;
+    mouseUp: ()=>void;
 }
 
 function TodoTicket(props: Props) {
     const [isGrabbed, setIsGrabbed] = useState(false);
+    const [toggle, setToggle] = useState(false);
 
-    if(isGrabbed) {
+    useEffect(()=>{
+        if(toggle && props.mousePos === undefined) {
+            setIsGrabbed(false);
+            setToggle(false);
+        }
+    });
+
+    if(isGrabbed && props.mousePos !== undefined) {
+        if(!toggle) { setToggle(true); }
         return (
             <div className="todo-ticket" style={{
-                position: "absolute", 
+                position: "absolute",
+                top: props.mousePos.y,
+                left: props.mousePos.x,
             }}>
                 {props.val.text}
             </div>
@@ -30,6 +38,10 @@ function TodoTicket(props: Props) {
         <div className="todo-ticket" style={{display: "flex", alignItems: "center"}} 
             onMouseDown={(e: React.MouseEvent<HTMLDivElement>) => {
                 setIsGrabbed(true);
+                props.mouseDown();
+            }}
+            onMouseUp={(e: React.MouseEvent<HTMLDivElement>)=> {
+                props.mouseUp();
             }}
         >
             {props.val.text}

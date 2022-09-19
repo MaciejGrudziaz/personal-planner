@@ -1,25 +1,46 @@
 import React, {useEffect, useState} from 'react';
-import { TodoGroup as TodoGroupState, TodoTicket as TodoTicketState, sortTickets} from '../../store/todos';
+import { useDispatch } from 'react-redux';
+import { TodoGroup as TodoGroupState, TodoTicket as TodoTicketState, sortTickets, moveTicket} from '../../store/todos';
 import TodoTicket from './todo-ticket';
 import { Position } from '../calendar/task';
 import './todo-group.scss';
 
 interface Props {
     val: TodoGroupState;
+    basePos?: Position;
 }
 
 function TodoGroup(props: Props) {
     const [mousePos, setMousePos] = useState(undefined as Position | undefined);
+    const [grabbedTicket, setGrabbedTicket] = useState(undefined as string | undefined);
+    const dispatch = useDispatch();
+
     const tickets = () => sortTickets(props.val.tickets).map((ticket: TodoTicketState) => (
-        <TodoTicket key={ticket.priority} val={ticket} mousePos={mousePos} />
+        <TodoTicket key={ticket.priority} val={ticket} mousePos={mousePos}
+            mouseDown={()=>{
+                setGrabbedTicket(ticket.id);
+            }}
+            mouseUp={()=>{
+                setMousePos(undefined);
+                if(grabbedTicket === undefined) { return; }
+                dispatch(moveTicket({ticketId: grabbedTicket, priority: ticket.priority - 1, groupId: props.val.id}));
+                setGrabbedTicket(undefined);
+            }}
+        />
     ));
 
     return (
         <div className="todo-group"
             onMouseMove={(e: React.MouseEvent<HTMLDivElement>)=>{
-                const pos = new Position(e.clientX, e.clientY);
-                console.log(`move pos: ${pos.x}, ${pos.y}`);
+                if(props.basePos === undefined || e.buttons === 0) {
+                    setMousePos(undefined);
+                    return;
+                }
+                const pos = new Position(e.clientX - props.basePos.x, e.clientY - props.basePos.y);
                 setMousePos(pos);
+            }}
+            onMouseUp={()=>{
+                setMousePos(undefined);
             }}
         >
             <div style={{display: "flex", alignItems: "center"}}>

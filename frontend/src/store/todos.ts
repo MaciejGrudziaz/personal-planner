@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import TodoGroup from '../views/side-menu/todo-group';
 
 export interface TodoTicket {
     priority: number;
@@ -43,6 +44,7 @@ interface Args {
     ordinal?: number;
     name?: string;
     ticketId?: string;
+    priority?: number;
     ticket?: TodoTicket;
 }
 
@@ -65,14 +67,7 @@ export const todosSlice = createSlice({
             if(groupId === undefined || ordinal === undefined) {
                 return state;
             }
-            return {content: state.content.map((val: TodoGroup) => {
-                    if(val.id !== groupId) {
-                        return val;
-                    }
-                    val.ordinal = ordinal;
-                    return val;
-                })
-            };
+            return {content: state.content.map((val: TodoGroup) => (val.id !== groupId) ? val : {...val, ordinal: ordinal})};
         },
         renameGroup: (state: TodoState, action: PayloadAction<Args>) => {
             const groupId = action.payload.groupId;
@@ -80,14 +75,7 @@ export const todosSlice = createSlice({
             if(groupId === undefined || name === undefined) {
                 return state;
             }
-            return {content: state.content.map((val: TodoGroup) => {
-                    if(val.id !== groupId) {
-                        return val;
-                    }
-                    val.name = name;
-                    return val;
-                })
-            };
+            return {content: state.content.map((val: TodoGroup) => (val.id !== groupId) ? val : {...val, name: name})};
         },
         deleteGroup: (state: TodoState, action: PayloadAction<Args>) => {
             const groupId = action.payload.groupId;
@@ -102,12 +90,35 @@ export const todosSlice = createSlice({
             if(groupId === undefined || ticket === undefined || ticket.id === "") {
                 return state;
             }
-            return {content: state.content.map((val: TodoGroup) => {
+            return {
+                content: state.content.map((val: TodoGroup) => {
                     if(val.id !== groupId) {
                         return val;
                     }
-                    val.tickets.push(ticket);
-                    return val;
+                    return {...val, tickets: val.tickets.concat([ticket])};
+                })
+            };
+        },
+        moveTicket: (state: TodoState, action: PayloadAction<Args>) => {
+            const ticketId = action.payload.ticketId;
+            const priority = action.payload.priority;
+            const groupId = action.payload.groupId;
+
+            if(ticketId === undefined || priority === undefined || groupId === undefined) {
+                return state;
+            }
+
+            return {
+                content: state.content.map((val: TodoGroup) => {
+                    if(val.id !== groupId) {
+                        return val;
+                    }
+                    return {...val, tickets: val.tickets.map((ticket: TodoTicket) => {
+                        if(ticket.id !== ticketId) {
+                            return ticket;
+                        }
+                        return {...ticket, priority: priority };
+                    })}
                 })
             };
         },
@@ -117,17 +128,17 @@ export const todosSlice = createSlice({
             if(modifiedTicket === undefined || groupId === undefined) {
                 return state;
             }
-            return {content: state.content.map((val: TodoGroup) => {
-                    if(val.id !== groupId) {
+            return {
+                content: state.content.map((val: TodoGroup) => {
+                    if (val.id !== groupId) {
                         return val;
                     }
                     return {...val, tickets: val.tickets.map((ticket: TodoTicket) => {
-                            if(ticket.id !== modifiedTicket.id) {
-                                return ticket;
-                            }
-                            return modifiedTicket;
-                        })
-                    };
+                        if(ticket.id !== modifiedTicket.id) {
+                            return ticket;
+                        }
+                        return modifiedTicket;
+                    })};
                 })
             };
         },
@@ -137,7 +148,8 @@ export const todosSlice = createSlice({
             if(groupId === undefined || ticketId === undefined) {
                 return state;
             }
-            return {content: state.content.map((val: TodoGroup) => {
+            return {
+                content: state.content.map((val: TodoGroup) => {
                     if(val.id !== groupId) {
                         return val;
                     }
@@ -148,7 +160,7 @@ export const todosSlice = createSlice({
     }
 });
 
-export const { createGroup, moveGroup, renameGroup, deleteGroup, createTicket, modifyTicket, deleteTicket } = todosSlice.actions;
+export const { createGroup, moveGroup, renameGroup, deleteGroup, createTicket, moveTicket, modifyTicket, deleteTicket } = todosSlice.actions;
 
 export default todosSlice.reducer;
 
