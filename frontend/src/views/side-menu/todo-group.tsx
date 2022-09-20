@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import { useDispatch } from 'react-redux';
-import { TodoGroup as TodoGroupState, TodoTicket as TodoTicketState, sortTickets, moveTicket} from '../../store/todos';
+import { TodoGroup as TodoGroupState, TodoTicket as TodoTicketState, sortTickets, moveTicket, createTicket, createGroup} from '../../store/todos';
 import TodoTicket from './todo-ticket';
 import { Position } from '../calendar/task';
 import './todo-group.scss';
@@ -8,6 +8,7 @@ import './todo-group.scss';
 interface Props {
     val: TodoGroupState;
     basePos?: Position;
+    baseSize?: Position;
 }
 
 function TodoGroup(props: Props) {
@@ -16,7 +17,12 @@ function TodoGroup(props: Props) {
     const dispatch = useDispatch();
 
     const tickets = () => sortTickets(props.val.tickets).map((ticket: TodoTicketState) => (
-        <TodoTicket key={ticket.priority} val={ticket} mousePos={mousePos}
+        <TodoTicket key={ticket.priority} 
+            val={ticket}
+            mousePos={mousePos} 
+            sideMenuBasePos={props.basePos} 
+            sideMenuBaseSize={props.baseSize}
+            groupId={props.val.id}
             mouseDown={()=>{
                 setGrabbedTicket(ticket.id);
             }}

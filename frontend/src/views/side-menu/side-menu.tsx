@@ -9,6 +9,7 @@ import './side-menu.scss';
 function SideMenu() {
     const [isOpened, setOpen] = useState(false);
     const [basePos, setBasePos] = useState(undefined as Position | undefined);
+    const [size, setSize] = useState(undefined as Position | undefined);
     const [isInitialized, setInit] = useState(false);
     const [todoGroups, setTodoGroups] = useState([] as TodoGroupState[]);
     const ref = useRef() as RefObject<HTMLDivElement>;
@@ -20,6 +21,7 @@ function SideMenu() {
         const el = ref.current;
         if(el === undefined || el === null) { return; }
         setBasePos(new Position(el.offsetLeft, el.offsetTop));
+        setSize(new Position(el.offsetWidth, el.offsetHeight));
 
         store.subscribe(fetchTodos);
         fetchTodos();
@@ -32,7 +34,7 @@ function SideMenu() {
     };
 
     const groups = todoGroups.map((todo: TodoGroupState)=>(
-        <TodoGroup key={todo.ordinal} val={todo} basePos={basePos} />
+        <TodoGroup key={todo.ordinal} val={todo} basePos={basePos} baseSize={size}/>
     ));
 
     if(!isOpened) {

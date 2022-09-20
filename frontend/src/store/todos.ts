@@ -128,6 +128,7 @@ export const todosSlice = createSlice({
             if(modifiedTicket === undefined || groupId === undefined) {
                 return state;
             }
+            console.log("delete ticket");
             return {
                 content: state.content.map((val: TodoGroup) => {
                     if (val.id !== groupId) {

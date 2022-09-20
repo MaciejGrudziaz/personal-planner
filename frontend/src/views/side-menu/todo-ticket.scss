@@ -1,4 +1,9 @@
 .todo-ticket {
     border: 1px solid black;
     padding: 0.5rem;
+    background-color: white;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    width: 90%;
 }
