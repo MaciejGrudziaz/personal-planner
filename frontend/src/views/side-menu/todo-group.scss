@@ -3,3 +3,10 @@
     padding: 1rem;
 }
 
+.todo-group-header {
+    padding: 0.1rem 1rem;
+    border: 1px solid black;
+    cursor: grab;
+    user-select: none;
+}
+

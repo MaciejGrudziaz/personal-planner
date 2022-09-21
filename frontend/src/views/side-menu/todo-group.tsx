@@ -1,23 +1,28 @@
-import React, {useEffect, useState} from 'react';
+import React, {RefObject, useEffect, useState, useRef} from 'react';
 import { useDispatch } from 'react-redux';
-import { TodoGroup as TodoGroupState, TodoTicket as TodoTicketState, sortTickets, moveTicket, createTicket, createGroup} from '../../store/todos';
+import { TodoGroup as TodoGroupState, TodoTicket as TodoTicketState, sortTickets, moveTicket, createTicket, deleteGroup} from '../../store/todos';
 import TodoTicket from './todo-ticket';
+import FloatingTextInput from './floating-text-input';
 import { Position } from '../calendar/task';
 import './todo-group.scss';
+import {ReducerFromReducersMapObject} from '@reduxjs/toolkit';
 
 interface Props {
     val: TodoGroupState;
     basePos?: Position;
     baseSize?: Position;
+    mousePos?: Position;
 }
 
 function TodoGroup(props: Props) {
     const [mousePos, setMousePos] = useState(undefined as Position | undefined);
     const [grabbedTicket, setGrabbedTicket] = useState(undefined as string | undefined);
+    const [showTicketInput, setShowTicketInput] = useState(false);
+    const groupHeaderRef = useRef() as RefObject<HTMLDivElement>;
     const dispatch = useDispatch();
 
     const tickets = () => sortTickets(props.val.tickets).map((ticket: TodoTicketState) => (
-        <TodoTicket key={ticket.priority} 
+        <TodoTicket key={ticket.id} 
             val={ticket}
             mousePos={mousePos} 
             sideMenuBasePos={props.basePos} 
@@ -35,6 +40,32 @@ function TodoGroup(props: Props) {
         />
     ));
 
+    const ticketFloatingInput = () => {
+        const el = groupHeaderRef.current;
+        if(!showTicketInput || el === undefined || el === null) {
+            return (<></>);
+        }
+
+        const boundingRect = el.getBoundingClientRect();
+        let x = boundingRect.x;
+        let y = boundingRect.y + 0.75 * boundingRect.height;
+        if(props.basePos) {
+            x -= props.basePos.x;
+            y -= props.basePos.y;
+        }
+
+        return (
+            <FloatingTextInput x={x} y={y} width={"75%"}
+                close={()=>setShowTicketInput(false)} 
+                save={(val: string)=>{
+                    const tickets = props.val.tickets;
+                    const priority = (tickets.length === 0) ? 0 : tickets[tickets.length - 1].priority + 1;
+                    dispatch(createTicket({groupId: props.val.id, ticket: {id: Date.now().toFixed(), text: val, done: false, priority: priority}}));
+                }}
+            />
+        );
+    };
+
     return (
         <div className="todo-group"
             onMouseMove={(e: React.MouseEvent<HTMLDivElement>)=>{
@@ -49,10 +80,19 @@ function TodoGroup(props: Props) {
                 setMousePos(undefined);
             }}
         >
-            <div style={{display: "flex", alignItems: "center"}}>
-                <h4>{props.val.name}</h4>
-                <button type="button" style={{marginLeft: "1rem", width: "1.5rem", height: "1.5rem"}}>+</button>
-                <button type="button" style={{marginLeft: "auto", marginRight: "0.5rem", width: "1.5rem", height: "1.5rem"}}>x</button>
+            <div ref={groupHeaderRef} style={{display: "flex", alignItems: "center"}}>
+                <h4 className="todo-group-header"
+                    onMouseDown={()=>{
+                        
+                    }}
+                >{props.val.name}</h4>
+                <button type="button" style={{marginLeft: "1rem", width: "1.5rem", height: "1.5rem"}}
+                    onClick={()=>setShowTicketInput(true)}
+                >+</button>
+                {ticketFloatingInput()}
+                <button type="button" style={{marginLeft: "auto", marginRight: "0.5rem", width: "1.5rem", height: "1.5rem"}}
+                    onClick={()=>dispatch(deleteGroup({groupId: props.val.id}))}
+                >x</button>
             </div>
             {tickets()}
         </div>

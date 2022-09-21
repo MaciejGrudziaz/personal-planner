@@ -36,6 +36,10 @@ function TodoTicket(props: Props) {
         setInit(true);
     });
 
+    useEffect(()=>{
+        setTodo(props.val);
+    }, [props.val]);
+
     if(isGrabbed && props.mousePos !== undefined) {
         if(!toggle) { setToggle(true); }
         return (
@@ -64,55 +68,73 @@ function TodoTicket(props: Props) {
                 edit={()=>{
                     setEdit(true);
                 }}
+                delete={()=>{
+                    if(todo === undefined) return;
+                    dispatch(deleteTicket({groupId: props.groupId, ticketId: todo.id}));
+                }}
             />
         );
     }
 
-    if(isEdit && todo !== undefined) {
+    const ticketContent = () => {
+        if(isEdit && todo !== undefined) {
+            return (
+                <input value={todo.text} autoFocus={true} className="todo-ticket"
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>)=>{
+                        setTodo({...todo, text: e.target.value});
+                    }}
+                    onBlur={()=> setEdit(false)}
+                    onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>)=>{
+                        if(e.key === "Escape" || e.key === "Tab") {
+                            setEdit(false);
+                            return;
+                        }
+                        if(e.key === "Enter") {
+                            dispatch(modifyTicket({groupId: props.groupId, ticket: todo}));
+                            setEdit(false);
+                            return;
+                        }
+                    }}
+                />
+            );
+        }
         return (
-            <input value={todo.text} autoFocus={true} className="todo-ticket" 
-                onChange={(e: React.ChangeEvent<HTMLInputElement>)=>{
-                    setTodo({...todo, text: e.target.value});
+            <div ref={ticketRef} className="todo-ticket"
+                onContextMenu={(e: React.MouseEvent<HTMLDivElement>)=> {
+                    e.preventDefault();
+                    if(props.sideMenuBasePos === undefined) { return; }
+                    setEditMenuOpen(true);
+                    const pos = new Position(e.clientX - props.sideMenuBasePos.x, e.clientY - props.sideMenuBasePos.y);
+                    setEditMenuPos(pos);
                 }}
-                onBlur={()=> setEdit(false)}
-                onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>)=>{
-                    if(e.key === "Escape" || e.key === "Tab") {
-                        setEdit(false);
-                        return;
-                    }
-                    if(e.key === "Enter") {
-                        dispatch(modifyTicket({groupId: props.groupId, ticket: todo}));
-                        setEdit(false);
-                        return;
-                    }
+                onMouseDown={(e: React.MouseEvent<HTMLDivElement>) => {
+                    if(e.button !== 0) { return; }
+                    setIsGrabbed(true);
+                    props.mouseDown();
+                    e.stopPropagation();
                 }}
-            />
+                onMouseUp={(e: React.MouseEvent<HTMLDivElement>)=> {
+                    props.mouseUp();
+                }}
+            >
+                {props.val.text}
+            </div>
         );
-    }
+    };
 
     return (
         <>
             <div style={{display: "flex"}}>
-                <div ref={ticketRef} className="todo-ticket"
-                    onContextMenu={(e: React.MouseEvent<HTMLDivElement>)=> {
-                        e.preventDefault();
-                        if(props.sideMenuBasePos === undefined) { return; }
-                        setEditMenuOpen(true);
-                        const pos = new Position(e.clientX - props.sideMenuBasePos.x, e.clientY - props.sideMenuBasePos.y);
-                        setEditMenuPos(pos);
-                    }}
-                    onMouseDown={(e: React.MouseEvent<HTMLDivElement>) => {
-                        if(e.button !== 0) { return; }
-                        setIsGrabbed(true);
-                        props.mouseDown();
-                        e.stopPropagation();
-                    }}
-                    onMouseUp={(e: React.MouseEvent<HTMLDivElement>)=> {
-                        props.mouseUp();
-                    }}
-                >
-                    {props.val.text}
-                </div>
+                <input type="checkbox"
+                    style={{margin: "auto"}}
+                    checked={(todo) ? todo.done : false}
+                    onChange={()=>{
+                        if(todo === undefined) return;
+                        setTodo({...todo, done: !todo.done});
+                        dispatch(modifyTicket({groupId: props.groupId, ticket: {...todo, done: !todo.done}}));
+                    }
+                } />
+                {ticketContent()}
                 <button type="button" style={{width: "1.5rem", height: "1.5rem", margin: "auto"}}
                     onClick={() => {
                         if(todo === undefined) return;

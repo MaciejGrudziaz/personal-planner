@@ -114,10 +114,13 @@ export const todosSlice = createSlice({
                         return val;
                     }
                     return {...val, tickets: val.tickets.map((ticket: TodoTicket) => {
-                        if(ticket.id !== ticketId) {
-                            return ticket;
+                        if(ticket.id === ticketId) {
+                            return {...ticket, priority: priority };
                         }
-                        return {...ticket, priority: priority };
+                        if(ticket.priority <= priority) {
+                            return {...ticket, priority: ticket.priority - 1};
+                        }
+                        return ticket;
                     })}
                 })
             };
