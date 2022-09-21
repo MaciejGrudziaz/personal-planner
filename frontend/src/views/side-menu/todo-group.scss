@@ -5,8 +5,17 @@
 
 .todo-group-header {
     padding: 0.1rem 1rem;
-    border: 1px solid black;
-    cursor: grab;
     user-select: none;
+}
+
+.todo-group-priority-btn-grid {
+    display: block;
+    width: 1.5rem;
+}
+
+.todo-group-priority-btn {
+    display: block;
+    width: 1.5rem;
+    padding: 0;
 }
 

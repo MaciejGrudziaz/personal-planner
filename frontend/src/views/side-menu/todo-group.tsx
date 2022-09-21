@@ -1,11 +1,10 @@
 import React, {RefObject, useEffect, useState, useRef} from 'react';
 import { useDispatch } from 'react-redux';
-import { TodoGroup as TodoGroupState, TodoTicket as TodoTicketState, sortTickets, moveTicket, createTicket, deleteGroup} from '../../store/todos';
+import { TodoGroup as TodoGroupState, TodoTicket as TodoTicketState, sortTickets, moveTicket, createTicket, deleteGroup, moveGroup} from '../../store/todos';
 import TodoTicket from './todo-ticket';
 import FloatingTextInput from './floating-text-input';
 import { Position } from '../calendar/task';
 import './todo-group.scss';
-import {ReducerFromReducersMapObject} from '@reduxjs/toolkit';
 
 interface Props {
     val: TodoGroupState;
@@ -81,11 +80,19 @@ function TodoGroup(props: Props) {
             }}
         >
             <div ref={groupHeaderRef} style={{display: "flex", alignItems: "center"}}>
-                <h4 className="todo-group-header"
-                    onMouseDown={()=>{
-                        
-                    }}
-                >{props.val.name}</h4>
+                <div className="todo-group-priority-btn-grid">
+                    <button className="todo-group-priority-btn"
+                        onClick={()=>{
+                            dispatch(moveGroup({groupId: props.val.id, direction: "up"}));
+                        }}
+                    >+</button>
+                    <button className="todo-group-priority-btn"
+                        onClick={()=>{
+                            dispatch(moveGroup({groupId: props.val.id, direction: "down"}));
+                        }}
+                    >-</button>
+                </div>
+                <h4 className="todo-group-header">{props.val.name}</h4>
                 <button type="button" style={{marginLeft: "1rem", width: "1.5rem", height: "1.5rem"}}
                     onClick={()=>setShowTicketInput(true)}
                 >+</button>

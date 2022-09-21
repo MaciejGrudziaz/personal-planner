@@ -46,6 +46,7 @@ interface Args {
     ticketId?: string;
     priority?: number;
     ticket?: TodoTicket;
+    direction?: "up" | "down";
 }
 
 export const todosSlice = createSlice({
@@ -62,12 +63,33 @@ export const todosSlice = createSlice({
             return {content: state.content.concat([{id: groupId, ordinal: groupOrdinal, name: groupName, tickets: []}])};
         },
         moveGroup: (state: TodoState, action: PayloadAction<Args>) => {
+            console.log("moveGroup action");
             const groupId = action.payload.groupId;
-            const ordinal = action.payload.ordinal;
-            if(groupId === undefined || ordinal === undefined) {
+            const direction = action.payload.direction;
+            if(groupId === undefined || direction === undefined) {
                 return state;
             }
-            return {content: state.content.map((val: TodoGroup) => (val.id !== groupId) ? val : {...val, ordinal: ordinal})};
+            const sortedGroups = [...state.content].sort((lhs: TodoGroup, rhs: TodoGroup) => lhs.ordinal - rhs.ordinal);
+            const id = sortedGroups.findIndex((val: TodoGroup) => val.id === groupId);
+            if(id === -1) {
+                return state;
+            }
+            if((direction === "up" && id === 0) || (direction === "down" && id === sortedGroups.length - 1)) {
+                return state;
+            }
+            const newOrdinal = (direction === "up") ? sortedGroups[id - 1].ordinal - 1 : sortedGroups[id + 1].ordinal + 1;
+            return {content: state.content.map((val: TodoGroup) => {
+                if(val.id === groupId) {
+                    return {...val, ordinal: newOrdinal};
+                }
+                if(direction === "up" && val.ordinal <= newOrdinal) {
+                    return {...val, ordinal: val.ordinal - 1};
+                }
+                if(direction === "down" && val.ordinal >= newOrdinal) {
+                    return {...val, ordinal: val.ordinal + 1};
+                }
+                return val;
+            })};
         },
         renameGroup: (state: TodoState, action: PayloadAction<Args>) => {
             const groupId = action.payload.groupId;
