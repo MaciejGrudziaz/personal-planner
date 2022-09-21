@@ -9,8 +9,6 @@ import './todo-group.scss';
 
 interface Props {
     val: TodoGroupState;
-    basePos?: Position;
-    baseSize?: Position;
     mousePos?: Position;
 }
 
@@ -44,8 +42,6 @@ function TodoGroup(props: Props) {
         <TodoTicket key={ticket.id} 
             val={ticket}
             mousePos={mousePos} 
-            sideMenuBasePos={props.basePos} 
-            sideMenuBaseSize={props.baseSize}
             groupId={group.id}
             mouseDown={()=>{
                 setGrabbedTicket(ticket.id);
@@ -108,9 +104,8 @@ function TodoGroup(props: Props) {
             <div className="todo-group-header" ref={groupHeaderRef} 
                 onContextMenu={(e: React.MouseEvent<HTMLDivElement>) => {
                     e.preventDefault();
-                    if(props.basePos === undefined) { return; }
                     setEditMenuOpen(true);
-                    const pos = new Position(e.clientX - props.basePos.x, e.clientY - props.basePos.y);
+                    const pos = new Position(e.clientX, e.clientY);
                     setEditMenuPos(pos);
                 }}
             >{group.name}</div>
@@ -123,8 +118,6 @@ function TodoGroup(props: Props) {
         }
         return (
             <EditMenu x={editMenuPos.x} y={editMenuPos.y}
-                menuWidth={(props.baseSize) ? props.baseSize.x : undefined}
-                menuHeight={(props.baseSize) ? props.baseSize.y : undefined}
                 close={()=>{
                     setEditMenuOpen(false);
                     setEditMenuPos(undefined);
@@ -143,11 +136,11 @@ function TodoGroup(props: Props) {
         <>
             <div className="todo-group"
                 onMouseMove={(e: React.MouseEvent<HTMLDivElement>)=>{
-                    if(props.basePos === undefined || e.buttons === 0) {
+                    if(e.buttons === 0) {
                         setMousePos(undefined);
                         return;
                     }
-                    const pos = new Position(e.clientX - props.basePos.x, e.clientY - props.basePos.y);
+                    const pos = new Position(e.clientX, e.clientY);
                     setMousePos(pos);
                 }}
                 onMouseUp={()=>{

@@ -8,8 +8,6 @@ import './todo-ticket.scss';
 interface Props {
     val: TodoTicketState;
     groupId: string;
-    sideMenuBasePos?: Position;
-    sideMenuBaseSize?: Position;
     mousePos?: Position;
     mouseDown: ()=>void;
     mouseUp: ()=>void;
@@ -44,9 +42,11 @@ function TodoTicket(props: Props) {
         if(!toggle) { setToggle(true); }
         return (
             <div className="todo-ticket" style={{
-                position: "absolute",
-                top: props.mousePos.y,
-                left: props.mousePos.x,
+                position: "fixed",
+                top: props.mousePos.y + 1,
+                left: props.mousePos.x + 1,
+                width: "10%",
+                overflow: "hidden"
             }}>
                 {props.val.text}
             </div>
@@ -59,8 +59,6 @@ function TodoTicket(props: Props) {
         }
         return (
             <EditMenu x={editMenuPos.x} y={editMenuPos.y} 
-                menuWidth={(props.sideMenuBaseSize) ? props.sideMenuBaseSize.x : undefined}
-                menuHeight={(props.sideMenuBaseSize) ? props.sideMenuBaseSize.y : undefined}
                 close={()=>{
                     setEditMenuOpen(false);
                     setEditMenuPos(undefined);
@@ -103,9 +101,8 @@ function TodoTicket(props: Props) {
             <div ref={ticketRef} className="todo-ticket"
                 onContextMenu={(e: React.MouseEvent<HTMLDivElement>)=> {
                     e.preventDefault();
-                    if(props.sideMenuBasePos === undefined) { return; }
                     setEditMenuOpen(true);
-                    const pos = new Position(e.clientX - props.sideMenuBasePos.x, e.clientY - props.sideMenuBasePos.y);
+                    const pos = new Position(e.clientX, e.clientY);
                     setEditMenuPos(pos);
                 }}
                 onMouseDown={(e: React.MouseEvent<HTMLDivElement>) => {
@@ -116,6 +113,7 @@ function TodoTicket(props: Props) {
                 }}
                 onMouseUp={(e: React.MouseEvent<HTMLDivElement>)=> {
                     props.mouseUp();
+                    console.log("ticket mouse up");
                 }}
             >
                 {props.val.text}

@@ -9,8 +9,6 @@ import './side-menu.scss';
 
 function SideMenu() {
     const [isOpened, setOpen] = useState(false);
-    const [basePos, setBasePos] = useState(undefined as Position | undefined);
-    const [size, setSize] = useState(undefined as Position | undefined);
     const [isInitialized, setInit] = useState(false);
     const [todoGroups, setTodoGroups] = useState([] as TodoGroupState[]);
     const [showGroupInput, setShowGroupInput] = useState(false);
@@ -24,8 +22,6 @@ function SideMenu() {
 
         const el = menuRef.current;
         if(el === undefined || el === null) { return; }
-        setBasePos(new Position(el.offsetLeft, el.offsetTop));
-        setSize(new Position(el.offsetWidth, el.offsetHeight));
 
         store.subscribe(fetchTodos);
         fetchTodos();
@@ -39,7 +35,7 @@ function SideMenu() {
     };
 
     const groups = ()=> todoGroups.map((todo: TodoGroupState)=>(
-        <TodoGroup key={todo.ordinal} val={todo} basePos={basePos} baseSize={size} />
+        <TodoGroup key={todo.ordinal} val={todo} />
     ));
 
     if(!isOpened) {
@@ -58,10 +54,7 @@ function SideMenu() {
         const boundingRect = el.getBoundingClientRect();
         let x = boundingRect.left;
         let y = boundingRect.top + 0.75 * boundingRect.height;
-        if(basePos) {
-            //x -= basePos.x;
-            //y -= basePos.y;
-        }
+
         return (
             <FloatingTextInput x={x} y={y} width={"calc(25% - 4.5rem)"} marginLeft={"2rem"} marginRight={"2rem"}
                 close={()=>setShowGroupInput(false)}

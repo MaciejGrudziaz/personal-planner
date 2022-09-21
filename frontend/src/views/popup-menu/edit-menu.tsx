@@ -5,8 +5,6 @@ import './edit-menu.scss';
 interface Props {
     x: number;
     y: number;
-    menuWidth?: number;
-    menuHeight?: number;
     edit?: ()=>void;
     delete?: ()=>void;
     close?: ()=>void;
@@ -30,14 +28,14 @@ function EditMenu(props: Props) {
             }
             const boundingRect = el.getBoundingClientRect();
             if(x + boundingRect.width > width) {
-                adjustedPos.x = 0.95 * width - boundingRect.width;
+                adjustedPos.x -= x + 1.1 * boundingRect.width - width;
             }
             if(y + boundingRect.height > height) {
-                adjustedPos.y = 0.95 * height - boundingRect.height;
+                adjustedPos.y -= y + 1.1 * boundingRect.height - height;
             }
             return adjustedPos;
         }
-        const newPos = adjustPos(props.x, props.y, props.menuWidth, props.menuHeight);
+        const newPos = adjustPos(props.x, props.y, window.innerWidth, window.innerHeight);
         if(newPos === undefined) { return; }
         setInit(true);
         setPos(newPos);
