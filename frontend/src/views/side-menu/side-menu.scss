@@ -15,9 +15,11 @@
     border-radius: 0.5rem;
     background-color: white;
     z-index: calc($max-z-index - 3);
+    overflow: scroll;
 }
 
 .open-btn {
+    position: fixed;
     width: 2rem;
     height: 2rem;
     z-index: 100;

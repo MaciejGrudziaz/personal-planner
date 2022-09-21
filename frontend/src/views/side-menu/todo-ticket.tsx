@@ -87,6 +87,7 @@ function TodoTicket(props: Props) {
                     onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>)=>{
                         if(e.key === "Escape" || e.key === "Tab") {
                             setEdit(false);
+                            setTodo(props.val);
                             return;
                         }
                         if(e.key === "Enter") {

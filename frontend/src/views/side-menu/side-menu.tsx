@@ -56,14 +56,14 @@ function SideMenu() {
         }
 
         const boundingRect = el.getBoundingClientRect();
-        let x = boundingRect.x;
-        let y = boundingRect.y + 0.75 * boundingRect.height;
+        let x = boundingRect.left;
+        let y = boundingRect.top + 0.75 * boundingRect.height;
         if(basePos) {
-            x -= basePos.x;
-            y -= basePos.y;
+            //x -= basePos.x;
+            //y -= basePos.y;
         }
         return (
-            <FloatingTextInput x={x} y={y} width={"calc(100% - 3rem)"}
+            <FloatingTextInput x={x} y={y} width={"calc(25% - 4.5rem)"} marginLeft={"2rem"} marginRight={"2rem"}
                 close={()=>setShowGroupInput(false)}
                 save={(val: string)=>{
                     const ordinal = (todoGroups.length === 0) ? 0 : todoGroups[todoGroups.length - 1].ordinal + 1;

@@ -6,6 +6,11 @@
 .todo-group-header {
     padding: 0.1rem 1rem;
     user-select: none;
+    font-size: 1.25rem;
+    font-weight: bold;
+    height: 2rem;
+    line-height: 2rem;
+    cursor: context-menu;
 }
 
 .todo-group-priority-btn-grid {
