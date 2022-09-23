@@ -29,7 +29,6 @@ function SideMenu() {
     });
 
     const fetchTodos = () => {
-        console.log("fetch todo groups");
         setTodoGroups(sortGroups((store.getState() as RootState).todosState.content));
     };
 

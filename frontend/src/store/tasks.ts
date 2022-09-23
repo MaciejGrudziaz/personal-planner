@@ -28,8 +28,8 @@ export type TaskCategory = "simple" | "important";
 export interface TaskState {
     id: string;
     date: TaskDate;
-    startTime: TaskTime;
-    endTime: TaskTime;
+    startTime: TaskTime | undefined;
+    endTime: TaskTime | undefined;
     basicInfo: string;
     description: string;
     category: TaskCategory;
@@ -51,7 +51,13 @@ export function findTasksForWeek(date: Date, state: TaskState[]): TaskState[] {
     endDate.setMilliseconds(999);
 
     return state.filter((task: TaskState)=>{
-        const taskStartDate = new Date(task.date.year, task.date.month, task.date.day, task.startTime.hour, task.startTime.minute);
+        let startHour = 0;
+        let startMinute = 0;
+        if(task.startTime) {
+            startHour = task.startTime.hour;
+            startMinute = task.startTime.minute;
+        }
+        const taskStartDate = new Date(task.date.year, task.date.month, task.date.day, startHour, startMinute);
         return taskStartDate >= startDate && taskStartDate <= endDate;
     });
 }

@@ -63,7 +63,6 @@ export const todosSlice = createSlice({
             return {content: state.content.concat([{id: groupId, ordinal: groupOrdinal, name: groupName, tickets: []}])};
         },
         moveGroup: (state: TodoState, action: PayloadAction<Args>) => {
-            console.log("moveGroup action");
             const groupId = action.payload.groupId;
             const direction = action.payload.direction;
             if(groupId === undefined || direction === undefined) {
@@ -153,7 +152,6 @@ export const todosSlice = createSlice({
             if(modifiedTicket === undefined || groupId === undefined) {
                 return state;
             }
-            console.log("delete ticket");
             return {
                 content: state.content.map((val: TodoGroup) => {
                     if (val.id !== groupId) {

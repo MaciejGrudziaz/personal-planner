@@ -48,9 +48,11 @@ function parseNumberToFixedLengthString(val: number): string {
     return (val < 10) ? `0${val.toFixed()}` : val.toFixed();
 }
 
-function setNewStartHour(task: TaskState, val: string): TaskTime {
+function setNewStartHour(task: TaskState, val: string): TaskTime | undefined {
+    if(task.startTime === undefined) { return undefined; }
     const newHour = parseStringToFixedNumber(val);
     if(newHour === undefined) { return task.startTime; }
+    if(task.endTime === undefined) { return {...task.startTime, hour: newHour}; }
     if(newHour === task.endTime.hour) {
         if(task.startTime.minute >= task.endTime.minute) {
             return task.startTime;
@@ -63,9 +65,11 @@ function setNewStartHour(task: TaskState, val: string): TaskTime {
     return {...task.startTime, hour: newHour};
 }
 
-function setNewStartMinute(task: TaskState, val: string): TaskTime {
+function setNewStartMinute(task: TaskState, val: string): TaskTime | undefined {
+    if(task.startTime === undefined) { return undefined; }
     const newMinute = parseStringToFixedNumber(val);
     if(newMinute === undefined) { return task.startTime; }
+    if(task.endTime === undefined) { return {...task.startTime, minute: newMinute} };
     if(task.startTime.hour === task.endTime.hour) {
         if(newMinute >= task.endTime.minute) {
             return task.startTime;
@@ -75,9 +79,11 @@ function setNewStartMinute(task: TaskState, val: string): TaskTime {
     return {...task.startTime, minute: newMinute};
 }
 
-function setNewEndHour(task: TaskState, val: string): TaskTime {
+function setNewEndHour(task: TaskState, val: string): TaskTime | undefined {
+    if(task.endTime === undefined) { return undefined; }
     const newHour = parseStringToFixedNumber(val);
     if(newHour === undefined) { return task.endTime; }
+    if(task.startTime === undefined) { return {...task.endTime, hour: newHour}; }
     if(newHour === task.endTime.hour) {
         if(task.endTime.minute <= task.startTime.minute) {
             return task.endTime;
@@ -90,9 +96,11 @@ function setNewEndHour(task: TaskState, val: string): TaskTime {
     return {...task.endTime, hour: newHour};
 }
 
-function setNewEndMinute(task: TaskState, val: string): TaskTime {
+function setNewEndMinute(task: TaskState, val: string): TaskTime | undefined {
+    if(task.endTime === undefined) { return undefined; }
     const newMinute = parseStringToFixedNumber(val);
     if(newMinute === undefined) { return task.endTime; }
+    if(task.startTime === undefined) { return {...task.endTime, minute: newMinute}; }
     if(task.startTime.hour === task.endTime.hour) {
         if(newMinute <= task.startTime.minute) {
             return task.endTime;
@@ -198,6 +206,10 @@ function TaskWnd(props: Props) {
     }
 
     if(!props.show) {
+        return (<></>);
+    }
+
+    if(task.startTime === undefined || task.endTime === undefined) {
         return (<></>);
     }
 

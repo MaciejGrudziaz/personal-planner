@@ -1,6 +1,7 @@
 import React, {RefObject, useEffect, useState, useRef} from 'react';
 import {useDispatch, useSelector} from 'react-redux';
-import {Position} from './task/task';
+import {Position, getColor as getTaskColor, getBorderColor as getTaskBorderColor} from './task/task';
+import {TaskState} from '../../store/tasks';
 import HourView, {CellBasicInfo} from './hour';
 import './day.scss';
 
@@ -8,11 +9,16 @@ interface Props {
     day: number;
     dayName: string;
     date: Date;
+    maxDailyTasksInWeekPerDay?: number;
     selectedCells: CellBasicInfo[];
+    dailyTasks: TaskState[];
     updateRefs(hour: number, refs: RefObject<HTMLDivElement>[]): void;
+    updateDayRef?(ref: RefObject<HTMLDivElement>): void;
     startSelection(day: number, hour: number, quarter: number): void;
     endSelection(day: number, hour: number, quarter: number): void;
     hoverOverCell(day: number, hour: number, quarter: number): void;
+    moveTask(task: TaskState, mousePos: Position, x: number, y: number, width: number, height: number): void;
+    onGridSizeChange?(): void;
 }
 
 export class Cell {
@@ -65,12 +71,31 @@ export class Hour {
 }
 
 function Day(props: Props) {
+    const dailyTasksRef = useRef() as RefObject<HTMLDivElement>;
+    const [isInitialized, setInit] = useState(false);
+
+    const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
+
     useEffect(()=>{
-        console.log("update day");
+        if(isInitialized) return;
+        if(props.updateDayRef) props.updateDayRef(dailyTasksRef);
+        setInit(true);
     });
+
+    useEffect(()=>{
+        if(props.onGridSizeChange) {
+            props.onGridSizeChange();
+        }
+    }, [props.maxDailyTasksInWeekPerDay]);
 
     const startHour = 4;
     const hours = Array.from(Array(24).keys()).splice(startHour);
+
+    const getDate = (): string => {
+        const day = props.date.getDate();
+        const month = props.date.getMonth() + 1;
+        return `${day}.${(month < 10) ? '0' + month : month}`;
+    }
 
     const hoursList = hours.map((hour: number) => {
         return (<HourView day={props.day} hour={hour} selectedCells={props.selectedCells}
@@ -81,11 +106,22 @@ function Day(props: Props) {
         />)
     });
 
-    const getDate = (): string => {
-        const day = props.date.getDate();
-        const month = props.date.getMonth() + 1;
-        return `${day}.${(month < 10) ? '0' + month : month}`;
-    }
+    const dailyTasks = props.dailyTasks.map((task: TaskState) => (
+        <div key={task.id} className="day-daily-task" style={{backgroundColor: getTaskColor(task.category), borderColor: getTaskBorderColor(task.category)}}
+            onMouseDown={(e: React.MouseEvent<HTMLDivElement>) => {
+                const el = dailyTasksRef.current;
+                if(el === undefined || el === null) {
+                    return;
+                }
+                const boundingRect = el.getBoundingClientRect();
+                task.startTime = {hour: 0, minute: 0};
+                task.endTime = {hour: 1, minute: 0};
+                props.moveTask(task, new Position(e.clientX, e.clientY), boundingRect.x, e.clientY - rem, boundingRect.width, 4.0 * rem);
+            }}
+        >
+            {task.basicInfo}
+        </div>
+    ));
 
     return (
         <div className="day">
@@ -93,8 +129,13 @@ function Day(props: Props) {
                 <div className="day-header"><b>{props.dayName}</b> {getDate()}</div>
                 <button className="day-add-btn">+</button>
             </div>
-            <div>
-                {hoursList}
+            <div className="day-cells-grid">
+                <div ref={dailyTasksRef} className="day-daily-task-tab" style={{gridRow: (props.maxDailyTasksInWeekPerDay !== undefined) ? `1 / ${props.maxDailyTasksInWeekPerDay + 1}` : 1}}>
+                    {dailyTasks}
+                </div>
+                <div style={{gridColumn: 1, gridRow: (props.maxDailyTasksInWeekPerDay !== undefined) ? props.maxDailyTasksInWeekPerDay + 1 : 2}}>
+                    {hoursList}
+                </div>
             </div>
         </div>
     );

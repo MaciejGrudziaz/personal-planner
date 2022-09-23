@@ -15,11 +15,6 @@ interface Props {
 }
 
 function CurrentTimePointer(props: Props) {
-    useEffect(()=>{
-        console.log(`redraw pointer: ${props.state}`);
-
-    });
-
     const pointer = ()=>{
         if(props.state === undefined) {
             return (<></>);

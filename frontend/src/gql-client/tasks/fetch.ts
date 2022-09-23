@@ -47,8 +47,8 @@ export function useFetchTasks(): ReturnFunc {
                 return {
                     id: task.id.toFixed(),
                     date: {year: task.date.year, month: task.date.month - 1, day: task.date.day},
-                    startTime: (task.start_time === null) ? {hour: 0, minute: 0} : {hour: task.start_time.hour, minute: task.start_time.minute},
-                    endTime: (task.end_time === null) ? {hour: 0, minute: 0} : {hour: task.end_time.hour, minute: task.end_time.minute},
+                    startTime: (task.start_time === null) ? undefined : {hour: task.start_time.hour, minute: task.start_time.minute},
+                    endTime: (task.end_time === null) ? undefined : {hour: task.end_time.hour, minute: task.end_time.minute},
                     basicInfo: (task.basic_info === null) ? "" : task.basic_info,
                     description: (task.description === null) ? "" : task.description,
                     category: task.category

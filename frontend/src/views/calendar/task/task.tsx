@@ -1,5 +1,5 @@
 import React, {RefObject, useState, useEffect} from 'react';
-import {CellInfo} from './../calendar';
+import {DayCellStore, CellInfo} from './../calendar';
 import {TaskDate, TaskState, TaskTime, TaskCategory} from '../../../store/tasks';
 import './task.css';
 
@@ -43,8 +43,8 @@ export class Task {
     padding: number = 0;
 
     dayOfWeek: number;
-    startTime: TaskTime;
-    endTime: TaskTime;
+    startTime: TaskTime | undefined;
+    endTime: TaskTime | undefined;
 
     basicInfo: string;
     description: string;
@@ -52,7 +52,21 @@ export class Task {
 
     minHeight: number = parseFloat(getComputedStyle(document.documentElement).fontSize);
 
-    constructor(id: string, date: Date, startTime: TaskTime, endTime: TaskTime, basicInfo: string, description: string, category: TaskCategory) {
+    get isDaily(): boolean {
+        return this.startTime === undefined || this.endTime === undefined;
+    }
+
+    setDaily(day: number) {
+        this.dayOfWeek = day;
+        this.startTime = undefined;
+        this.endTime = undefined;
+        this.x = 0;
+        this.y = 0;
+        this.width = 0;
+        this.height = 0;
+    }
+
+    constructor(id: string, date: Date, basicInfo: string, description: string, category: TaskCategory, startTime?: TaskTime, endTime?: TaskTime) {
         this.id = id;
         this.dayOfWeek = (date.getDay() === 0) ? 6 : date.getDay() - 1;
         this.startTime = startTime;
@@ -105,7 +119,7 @@ export class Task {
         }
     }
 
-    getHourQuarter(time: TaskTime): number | undefined {
+    getHourQuarter(time: TaskTime | undefined): number | undefined {
         if(time === undefined) { return undefined; }
         return Math.floor(time.minute / 15);
     }
@@ -134,14 +148,12 @@ export class Task {
         return zIndexChanged;
     }
 
-    init(weekView: Map<number, Map<number, CellInfo[]>>) {
-        //const day = weekView.days.find((day: DayState)=>{ return day.day === this.day; });
+    init(weekView: Map<number, DayCellStore>) {
+        if(this.startTime === undefined || this.endTime === undefined) { return; }
+
         const day = weekView.get(this.dayOfWeek);
         if(day === undefined) { return; }
-        //const startHour = day.hours.find((hour: HourState)=>{ return hour.hour === this.getHour(this.startTime); });
-        // const startHourValue = this.getHour(this.startTime);
-        // if(startHourValue === undefined) { return; }
-        const startHour = day.get(this.startTime.hour);
+        const startHour = day.hourlyRefs.get(this.startTime.hour);
         if(startHour === undefined) { return; }
         const startCell = startHour.find((cell: CellInfo)=>{ return cell.quarter === this.getHourQuarter(this.startTime); });
         if(startCell === undefined) { return; }
@@ -156,7 +168,7 @@ export class Task {
         this.width = width;
         this.minHeight = parseFloat(getComputedStyle(startCellEl).fontSize);
 
-        const endHour = day.get(this.endTime.hour);
+        const endHour = day.hourlyRefs.get(this.endTime.hour);
         if(endHour === undefined) { return; }
         const endCell = endHour.find((cell: CellInfo)=>{ return cell.quarter === this.getHourQuarter(this.endTime); });
         if(endCell === undefined) { return; }
@@ -169,7 +181,7 @@ export class Task {
     }
 }
 
-function getColor(category: TaskCategory): string {
+export function getColor(category: TaskCategory): string {
     switch(category) {
         case "simple":
             return "#e9c46a";
@@ -178,7 +190,7 @@ function getColor(category: TaskCategory): string {
     }
 }
 
-function getBorderColor(category: TaskCategory): string {
+export function getBorderColor(category: TaskCategory): string {
     switch(category) {
         case "simple":
             return "#926F16";
@@ -198,12 +210,12 @@ function CalendarTask(props: Props) {
     return (
         <>
         <div className="bar" style={{left: props.left, top: props.top, width: props.width, zIndex: props.zIndex + 1}} 
-            onMouseDown={(event)=>{
+            onMouseDown={(event: React.MouseEvent<HTMLDivElement>)=>{
                 props.resize(new Position(event.pageX, event.pageY), ResizeDir.up);
             }}
         />
         <div className="task" style={{top: props.top, left: props.left, width: props.width, height: props.height, borderColor: getBorderColor(props.category), backgroundColor: getColor(props.category), zIndex: props.zIndex}} 
-            onMouseDown={(event)=>{
+            onMouseDown={(event: React.MouseEvent<HTMLDivElement>)=>{
                 props.grabbed(new Position(event.pageX, event.pageY));
             }}
             onClick={()=>{
@@ -222,7 +234,7 @@ function CalendarTask(props: Props) {
             <button className="task-btn" onClick={()=>props.deleteTask()}>X</button>
         </div>
         <div className="bar" style={{left: props.left, top: props.top + props.height, width: props.width, zIndex: props.zIndex + 1}}
-            onMouseDown={(event)=>{
+            onMouseDown={(event: React.MouseEvent<HTMLDivElement>)=>{
                 props.resize(new Position(event.pageX, event.pageY), ResizeDir.down);
             }}
         />

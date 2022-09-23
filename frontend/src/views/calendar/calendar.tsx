@@ -23,15 +23,24 @@ interface Props {
     changeWeek(baseDate: Date): void;
 }
 
+export interface DayCellStore {
+    dailyTasksRef: CellInfo | undefined;
+    hourlyRefs: Map<number, CellInfo[]>;
+}
+
 export interface CellInfo {
     day: number;
-    hour: number;
-    quarter: number;
+    hour?: number;
+    quarter?: number;
     x: number;
     y: number;
     width: number;
     height: number;
     ref: RefObject<HTMLDivElement>;
+}
+
+function isCellDaily(cell: CellInfo): boolean {
+    return cell.hour === undefined || cell.quarter === undefined;
 }
 
 function isPointInsideCell(cell: CellInfo, point: Position) {
@@ -65,11 +74,12 @@ function Calendar(props: Props) {
     const [startMovePos, setStartMovePos] = useState(new Position(0, 0));
     const [modifyObject, setModifyObject] = useState(undefined as string | undefined);
     const [tasks, setTasks] = useState(new Array() as Task[]);
-    const [cells, setCells] = useState(new Map() as Map<number, Map<number, CellInfo[]>>);
+    const [cells, setCells] = useState(new Map() as Map<number, DayCellStore>);
     const [pointerState, setPointerState] = useState(undefined as undefined | PointerState);
     const [calendarFont, setCalendarFont] = useState({size: 12, changed: false} as FontState);
     const [selectedCells, setSelectedCells] = useState([] as CellBasicInfo[]);
     const [wndTaskInfo, setWndTaskInfo] = useState({id: undefined, date: undefined, startTime: undefined, endTime: undefined, show: false} as WndTaskInfo);
+    const [forceDailyTaskTabResize, setForceDailyTaskTabResize] = useState(false);
     const [isInitialized, init] = useState(false);
     const dayMapping: Map<number, string> = new Map([[0, "monday"], [1, "tuesday"], [2, "wednesday"], [3, "thursday"], [4, "friday"], [5, "saturday"], [6, "sunday"]]);
 
@@ -110,7 +120,7 @@ function Calendar(props: Props) {
         const tasksState = (store.getState() as RootState).tasksState;
         while(tasks.length > 0) { tasks.pop(); }
         findTasksForWeek(props.weekStartDate, tasksState).forEach((taskInfo: TaskState) => {
-            const task = new Task(taskInfo.id, parseDateToBuiltin(taskInfo.date), taskInfo.startTime, taskInfo.endTime, taskInfo.basicInfo, taskInfo.description, taskInfo.category)
+            const task = new Task(taskInfo.id, parseDateToBuiltin(taskInfo.date), taskInfo.basicInfo, taskInfo.description, taskInfo.category, taskInfo.startTime, taskInfo.endTime)
             task.init(cells);
             tasks.push(task);
         });
@@ -120,14 +130,11 @@ function Calendar(props: Props) {
 
     const calcOverlapping = ()=>{
         let retry = true;
-        let retryId = 1;
         while(retry) {
-            console.log(`retry ${retryId}`);
             retry = false;
             tasks.forEach((task: Task)=>{
                 if(task.calcOverlapping(tasks)) { retry = true; }
             });
-            retryId += 1;
         }
     }
 
@@ -141,7 +148,7 @@ function Calendar(props: Props) {
             }
         });
         calcOverlapping();
-        if(needsUpdate) { 
+        if(needsUpdate) {
             setTasks([...tasks]); 
         }
     };
@@ -152,16 +159,30 @@ function Calendar(props: Props) {
         setCalendarFont({size: newFontSize, changed: true});
     }
 
+    const updateDailyRef = (dailyTask: CellInfo | undefined): CellInfo | undefined => {
+        if(!dailyTask) { return undefined; }
+        const el = dailyTask.ref.current;
+        if(el === undefined || el === null) { return dailyTask; }
+        const boundingRect = el.getBoundingClientRect();
+        dailyTask.x = boundingRect.x;
+        dailyTask.y = boundingRect.y;
+        dailyTask.width = boundingRect.width;
+        dailyTask.height = boundingRect.height;
+        return dailyTask;
+    }
+
     const updateCellsInStore = ()=>{
-        cells.forEach((hourMap: Map<number, CellInfo[]>, day: number)=>{
-            hourMap.forEach((quarters: CellInfo[], hour: number)=>{
+        cells.forEach((dayStore: DayCellStore, day: number)=>{
+            dayStore.dailyTasksRef = updateDailyRef(dayStore.dailyTasksRef);
+            dayStore.hourlyRefs.forEach((quarters: CellInfo[], hour: number)=>{
                 quarters.forEach((cell: CellInfo, quarter: number)=>{
                     const el = cell.ref.current;
-                    if(el === null) { return; }
-                    cell.x = el.offsetLeft;
-                    cell.y = el.offsetTop;
-                    cell.width = el.offsetWidth;
-                    cell.height = el.offsetHeight;
+                    if(el === null || el === undefined) { return; }
+                    const boundingRect = el.getBoundingClientRect();
+                    cell.x = boundingRect.x;
+                    cell.y = boundingRect.y;
+                    cell.width = boundingRect.width;
+                    cell.height = boundingRect.height;
                 });
             });
         });
@@ -191,6 +212,7 @@ function Calendar(props: Props) {
             setPointerState(undefined);
             return;
         }
+        if(matchingCell.quarter === undefined) { return; }
         const verticalOffset = Math.floor((currentDate.getMinutes() - matchingCell.quarter * 15) / 15 * matchingCell.height);
         setPointerState({width: matchingCell.width, x: matchingCell.x, y: matchingCell.y + verticalOffset, baseX: baseCell.x, endX: endCell.x});
     }
@@ -234,8 +256,24 @@ function Calendar(props: Props) {
         setWndTaskInfo({...wndTaskInfo, show: false});
     }
 
+    const getDailyTaskTabMinHeight = (): number => {
+        const dailyCount = new Map() as Map<number, number>;
+        tasks.filter((val: Task) => val.isDaily).forEach((val: Task) => {
+            const count = dailyCount.get(val.dayOfWeek);
+            if(count === undefined) {
+                dailyCount.set(val.dayOfWeek, 1);
+                return;
+            }
+            dailyCount.set(val.dayOfWeek, count + 1);
+        });
+        return Array.from(dailyCount.values()).reduce((val: number, acc: number) => (val > acc) ? val : acc, 0);
+    }
+
     const daysList = Array.from(dayMapping.entries()).map((value: [number, string]) => (
         <Day day={value[0]} dayName={value[1]} date={calcDate(value[0])} selectedCells={selectedCells}
+            maxDailyTasksInWeekPerDay={getDailyTaskTabMinHeight()}
+            dailyTasks={tasks.filter((val: Task) => val.dayOfWeek === value[0] && val.isDaily).map((val: Task) => val.toTaskState(props.weekStartDate))}
+            onGridSizeChange={()=>updateCellsInStore()}
             updateRefs={(hour: number, quarterRefs: RefObject<HTMLDivElement>[])=>{
                 const day = cells.get(value[0]);
                 const hourCells = [
@@ -245,11 +283,22 @@ function Calendar(props: Props) {
                     {day: value[0], hour: hour, quarter: 3, x: 0, y: 0, width: 0, height: 0, ref: quarterRefs[3]},
                 ];
                 if(day === undefined) {
-                    cells.set(value[0], new Map([[hour, hourCells]]));
+                    cells.set(value[0], {dailyTasksRef: undefined, hourlyRefs: new Map([[hour, hourCells]])});
                     setCells(cells);
                     return;
                 }
-                day.set(hour, hourCells);
+                day.hourlyRefs.set(hour, hourCells);
+                setCells(cells);
+            }}
+            updateDayRef={(ref: RefObject<HTMLDivElement>)=>{
+                const day = cells.get(value[0]);
+                const dailyTask = {day: value[0], x: 0, y: 0, width: 0, height: 0, ref: ref};
+                if(day === undefined) {
+                    cells.set(value[0], {dailyTasksRef: dailyTask, hourlyRefs: new Map()});
+                    setCells(cells);
+                    return;
+                }
+                day.dailyTasksRef = dailyTask;
                 setCells(cells);
             }}
             startSelection={(day: number, hour: number, quarter: number)=>{
@@ -268,10 +317,26 @@ function Calendar(props: Props) {
                 if(selectedCells.length === 0) { return; }
                 setSelectedCells(calcSelectedCells({day: day, hour: hour, quarter: quarter}));
             }}
+            moveTask={(taskState: TaskState, pos: Position, x: number, y: number, width: number, height: number)=>{
+                const task = tasks.find((val: Task) => val.id === taskState.id);
+                if(task === undefined) {
+                    return;
+                }
+                task.x = x - task.getLeftPadding();
+                task.y = y;
+                task.startTime = taskState.startTime;
+                task.endTime = taskState.endTime;
+                task.width = width;
+                task.height = height;
+                setGrabbed(true);
+                setModifyObject(task.id);
+                setStartMovePos(pos);
+                setForceDailyTaskTabResize(true);
+            }}
         />
     ));
 
-    const tasksList = tasks.map((value: Task)=>(
+    const tasksList = tasks.filter((value: Task) => !value.isDaily).map((value: Task)=>(
         <CalendarTask top={value.y} left={value.x + value.getLeftPadding()} width={value.width - value.getLeftPadding() - value.getRightPadding()} height={value.height} basicInfo={value.basicInfo} category={value.category} zIndex={value.zIndex}
             grabbed={(position: Position)=>{
                 setStartMovePos(position); 
@@ -295,8 +360,13 @@ function Calendar(props: Props) {
 
     const findCell = (point: Position): CellInfo | undefined => {
         let targetCell: CellInfo | undefined = undefined;
-        cells.forEach((hours: Map<number, CellInfo[]>, day: number)=>{
-            hours.forEach((quarters: CellInfo[], hour: number)=>{
+        cells.forEach((dayStore: DayCellStore, day: number)=>{
+            if(targetCell !== undefined) { return; }
+            if(dayStore.dailyTasksRef !== undefined && isPointInsideCell(dayStore.dailyTasksRef, point)) {
+                targetCell = dayStore.dailyTasksRef;
+                return;
+            }
+            dayStore.hourlyRefs.forEach((quarters: CellInfo[], hour: number)=>{
                 quarters.forEach((cell: CellInfo)=>{
                     if(!isPointInsideCell(cell, point)) { return; }
                     targetCell = cell;
@@ -317,10 +387,10 @@ function Calendar(props: Props) {
         const hour = date.getHours();
         const minutes = date.getMinutes();
         let targetCell: CellInfo | undefined = undefined;
-        cells.forEach((hours: Map<number, CellInfo[]>, dayVal: number)=>{
-            hours.forEach((quarters: CellInfo[], hourVal: number)=>{
+        cells.forEach((dayStore: DayCellStore, dayVal: number)=>{
+            dayStore.hourlyRefs.forEach((quarters: CellInfo[], hourVal: number)=>{
                 quarters.forEach((cell: CellInfo)=>{
-                    if(day != dayVal || hour != hourVal) {
+                    if(day != dayVal || hour != hourVal || cell.quarter === undefined) {
                         return;
                     }
                     if(minutes >= cell.quarter * 15 && minutes < (cell.quarter + 1) * 15) {
@@ -359,10 +429,24 @@ function Calendar(props: Props) {
         };
 
         const cell = getMajorityCell();
-        if(cell === undefined) { 
+        if(cell === undefined) {
+            const cell = findCell(startMovePos);
+            if(cell !== undefined && isCellDaily(cell)) {
+                task.setDaily(cell.day);
+                updateTask(task.toTaskState(props.weekStartDate));
+                setTasks([...tasks]);
+                return;
+            }
             updateCellsInStore();
             return; 
         }
+        if(isCellDaily(cell)) {
+            task.setDaily(cell.day);
+            updateTask(task.toTaskState(props.weekStartDate));
+            setTasks([...tasks]);
+            return;
+        }
+
         task.setPosition(new Position(cell.x, cell.y));
 
         const endCell = findCell(new Position(task.x, task.y + task.height - task.minHeight / 2));
@@ -370,6 +454,12 @@ function Calendar(props: Props) {
             updateCellsInStore();
             return;
         }
+
+        if(endCell.hour === undefined || endCell.quarter === undefined
+            || cell.hour === undefined || cell.quarter === undefined) { 
+            return; 
+        }
+
         let endHour = endCell.hour;
         let endQuarter = endCell.quarter + 1;
         if(endQuarter === 4) {
@@ -422,6 +512,12 @@ function Calendar(props: Props) {
             updateCellsInStore();
             return;
         }
+
+        if(baseCell.hour === undefined || baseCell.quarter === undefined
+            || endCell.hour === undefined || endCell.quarter === undefined) { 
+            return;
+        }
+
         let endHour = endCell.hour;
         let endQuarter = endCell.quarter + 1;
         if(endQuarter === 4) {

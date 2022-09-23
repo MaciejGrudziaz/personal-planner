@@ -11,14 +11,24 @@ export function useUpdateTask(): ReturnFunc {
             const res = await fetchMutation("http://localhost:8080/",
                 `updateTask(
                     id: ${task.id},
-                    start_time: {
-                        hour: ${task.startTime.hour}
-                        minute: ${task.startTime.minute}
-                    },
-                    end_time: {
-                        hour: ${task.endTime.hour}
-                        minute: ${task.endTime.minute}
-                    },
+                    ${(task.startTime !== undefined)
+                        ? `
+                            start_time: {
+                                hour: ${task.startTime.hour}
+                                minute: ${task.startTime.minute}
+                            },
+                          `
+                        : ""
+                    }
+                    ${(task.endTime !== undefined)
+                        ? `
+                            end_time: {
+                                hour: ${task.endTime.hour}
+                                minute: ${task.endTime.minute}
+                            },
+                          `
+                        : ""
+                    }
                     date: {
                         year: ${task.date.year}
                         month: ${task.date.month + 1}

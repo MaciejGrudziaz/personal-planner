@@ -113,7 +113,6 @@ function TodoTicket(props: Props) {
                 }}
                 onMouseUp={(e: React.MouseEvent<HTMLDivElement>)=> {
                     props.mouseUp();
-                    console.log("ticket mouse up");
                 }}
             >
                 {props.val.text}

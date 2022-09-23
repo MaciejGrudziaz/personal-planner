@@ -1,15 +1,17 @@
 .day {
     width: 100%;
-    display: block;
 }
 
 .day-header-tab {
     display: flex;
+    height: 2rem;
+
 }
 
 .day-header {
     font-size: 1rem;
     user-select: none;
+    margin: auto 0;
 }
 
 .day-add-btn {
@@ -17,5 +19,27 @@
     height: 1.5rem;
     padding: 0;
     margin: auto 1rem;
+}
+
+$daily-task-height: 1.5rem;
+
+.day-cells-grid {
+    display: grid;
+    grid-auto-rows: minmax(calc($daily-task-height + 0.5rem), auto);
+}
+
+.day-daily-task-tab {
+    font-size: 1rem;
+    outline: 0.1rem solid black;
+    position: relative;
+    grid-column: 1;
+}
+
+.day-daily-task {
+    height: $daily-task-height;
+    line-height: $daily-task-height;
+    border-width: 0.2rem;
+    border-style: solid;
+    border-radius: 0.3rem;
 }
 
