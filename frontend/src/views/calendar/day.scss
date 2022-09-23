@@ -25,7 +25,7 @@ $daily-task-height: 1.5rem;
 
 .day-cells-grid {
     display: grid;
-    grid-auto-rows: minmax(calc($daily-task-height + 0.5rem), auto);
+    grid-auto-rows: minmax(calc($daily-task-height + 0.7rem), auto);
 }
 
 .day-daily-task-tab {
@@ -33,6 +33,7 @@ $daily-task-height: 1.5rem;
     outline: 0.1rem solid black;
     position: relative;
     grid-column: 1;
+    user-select: none;
 }
 
 .day-daily-task {
@@ -41,5 +42,7 @@ $daily-task-height: 1.5rem;
     border-width: 0.2rem;
     border-style: solid;
     border-radius: 0.3rem;
+    margin: 0.2rem 0.2rem;
+    padding: 0 0.3rem;
 }
 

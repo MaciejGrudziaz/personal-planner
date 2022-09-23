@@ -224,10 +224,10 @@ function CalendarTask(props: Props) {
                         props.selected();
                     }
                     resetClick();
-                } else {
-                    setClickRecord(true);
-                    setTimeout(resetClick, 500);
+                    return;
                 }
+                setClickRecord(true);
+                setTimeout(resetClick, 500);
             }}
         >
             {props.basicInfo}

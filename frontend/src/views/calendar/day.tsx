@@ -19,6 +19,7 @@ interface Props {
     hoverOverCell(day: number, hour: number, quarter: number): void;
     moveTask(task: TaskState, mousePos: Position, x: number, y: number, width: number, height: number): void;
     onGridSizeChange?(): void;
+    select?(id: string): void;
 }
 
 export class Cell {
@@ -71,8 +72,10 @@ export class Hour {
 }
 
 function Day(props: Props) {
-    const dailyTasksRef = useRef() as RefObject<HTMLDivElement>;
+    const [mouseClickStartPos, setMouseClickStartPos] = useState(undefined as Position | undefined);
+    const [clickRecorded, setClickRecord] = useState(false);
     const [isInitialized, setInit] = useState(false);
+    const dailyTasksRef = useRef() as RefObject<HTMLDivElement>;
 
     const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
 
@@ -106,9 +109,38 @@ function Day(props: Props) {
         />)
     });
 
+    const resetClick = () => {
+        setClickRecord(false);
+    };
+
+    const calcLength = (a: Position, b: Position) => {
+        const x = a.x - b.x;
+        const y = a.y - b.y;
+        return Math.sqrt(x*x + y*y);
+    }
+
     const dailyTasks = props.dailyTasks.map((task: TaskState) => (
         <div key={task.id} className="day-daily-task" style={{backgroundColor: getTaskColor(task.category), borderColor: getTaskBorderColor(task.category)}}
             onMouseDown={(e: React.MouseEvent<HTMLDivElement>) => {
+                setMouseClickStartPos(new Position(e.clientX, e.clientY));
+            }}
+            onMouseUp={()=>setMouseClickStartPos(undefined)}
+            onClick={(event: React.MouseEvent<HTMLDivElement>) => {
+                if(clickRecorded) {
+                    if(props.select) {
+                        props.select(task.id);
+                    }
+                    resetClick();
+                    return;
+                }
+                setClickRecord(true);
+                setTimeout(resetClick, 500);
+            }}
+            onMouseMove={(e: React.MouseEvent<HTMLDivElement>)=>{
+                if(mouseClickStartPos === undefined) return;
+                if(calcLength(mouseClickStartPos, new Position(e.clientX, e.clientY)) < rem) return;
+                setMouseClickStartPos(undefined);
+
                 const el = dailyTasksRef.current;
                 if(el === undefined || el === null) {
                     return;
@@ -116,7 +148,7 @@ function Day(props: Props) {
                 const boundingRect = el.getBoundingClientRect();
                 task.startTime = {hour: 0, minute: 0};
                 task.endTime = {hour: 1, minute: 0};
-                props.moveTask(task, new Position(e.clientX, e.clientY), boundingRect.x, e.clientY - rem, boundingRect.width, 4.0 * rem);
+                props.moveTask(task, new Position(e.clientX, e.clientY), boundingRect.x, e.clientY - rem, boundingRect.width, 4.0 * rem);               
             }}
         >
             {task.basicInfo}

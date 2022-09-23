@@ -333,6 +333,9 @@ function Calendar(props: Props) {
                 setStartMovePos(pos);
                 setForceDailyTaskTabResize(true);
             }}
+            select={(id: string) => {
+                console.log(`select ${id}`);
+            }}
         />
     ));
 
