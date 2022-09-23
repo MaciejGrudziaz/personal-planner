@@ -1,0 +1,21 @@
+.day {
+    width: 100%;
+    display: block;
+}
+
+.day-header-tab {
+    display: flex;
+}
+
+.day-header {
+    font-size: 1rem;
+    user-select: none;
+}
+
+.day-add-btn {
+    width: 1.5rem;
+    height: 1.5rem;
+    padding: 0;
+    margin: auto 1rem;
+}
+

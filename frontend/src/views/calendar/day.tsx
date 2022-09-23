@@ -1,8 +1,8 @@
 import React, {RefObject, useEffect, useState, useRef} from 'react';
 import {useDispatch, useSelector} from 'react-redux';
-import {Position} from './task';
+import {Position} from './task/task';
 import HourView, {CellBasicInfo} from './hour';
-import './day.css';
+import './day.scss';
 
 interface Props {
     day: number;
@@ -89,7 +89,10 @@ function Day(props: Props) {
 
     return (
         <div className="day">
-            <div style={{fontSize: "1rem", userSelect: "none"}}><b>{props.dayName}</b> {getDate()}</div>
+            <div className="day-header-tab">
+                <div className="day-header"><b>{props.dayName}</b> {getDate()}</div>
+                <button className="day-add-btn">+</button>
+            </div>
             <div>
                 {hoursList}
             </div>

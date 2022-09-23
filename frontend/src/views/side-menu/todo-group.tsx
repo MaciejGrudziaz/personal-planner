@@ -4,7 +4,7 @@ import { TodoGroup as TodoGroupState, TodoTicket as TodoTicketState, sortTickets
 import TodoTicket from './todo-ticket';
 import FloatingTextInput from './floating-text-input';
 import EditMenu from '../popup-menu/edit-menu';
-import { Position } from '../calendar/task';
+import { Position } from '../calendar/task/task';
 import './todo-group.scss';
 
 interface Props {

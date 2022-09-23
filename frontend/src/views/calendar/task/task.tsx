@@ -1,7 +1,6 @@
 import React, {RefObject, useState, useEffect} from 'react';
-import {Hour, Cell} from './day';
-import {CellInfo} from './calendar';
-import {TaskDate, TaskState, TaskTime, TaskCategory} from '../../store/tasks';
+import {CellInfo} from './../calendar';
+import {TaskDate, TaskState, TaskTime, TaskCategory} from '../../../store/tasks';
 import './task.css';
 
 export enum ResizeDir {

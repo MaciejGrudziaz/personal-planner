@@ -1,6 +1,5 @@
 import React, {RefObject, useRef, useEffect, useState} from 'react';
 import { useDispatch } from 'react-redux';
-import { Position } from './task';
 import { TaskDate, TaskTime } from '../../store/tasks';
 import './hour.css';
 

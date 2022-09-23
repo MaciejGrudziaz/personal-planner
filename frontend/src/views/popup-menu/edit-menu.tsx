@@ -1,5 +1,5 @@
 import React, {useState, useEffect, useRef, RefObject} from 'react';
-import {Position} from '../calendar/task';
+import {Position} from '../calendar/task/task';
 import './edit-menu.scss';
 
 interface Props {

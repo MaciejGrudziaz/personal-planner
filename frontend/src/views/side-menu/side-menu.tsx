@@ -2,7 +2,6 @@ import React, {useEffect, useState, useRef, RefObject} from 'react';
 import {useStore, useDispatch} from 'react-redux';
 import {RootState} from '../../store/store';
 import {TodoGroup as TodoGroupState, TodoTicket as TodoTicketState, sortGroups, createGroup} from '../../store/todos';
-import {Position} from '../calendar/task';
 import TodoGroup from './todo-group';
 import FloatingTextInput from './floating-text-input';
 import './side-menu.scss';

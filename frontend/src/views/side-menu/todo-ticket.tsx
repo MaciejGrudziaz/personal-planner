@@ -2,7 +2,7 @@ import React, {RefObject, useEffect, useState, useRef} from 'react';
 import { TodoTicket as TodoTicketState, modifyTicket, deleteTicket } from '../../store/todos';
 import { useDispatch } from 'react-redux';
 import EditMenu from '../popup-menu/edit-menu';
-import { Position } from '../calendar/task';
+import { Position } from '../calendar/task/task';
 import './todo-ticket.scss';
 
 interface Props {
