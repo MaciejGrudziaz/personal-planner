@@ -19,19 +19,6 @@ type Task {
     category: String!
 }
 
-type CalendarMonthView {
-  fontSize: Int!
-}
-
-type Config {
-  calendarMonthView: CalendarMonthView
-}
-
-type Query {
-    fetchTasks(month: Int, year: Int, id: [Int]): [Task]
-    config: Config
-}
-
 input InputTime {
     hour: Int!
     minute: Int!
@@ -43,10 +30,49 @@ input InputDate {
     day: Int!
 }
 
+type ToDo {
+    id: Int!
+    group_id: Int!
+    content: String
+    priority: Int!
+    done: Boolean!
+}
+
+type ToDoGroup {
+    id: Int!
+    name: String
+    ordinal: Int!
+    todos: [ToDo]!
+}
+
+type Config {
+  calendarMonthView: CalendarMonthView
+}
+
+type CalendarMonthView {
+  fontSize: Int!
+}
+
+type Query {
+    fetchTasks(month: Int, year: Int, id: [Int]): [Task]
+    fetchTodos(id: [Int], priority: Int): [ToDo]
+    fetchTodoGroups(id: [Int]): [ToDoGroup]
+    config: Config
+}
+
+
 type Mutation {
     createTask(start_time: InputTime, end_time: InputTime, date: InputDate!, basic_info: String, description: String, category: String!): Int
     updateTask(id: Int!, start_time: InputTime, end_time: InputTime, date: InputDate!, basic_info: String, description: String, category: String!): Boolean!
     deleteTask(id: Int!): Boolean!
+
+    createTodoGroup(name: String, ordinal: Int): Int
+    modifyTodoGroup(id: Int!, name: String, ordinal: Int): Boolean!
+    deleteTodoGroup(id: [Int]!): Boolean!
+
+    createTodo(content: String, group_id: Int!, priority: Int): Int
+    modifyTodo(id: Int!, content: String, priority: Int, group_id: Int, done: Boolean): Boolean!
+    deleteTodo(id: [Int]!): Boolean!
 
     updateCalendarMonthViewFontSize(size: Int!): Boolean!
 }

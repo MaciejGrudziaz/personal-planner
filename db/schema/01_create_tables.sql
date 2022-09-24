@@ -18,12 +18,22 @@ CREATE TABLE config
     PRIMARY KEY(name)
 );
 
+CREATE TABLE todo_groups
+(
+    id serial,
+    name varchar(150),
+    ordinal integer,
+    PRIMARY KEY(id)
+);
+
 CREATE TABLE todo_tasks
 (
     id serial,
+    group_id integer not null,
     content varchar(150),
-    priority integer,
-    PRIMARY KEY(id)
+    priority integer not null,
+    PRIMARY KEY(id),
+    FOREIGN KEY(group_id) REFERENCES todo_groups(id) ON DELETE CASCADE
 );
 
 CREATE TABLE done_tasks
