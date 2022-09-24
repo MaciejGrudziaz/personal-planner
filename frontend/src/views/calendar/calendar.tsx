@@ -79,7 +79,6 @@ function Calendar(props: Props) {
     const [calendarFont, setCalendarFont] = useState({size: 12, changed: false} as FontState);
     const [selectedCells, setSelectedCells] = useState([] as CellBasicInfo[]);
     const [wndTaskInfo, setWndTaskInfo] = useState({id: undefined, date: undefined, startTime: undefined, endTime: undefined, show: false} as WndTaskInfo);
-    const [forceDailyTaskTabResize, setForceDailyTaskTabResize] = useState(false);
     const [isInitialized, init] = useState(false);
     const dayMapping: Map<number, string> = new Map([[0, "monday"], [1, "tuesday"], [2, "wednesday"], [3, "thursday"], [4, "friday"], [5, "saturday"], [6, "sunday"]]);
 
@@ -270,7 +269,7 @@ function Calendar(props: Props) {
     }
 
     const daysList = Array.from(dayMapping.entries()).map((value: [number, string]) => (
-        <Day day={value[0]} dayName={value[1]} date={calcDate(value[0])} selectedCells={selectedCells}
+        <Day key={value[0]} day={value[0]} dayName={value[1]} date={calcDate(value[0])} selectedCells={selectedCells}
             maxDailyTasksInWeekPerDay={getDailyTaskTabMinHeight()}
             dailyTasks={tasks.filter((val: Task) => val.dayOfWeek === value[0] && val.isDaily).map((val: Task) => val.toTaskState(props.weekStartDate))}
             onGridSizeChange={()=>updateCellsInStore()}
@@ -331,16 +330,15 @@ function Calendar(props: Props) {
                 setGrabbed(true);
                 setModifyObject(task.id);
                 setStartMovePos(pos);
-                setForceDailyTaskTabResize(true);
             }}
-            select={(id: string) => {
-                console.log(`select ${id}`);
+            select={(task: TaskState) => {
+                setWndTaskInfo({...task, show: true});
             }}
         />
     ));
 
     const tasksList = tasks.filter((value: Task) => !value.isDaily).map((value: Task)=>(
-        <CalendarTask top={value.y} left={value.x + value.getLeftPadding()} width={value.width - value.getLeftPadding() - value.getRightPadding()} height={value.height} basicInfo={value.basicInfo} category={value.category} zIndex={value.zIndex}
+        <CalendarTask key={value.id} top={value.y} left={value.x + value.getLeftPadding()} width={value.width - value.getLeftPadding() - value.getRightPadding()} height={value.height} basicInfo={value.basicInfo} category={value.category} zIndex={value.zIndex}
             grabbed={(position: Position)=>{
                 setStartMovePos(position); 
                 setGrabbed(true); 

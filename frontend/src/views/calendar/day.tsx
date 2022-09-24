@@ -19,7 +19,7 @@ interface Props {
     hoverOverCell(day: number, hour: number, quarter: number): void;
     moveTask(task: TaskState, mousePos: Position, x: number, y: number, width: number, height: number): void;
     onGridSizeChange?(): void;
-    select?(id: string): void;
+    select?(task: TaskState): void;
 }
 
 export class Cell {
@@ -100,14 +100,14 @@ function Day(props: Props) {
         return `${day}.${(month < 10) ? '0' + month : month}`;
     }
 
-    const hoursList = hours.map((hour: number) => {
-        return (<HourView day={props.day} hour={hour} selectedCells={props.selectedCells}
+    const hoursList = hours.map((hour: number) => (
+        <HourView key={hour} day={props.day} hour={hour} selectedCells={props.selectedCells}
             updateRefs={(refs: RefObject<HTMLDivElement>[])=>props.updateRefs(hour, refs)}
             startSelection={(day: number, hour: number, quarter: number)=>props.startSelection(day, hour, quarter)}
             endSelection={(day: number, hour: number, quarter: number)=>props.endSelection(day, hour, quarter)}
             hoverOverCell={(day: number, hour: number, quarter: number)=>props.hoverOverCell(day, hour, quarter)}
-        />)
-    });
+        />
+    ));
 
     const resetClick = () => {
         setClickRecord(false);
@@ -128,7 +128,7 @@ function Day(props: Props) {
             onClick={(event: React.MouseEvent<HTMLDivElement>) => {
                 if(clickRecorded) {
                     if(props.select) {
-                        props.select(task.id);
+                        props.select(task);
                     }
                     resetClick();
                     return;

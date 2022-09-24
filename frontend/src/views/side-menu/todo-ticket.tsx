@@ -130,8 +130,8 @@ function TodoTicket(props: Props) {
                         if(todo === undefined) return;
                         setTodo({...todo, done: !todo.done});
                         dispatch(modifyTicket({groupId: props.groupId, ticket: {...todo, done: !todo.done}}));
-                    }
-                } />
+                    }}
+                />
                 {ticketContent()}
                 <button type="button" style={{width: "1.5rem", height: "1.5rem", margin: "auto"}}
                     onClick={() => {

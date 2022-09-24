@@ -28,8 +28,8 @@ function createDefaultTaskState(props: Props): TaskState {
     return {
         id: (props.id === undefined) ? "" : props.id,
         date: (props.date === undefined) ? {year: now.getFullYear(), month: now.getMonth(), day: now.getDate()} : props.date,
-        startTime: (props.startTime === undefined) ? {hour: 0, minute: 0} : props.startTime,
-        endTime: (props.endTime === undefined) ? {hour: 0, minute: 0} : props.endTime,
+        startTime: (props.startTime === undefined) ? undefined : props.startTime,
+        endTime: (props.endTime === undefined) ? undefined : props.endTime,
         basicInfo: (props.basicInfo === undefined) ? "" : props.basicInfo,
         description: (props.description === undefined) ? "" : props.description,
         category: (props.category === undefined) ? "simple" : props.category
@@ -114,9 +114,8 @@ function TaskWnd(props: Props) {
     const updateTask = useUpdateTask();
     const createTask = useCreateTask();
     const [task, setTask] = useState(createDefaultTaskState(props));
-    const [showCalendar, setShowCalendar] = useState(false);
+    const [showCalendar, setShowCalendar] = useState(props.startTime === undefined || props.endTime === undefined);
     const dateInputRef = useRef() as RefObject<HTMLDivElement>;
-    const store = useStore();
 
     const timeInputStyle = {
         width: "1.75rem",
@@ -163,10 +162,6 @@ function TaskWnd(props: Props) {
         hideCalendar();
     }
 
-    const openCalendar = ()=>{
-        setShowCalendar(true);
-    }
-
     const hideCalendar = ()=>{
         setShowCalendar(false);
     }
@@ -209,9 +204,61 @@ function TaskWnd(props: Props) {
         return (<></>);
     }
 
-    if(task.startTime === undefined || task.endTime === undefined) {
-        return (<></>);
-    }
+    const timeInputFullDayCheckbox = (
+        <>
+            <input type="checkbox"
+                style={{margin: "auto 0.5rem auto 1rem"}}
+                checked={task.startTime === undefined || task.endTime === undefined}
+                onChange={()=>{
+                    if(task.startTime === undefined || task.endTime === undefined) {
+                        setTask({...task, startTime: {hour: 12, minute: 0}, endTime: {hour: 13, minute: 0}});
+                        return;
+                    }
+                    setTask({...task, startTime: undefined, endTime: undefined});
+                }}
+            />
+            <span>full day</span>
+        </>
+    )
+
+    const timeInput = () => {
+        if(task.startTime === undefined || task.endTime === undefined) {
+            return (
+                <div className="task-line-container">
+                    <div style={{margin: "0 0.5rem"}}><b>time:</b></div>
+                    {timeInputFullDayCheckbox}
+                </div>
+            );
+        }
+        return (
+            <div className="task-line-container">
+                <div style={{margin: "0 0.5rem"}}><b>time:</b></div>
+                <TaskInput style={timeInputStyle} initValue={parseNumberToFixedLengthString(task.startTime.hour)} maxCharacterCount={2}
+                    setValue={(val: string)=>{
+                        setTask({...task, startTime: setNewStartHour(task, val)});
+                    }}
+                />
+                <div>:</div> <TaskInput style={timeInputStyle} initValue={parseNumberToFixedLengthString(task.startTime.minute)} maxCharacterCount={2}
+                    setValue={(val: string)=>{
+                        setTask({...task, startTime: setNewStartMinute(task, val)});
+                    }}
+                />
+                <div style={{margin: "0 0.25rem"}}>-</div>
+                <TaskInput style={timeInputStyle} initValue={parseNumberToFixedLengthString(task.endTime.hour)} maxCharacterCount={2}
+                    setValue={(val: string)=>{
+                        setTask({...task, endTime: setNewEndHour(task, val)});
+                    }}
+                />
+                <div>:</div>
+                <TaskInput style={timeInputStyle} initValue={parseNumberToFixedLengthString(task.endTime.minute)} maxCharacterCount={2}
+                    setValue={(val: string)=>{
+                        setTask({...task, endTime: setNewEndMinute(task, val)});
+                    }}
+                />
+                {timeInputFullDayCheckbox}
+            </div>
+        );
+    };
 
     return (
         <>
@@ -222,31 +269,7 @@ function TaskWnd(props: Props) {
                         setValue={(val: string)=>setTask({...task, basicInfo: val})} 
                     />
                 </div>
-                <div className="task-line-container">
-                    <div style={{margin: "0 0.5rem"}}><b>time:</b></div>
-                    <TaskInput style={timeInputStyle} initValue={parseNumberToFixedLengthString(task.startTime.hour)} maxCharacterCount={2}
-                        setValue={(val: string)=>{
-                            setTask({...task, startTime: setNewStartHour(task, val)});
-                        }}
-                    />
-                    <div>:</div> <TaskInput style={timeInputStyle} initValue={parseNumberToFixedLengthString(task.startTime.minute)} maxCharacterCount={2}
-                        setValue={(val: string)=>{
-                            setTask({...task, startTime: setNewStartMinute(task, val)});
-                        }}
-                    />
-                    <div style={{margin: "0 0.25rem"}}>-</div>
-                    <TaskInput style={timeInputStyle} initValue={parseNumberToFixedLengthString(task.endTime.hour)} maxCharacterCount={2}
-                        setValue={(val: string)=>{
-                            setTask({...task, endTime: setNewEndHour(task, val)});
-                        }}
-                    />
-                    <div>:</div>
-                    <TaskInput style={timeInputStyle} initValue={parseNumberToFixedLengthString(task.endTime.minute)} maxCharacterCount={2}
-                        setValue={(val: string)=>{
-                            setTask({...task, endTime: setNewEndMinute(task, val)});
-                        }}
-                    />
-                </div>
+                {timeInput()}
                 <div className="task-line-container">
                     <div style={{margin: "0 0.5rem"}}><b>date:</b></div>
                     <div ref={dateInputRef} onClick={toggleCalendar} className="task-date">{parseDateToStr(task.date)}</div>
