@@ -162,10 +162,11 @@ function Day(props: Props) {
                 <button className="day-add-btn">+</button>
             </div>
             <div className="day-cells-grid">
-                <div ref={dailyTasksRef} className="day-daily-task-tab" style={{gridRow: (props.maxDailyTasksInWeekPerDay !== undefined) ? `1 / ${props.maxDailyTasksInWeekPerDay + 1}` : 1}}>
+                <div ref={dailyTasksRef} className="day-daily-task-tab" 
+                    style={{gridRow: (props.maxDailyTasksInWeekPerDay === undefined || props.maxDailyTasksInWeekPerDay === 0) ? 1 : `1 / ${props.maxDailyTasksInWeekPerDay + 1}`}}>
                     {dailyTasks}
                 </div>
-                <div style={{gridColumn: 1, gridRow: (props.maxDailyTasksInWeekPerDay !== undefined) ? props.maxDailyTasksInWeekPerDay + 1 : 2}}>
+                <div style={{gridColumn: 1, gridRow: (props.maxDailyTasksInWeekPerDay === undefined || props.maxDailyTasksInWeekPerDay === 0) ? 2 : props.maxDailyTasksInWeekPerDay + 1}}>
                     {hoursList}
                 </div>
             </div>
