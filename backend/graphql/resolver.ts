@@ -1,7 +1,18 @@
 import { DBClient, FetchParams } from '../db-client/client';
 import { Task } from '../data-types/task';
-import { ToDo, ToDoGroup } from '../data-types/todo';
 import { Config } from '../data-types/config';
+import { ToDo } from './todo/types';
+import { createTodo } from './todo/create';
+import { deleteTodos } from './todo/delete';
+import { fetchTodos } from './todo/fetch';
+import { modifyTodo } from './todo/modify';
+import { moveTodo, TodoPriority } from './todo/move';
+import { ToDoGroup } from './todo-group/types';
+import { createTodoGroup } from './todo-group/create';
+import { deleteTodoGroups } from './todo-group/delete';
+import { fetchTodoGroups } from './todo-group/fetch';
+import { modifyTodoGroup } from './todo-group/modify';
+import { moveTodoGroup, TodoGroupOrdinal } from './todo-group/move';
 
 export interface Resolver {
     fetchTasks(args: any): Promise<Task[] | null>;
@@ -14,9 +25,11 @@ export interface Resolver {
     createTodoGroup(args: any): Promise<number | null>;
     modifyTodoGroup(args: any): Promise<boolean>;
     deleteTodoGroup(args: any): Promise<boolean>;
+    moveTodoGroup(args: any): Promise<TodoGroupOrdinal[] | null>;
     createTodo(args: any): Promise<number | null>;
     modifyTodo(args: any): Promise<boolean>;
     deleteTodo(args: any): Promise<boolean>;
+    moveTodo(args: any): Promise<TodoPriority[] | null>;
     updateCalendarMonthViewFontSize(args: any): Promise<boolean>;
 }
 
@@ -37,10 +50,10 @@ function getResolver(db: DBClient): Resolver {
             });
         },
         fetchTodos: async (args: any): Promise<ToDo[] | null> => {
-            return await db.fetchTodos(args.id, args.priority);
+            return await fetchTodos(db, args.id, args.priority);
         },
         fetchTodoGroups: async (args: any): Promise<ToDoGroup[] | null> => {
-            return await db.fetchTodoGroups(args.id);
+            return await fetchTodoGroups(db, args.id);
         },
         updateTask: async (args: any): Promise<boolean> => {
             return await db.updateTask({
@@ -60,22 +73,28 @@ function getResolver(db: DBClient): Resolver {
             return await db.fetchConfig();
         },
         createTodoGroup: async (args: any): Promise<number | null> => {
-            return await db.insertTodoGroup(args.name, args.ordinal);
+            return await createTodoGroup(db, args.name, args.ordinal);
         },
         modifyTodoGroup: async (args: any): Promise<boolean> => {
-            return await db.updateTodoGroup(args.id, args.name, args.ordinal);
+            return await modifyTodoGroup(db, args.id, args.name, args.ordinal);
         },
         deleteTodoGroup: async (args: any): Promise<boolean> => {
-            return await db.deleteTodoGroups(args.id);
+            return await deleteTodoGroups(db, args.id);
+        },
+        moveTodoGroup: async (args: any): Promise<TodoGroupOrdinal[] | null> => {
+            return await moveTodoGroup(db, args.id, args.up, args.down);
         },
         createTodo: async (args: any): Promise<number | null> => {
-            return await db.insertTodo(args.group_id, args.content, args.priority);
+            return await createTodo(db, args.group_id, args.content, args.priority);
         },
         modifyTodo: async (args: any): Promise<boolean> => {
-            return await db.updateTodo(args.id, args.content, args.priority, args.group_id, args.done);
+            return await modifyTodo(db, args.id, args.content, args.priority, args.group_id, args.done);
         },
         deleteTodo: async (args: any): Promise<boolean> => {
-            return await db.deleteTodo(args.id);
+            return await deleteTodos(db, args.id);
+        },
+        moveTodo: async (args: any): Promise<TodoPriority[] | null> => {
+            return await moveTodo(db, args.id, args.up, args.down);
         },
         updateCalendarMonthViewFontSize: async (args: any): Promise<boolean> => {
             return await db.updateConfig("calendarMonthView_fontSize", args.size);

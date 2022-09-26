@@ -71,7 +71,7 @@ function TodoGroup(props: Props) {
                 save={(val: string)=>{
                     const tickets = group.tickets;
                     const priority = (tickets.length === 0) ? 0 : tickets[tickets.length - 1].priority + 1;
-                    dispatch(createTicket({groupId: group.id, ticket: {id: Date.now().toFixed(), text: val, done: false, priority: priority}}));
+                    dispatch(createTicket({groupId: group.id, ticket: {id: Date.now().toFixed(), content: val, done: false, priority: priority}}));
                 }}
             />
         );

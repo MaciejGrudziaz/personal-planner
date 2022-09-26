@@ -48,7 +48,7 @@ function TodoTicket(props: Props) {
                 width: "10%",
                 overflow: "hidden"
             }}>
-                {props.val.text}
+                {props.val.content}
             </div>
         );
     }
@@ -77,9 +77,9 @@ function TodoTicket(props: Props) {
     const ticketContent = () => {
         if(isEdit && todo !== undefined) {
             return (
-                <input value={todo.text} autoFocus={true} className="todo-ticket"
+                <input value={todo.content} autoFocus={true} className="todo-ticket"
                     onChange={(e: React.ChangeEvent<HTMLInputElement>)=>{
-                        setTodo({...todo, text: e.target.value});
+                        setTodo({...todo, content: e.target.value});
                     }}
                     onBlur={()=> setEdit(false)}
                     onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>)=>{
@@ -115,7 +115,7 @@ function TodoTicket(props: Props) {
                     props.mouseUp();
                 }}
             >
-                {props.val.text}
+                {props.val.content}
             </div>
         );
     };
