@@ -35,7 +35,7 @@ export function useDeleteTodoGroup(): ReturnFunc {
             }
             const result = await res.json();
             if(result["data"]["deleteTodoGroup"] === true) {
-                dispatch(deleteTicket({groupId: id}));
+                dispatch(deleteGroup({groupId: id}));
                 return true;
             }
             return false;

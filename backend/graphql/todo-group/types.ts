@@ -21,16 +21,15 @@ export function parseToDoGroup(val: any[]): ToDoGroup[] {
         }
 
         const task = parseToDo(val);
-        if(task === undefined) {
-            return;
-        }
 
         const group = groups.get(id);
         if(group !== undefined) {
-            group.tickets.push(task);
+            if(task !== undefined) {
+                group.tickets.push(task);
+            }
             return;
         }
-        groups.set(id, {id: id, name: (name) ? name : "", ordinal: ordinal, tickets: [task]});
+        groups.set(id, {id: id, name: (name) ? name : "", ordinal: ordinal, tickets: (task !== undefined) ? [task] : []});
     });
 
     return Array.from(groups.values());

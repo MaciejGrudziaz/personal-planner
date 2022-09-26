@@ -131,7 +131,7 @@ function TodoTicket(props: Props) {
                     onChange={()=>{
                         if(todo === undefined) return;
                         setTodo({...todo, done: !todo.done});
-                        updateTicket(todo.id, todo.content, todo.done);
+                        updateTicket(todo.id, todo.content, !todo.done);
                     }}
                 />
                 {ticketContent()}

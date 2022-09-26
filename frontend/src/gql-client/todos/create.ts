@@ -11,7 +11,7 @@ export function useCreateTodoTicket(): TodoTicketReturnFunc {
         try {
             const res = await fetchMutation("http://localhost:8080/",
                 `createTodo(
-                    group_id: "${groupId}",
+                    group_id: ${groupId},
                     priority: ${ticket.priority},
                     content: "${ticket.content}"
                 )`
@@ -39,7 +39,7 @@ export function useCreateTodoGroup(): TodoGroupReturnFunc {
         try {
             const res = await fetchMutation("http://localhost:8080/",
                 `createTodoGroup(
-                    name: "${name},
+                    name: "${name}",
                     ordinal: ${ordinal}
                 )`
             );
