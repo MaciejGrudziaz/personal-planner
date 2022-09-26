@@ -4,7 +4,8 @@ import { fetchMutation } from "../fetch";
 
 type TodoTicketUpdateReturnFunc = (id: string, content?: string, done?: boolean) => Promise<boolean>;
 type TodoGroupRenameReturnFunc = (id: string, name?: string) => Promise<boolean>;
-type TodoMoveReturnFunc = (id: string, dir: MoveDirection) => Promise<boolean>;
+type TodoGroupMoveReturnFunc = (id: string, dir: MoveDirection) => Promise<boolean>;
+type TodoMoveReturnFunc = (id: string, target_id: string) => Promise<boolean>;
 
 export type MoveDirection = "up" | "down";
 
@@ -45,17 +46,9 @@ export function useUpdateTicket(): TodoTicketUpdateReturnFunc {
 
 export function useMoveTicket(): TodoMoveReturnFunc {
     const dispatch = useDispatch();
-    return async (id: string, dir: MoveDirection): Promise<boolean> => {
+    return async (id: string, target_id: string): Promise<boolean> => {
         try {
-            const res = await fetchMutation("http://localhost:8080/",
-                `moveTodo(id: ${id},
-                    ${(dir === "up")
-                        ? "up: true"
-                        : "down: true"
-                    }
-                ) { id priority }
-                `
-            );
+            const res = await fetchMutation("http://localhost:8080/", `moveTodo(id: ${id}, target_id: ${target_id}) { id priority }`);
             if(!res.ok) {
                 return false;
             }
@@ -96,7 +89,7 @@ export function useRenameTodoGroup(): TodoGroupRenameReturnFunc {
     };
 }
 
-export function useMoveTodoGroup(): TodoMoveReturnFunc {
+export function useMoveTodoGroup(): TodoGroupMoveReturnFunc {
     const dispatch = useDispatch();
     return async (id: string, dir: MoveDirection): Promise<boolean> => {
         try {

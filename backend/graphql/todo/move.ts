@@ -19,10 +19,7 @@ function parseTodoPriority(val: any): TodoPriority | undefined {
 
 type MoveDirection = "up" | "down";
 
-async function fetchAffectedTodos(db: DBClient, id: number, dir: MoveDirection): Promise<TodoPriority[] | null> {
-    const comparisionSign = (dir === "up") ? "<=" : ">=";
-    const orderBy = (dir ===  "up") ? "DESC" : "ASC";
-
+async function fetchAffectedTodos(db: DBClient, id: number, targetId: number): Promise<TodoPriority[] | null> {
     const fetchAffectedTodosQuery = {
         name: "fetch-todos-by-priority",
         text: `
@@ -30,11 +27,12 @@ async function fetchAffectedTodos(db: DBClient, id: number, dir: MoveDirection):
             FROM todo_tasks t
             LEFT JOIN todo_tasks t2
                 ON t2.group_id = t.group_id AND
-                   t2.priority ${comparisionSign} t.priority
-            WHERE t.id = $1
-            ORDER BY priority ${orderBy}
+                   t2.priority >= t.priority AND
+                   t2.id != $1
+            WHERE t.id = $2
+            ORDER BY t2.priority ASC
         `,
-        values: [id]
+        values: [id, targetId]
     };
 
     const client = await db.connect();
@@ -76,42 +74,23 @@ export async function updateAffectedTodos(db: DBClient, todos: TodoPriority[]): 
     return false;
 }
 
-export async function moveTodo(db: DBClient, id: number, up?: boolean, down?: boolean): Promise<TodoPriority[] | null> {
-    if(up === undefined && down === undefined) {
-        return null;
-    }
-    if(up !== undefined && up === true && down !== undefined && down === true) {
-        return null;
-    }
-    const dir = (up !== undefined && up === true) ? "up" : "down" as MoveDirection;
-
-    const affectedTodos = await fetchAffectedTodos(db, id, dir);
+export async function moveTodo(db: DBClient, id: number, targetId: number): Promise<TodoPriority[] | null> {
+    const affectedTodos = await fetchAffectedTodos(db, id, targetId);
     if(affectedTodos === null) {
         return null;
     }
-    if(affectedTodos.length < 2) {
+    if(affectedTodos.length === 0) {
         return [];
     }
 
     const updatePriorities = () => {
         let priority = affectedTodos[0].priority;
-        if(dir === "up") {
-            return affectedTodos.map((val: TodoPriority) => { 
-                return {...val, priority: priority--};
-            });
-        }
-        return affectedTodos.map((val: TodoPriority) => { 
+        return [{id: id, priority: priority}].concat(affectedTodos).map((val: TodoPriority) => {
             return {...val, priority: priority++};
         });
     };
 
-    const switchPosition = (updatedTodos: TodoPriority[]) => {
-        const first = updatedTodos[0];
-        const second = updatedTodos[1];
-        return [{...first, priority: second.priority}, {...second, priority: first.priority}].concat(updatedTodos.slice(2));
-    }
-
-    const updatedTodos = switchPosition(updatePriorities());
+    const updatedTodos = updatePriorities();
 
     const res = await updateAffectedTodos(db, updatedTodos);
     if(res === false) {

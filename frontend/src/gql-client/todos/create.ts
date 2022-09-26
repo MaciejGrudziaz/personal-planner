@@ -3,7 +3,7 @@ import { TodoTicket, TodoGroup, createTicket, createGroup } from "../../store/to
 import { fetchMutation } from "../fetch";
 
 type TodoTicketReturnFunc = (ticket: TodoTicket, groupId: string) => Promise<boolean>;
-type TodoGroupReturnFunc = (group: TodoGroup) => Promise<boolean>;
+type TodoGroupReturnFunc = (name: string, ordinal: number) => Promise<boolean>;
 
 export function useCreateTodoTicket(): TodoTicketReturnFunc {
     const dispatch = useDispatch();
@@ -24,8 +24,7 @@ export function useCreateTodoTicket(): TodoTicketReturnFunc {
             if(id === undefined || id === null) {
                 return false;
             }
-            ticket.id = id;
-            dispatch(createTicket({ticket: ticket, groupId: groupId}));
+            dispatch(createTicket({ticketId: id, groupId: groupId, content: ticket.content, priority: ticket.priority}));
             return true;
         } catch(err: any) {
             console.log(err.stack);
@@ -36,12 +35,12 @@ export function useCreateTodoTicket(): TodoTicketReturnFunc {
 
 export function useCreateTodoGroup(): TodoGroupReturnFunc {
     const dispatch = useDispatch();
-    return async (group: TodoGroup): Promise<boolean> => {
+    return async (name: string, ordinal: number): Promise<boolean> => {
         try {
             const res = await fetchMutation("http://localhost:8080/",
                 `createTodoGroup(
-                    name: "${group.name},
-                    ordinal: ${group.ordinal}
+                    name: "${name},
+                    ordinal: ${ordinal}
                 )`
             );
             if(!res.ok) {
@@ -52,8 +51,7 @@ export function useCreateTodoGroup(): TodoGroupReturnFunc {
             if(id === undefined || id === null) {
                 return false;
             }
-            group.id = id;
-            dispatch(createGroup({groupId: id, ordinal: group.ordinal, name: group.name}));
+            dispatch(createGroup({groupId: id, ordinal: ordinal, name: name}));
             return true;
         } catch(err: any) {
             console.error(err.stack);

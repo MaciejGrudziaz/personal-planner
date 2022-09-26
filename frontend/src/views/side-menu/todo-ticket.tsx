@@ -1,6 +1,7 @@
 import React, {RefObject, useEffect, useState, useRef} from 'react';
-import { TodoTicket as TodoTicketState, modifyTicket, deleteTicket } from '../../store/todos';
-import { useDispatch } from 'react-redux';
+import { TodoTicket as TodoTicketState } from '../../store/todos';
+import { useDeleteTodoTicket } from '../../gql-client/todos/delete';
+import { useUpdateTicket } from '../../gql-client/todos/update';
 import EditMenu from '../popup-menu/edit-menu';
 import { Position } from '../calendar/task/task';
 import './todo-ticket.scss';
@@ -22,7 +23,8 @@ function TodoTicket(props: Props) {
     const [isEdit, setEdit] = useState(false);
     const [isInitialized, setInit] = useState(false);
     const ticketRef = useRef() as RefObject<HTMLDivElement>;
-    const dispatch = useDispatch();
+    const deleteTodoTicket = useDeleteTodoTicket();
+    const updateTicket = useUpdateTicket();
 
     useEffect(()=>{
         if(toggle && props.mousePos === undefined) {
@@ -68,7 +70,7 @@ function TodoTicket(props: Props) {
                 }}
                 delete={()=>{
                     if(todo === undefined) return;
-                    dispatch(deleteTicket({groupId: props.groupId, ticketId: todo.id}));
+                    deleteTodoTicket(todo.id);
                 }}
             />
         );
@@ -89,7 +91,7 @@ function TodoTicket(props: Props) {
                             return;
                         }
                         if(e.key === "Enter") {
-                            dispatch(modifyTicket({groupId: props.groupId, ticket: todo}));
+                            updateTicket(todo.id, todo.content, todo.done);
                             setEdit(false);
                             return;
                         }
@@ -129,14 +131,14 @@ function TodoTicket(props: Props) {
                     onChange={()=>{
                         if(todo === undefined) return;
                         setTodo({...todo, done: !todo.done});
-                        dispatch(modifyTicket({groupId: props.groupId, ticket: {...todo, done: !todo.done}}));
+                        updateTicket(todo.id, todo.content, todo.done);
                     }}
                 />
                 {ticketContent()}
                 <button type="button" style={{width: "1.5rem", height: "1.5rem", margin: "auto"}}
                     onClick={() => {
                         if(todo === undefined) return;
-                        dispatch(deleteTicket({groupId: props.groupId, ticketId: todo.id}));
+                        deleteTodoTicket(todo.id);
                     }}
                 >x</button>
             </div>

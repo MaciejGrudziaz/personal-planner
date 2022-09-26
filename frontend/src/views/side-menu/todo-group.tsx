@@ -1,6 +1,8 @@
 import React, {RefObject, useEffect, useState, useRef} from 'react';
-import { useDispatch } from 'react-redux';
-import { TodoGroup as TodoGroupState, TodoTicket as TodoTicketState, sortTickets, moveTicket, createTicket, deleteGroup, moveGroup, renameGroup} from '../../store/todos';
+import { TodoGroup as TodoGroupState, TodoTicket as TodoTicketState, sortTickets } from '../../store/todos';
+import { useMoveTicket, useMoveTodoGroup, useRenameTodoGroup } from '../../gql-client/todos/update';
+import { useCreateTodoTicket } from '../../gql-client/todos/create';
+import { useDeleteTodoGroup } from '../../gql-client/todos/delete';
 import TodoTicket from './todo-ticket';
 import FloatingTextInput from './floating-text-input';
 import EditMenu from '../popup-menu/edit-menu';
@@ -22,7 +24,11 @@ function TodoGroup(props: Props) {
     const [group, setGroup] = useState(undefined as TodoGroupState | undefined);
     const [isInitialized, setInit] = useState(false);
     const groupHeaderRef = useRef() as RefObject<HTMLDivElement>;
-    const dispatch = useDispatch();
+    const moveTicket = useMoveTicket();
+    const createTicket = useCreateTodoTicket();
+    const renameTodoGroup = useRenameTodoGroup();
+    const deleteTodoGroup = useDeleteTodoGroup();
+    const moveTodoGroup = useMoveTodoGroup();
 
     useEffect(()=>{
         if(isInitialized)  return;
@@ -49,7 +55,7 @@ function TodoGroup(props: Props) {
             mouseUp={()=>{
                 setMousePos(undefined);
                 if(grabbedTicket === undefined) { return; }
-                dispatch(moveTicket({ticketId: grabbedTicket, priority: ticket.priority - 1, groupId: group.id}));
+                moveTicket(grabbedTicket, ticket.id);
                 setGrabbedTicket(undefined);
             }}
         />
@@ -71,7 +77,7 @@ function TodoGroup(props: Props) {
                 save={(val: string)=>{
                     const tickets = group.tickets;
                     const priority = (tickets.length === 0) ? 0 : tickets[tickets.length - 1].priority + 1;
-                    dispatch(createTicket({groupId: group.id, ticket: {id: Date.now().toFixed(), content: val, done: false, priority: priority}}));
+                    createTicket({id: "", content: val, done: false, priority: priority}, group.id);
                 }}
             />
         );
@@ -92,7 +98,7 @@ function TodoGroup(props: Props) {
                             return;
                         }
                         if(e.key === "Enter") {
-                            dispatch(renameGroup({groupId: group.id, name: group.name}));
+                            renameTodoGroup(group.id, group.name);
                             setTextEdit(false);
                             return;
                         }
@@ -126,7 +132,7 @@ function TodoGroup(props: Props) {
                     setTextEdit(true);
                 }}
                 delete={()=>{
-                    dispatch(deleteGroup({groupId: props.val.id}));
+                    deleteTodoGroup(props.val.id);
                 }}
             />
         );
@@ -150,23 +156,19 @@ function TodoGroup(props: Props) {
                 <div style={{display: "flex", alignItems: "center"}}>
                     <div className="todo-group-priority-btn-grid">
                         <button className="todo-group-priority-btn"
-                            onClick={()=>{
-                                dispatch(moveGroup({groupId: props.val.id, direction: "up"}));
-                            }}
+                            onClick={() => moveTodoGroup(props.val.id, "up")}
                         >+</button>
                         <button className="todo-group-priority-btn"
-                            onClick={()=>{
-                                dispatch(moveGroup({groupId: props.val.id, direction: "down"}));
-                            }}
+                            onClick={() => moveTodoGroup(props.val.id, "down")}
                         >-</button>
                     </div>
                     {groupNameContent()}
                     <button type="button" style={{marginLeft: "1rem", width: "1.5rem", height: "1.5rem"}}
-                        onClick={()=>setShowTicketInput(true)}
+                        onClick={() => setShowTicketInput(true)}
                     >+</button>
                     {ticketFloatingInput()}
                     <button type="button" style={{marginLeft: "auto", marginRight: "0.5rem", width: "1.5rem", height: "1.5rem"}}
-                        onClick={()=>dispatch(deleteGroup({groupId: props.val.id}))}
+                        onClick={() => deleteTodoGroup(props.val.id)}
                     >x</button>
                 </div>
                 {tickets()}

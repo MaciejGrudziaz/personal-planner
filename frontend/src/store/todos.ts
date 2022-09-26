@@ -56,34 +56,6 @@ export const todosSlice = createSlice({
             }
             return {content: state.content.concat([{id: groupId, ordinal: groupOrdinal, name: groupName, tickets: []}])};
         },
-//         moveGroup: (state: TodoState, action: PayloadAction<Args>) => {
-//             const groupId = action.payload.groupId;
-//             const direction = action.payload.direction;
-//             if(groupId === undefined || direction === undefined) {
-//                 return state;
-//             }
-//             const sortedGroups = [...state.content].sort((lhs: TodoGroup, rhs: TodoGroup) => lhs.ordinal - rhs.ordinal);
-//             const id = sortedGroups.findIndex((val: TodoGroup) => val.id === groupId);
-//             if(id === -1) {
-//                 return state;
-//             }
-//             if((direction === "up" && id === 0) || (direction === "down" && id === sortedGroups.length - 1)) {
-//                 return state;
-//             }
-//             const newOrdinal = (direction === "up") ? sortedGroups[id - 1].ordinal - 1 : sortedGroups[id + 1].ordinal + 1;
-//             return {content: state.content.map((val: TodoGroup) => {
-//                 if(val.id === groupId) {
-//                     return {...val, ordinal: newOrdinal};
-//                 }
-//                 if(direction === "up" && val.ordinal <= newOrdinal) {
-//                     return {...val, ordinal: val.ordinal - 1};
-//                 }
-//                 if(direction === "down" && val.ordinal >= newOrdinal) {
-//                     return {...val, ordinal: val.ordinal + 1};
-//                 }
-//                 return val;
-//             })};
-//         },
         modifyGroup: (state: TodoState, action: PayloadAction<Args>) => {
             const groupId = action.payload.groupId;
             const name = action.payload.name;
@@ -133,32 +105,6 @@ export const todosSlice = createSlice({
                 })
             };
         },
-//         moveTicket: (state: TodoState, action: PayloadAction<Args>) => {
-//             const ticketId = action.payload.ticketId;
-//             const priority = action.payload.priority;
-//             const groupId = action.payload.groupId;
-// 
-//             if(ticketId === undefined || priority === undefined || groupId === undefined) {
-//                 return state;
-//             }
-// 
-//             return {
-//                 content: state.content.map((val: TodoGroup) => {
-//                     if(val.id !== groupId) {
-//                         return val;
-//                     }
-//                     return {...val, tickets: val.tickets.map((ticket: TodoTicket) => {
-//                         if(ticket.id === ticketId) {
-//                             return {...ticket, priority: priority };
-//                         }
-//                         if(ticket.priority <= priority) {
-//                             return {...ticket, priority: ticket.priority - 1};
-//                         }
-//                         return ticket;
-//                     })}
-//                 })
-//             };
-//         },
         modifyTicket: (state: TodoState, action: PayloadAction<Args>) => {
             const ticketId = action.payload.ticketId;
             const content = action.payload.content;

@@ -1,7 +1,9 @@
 import React, {useEffect, useState, useRef, RefObject} from 'react';
-import {useStore, useDispatch} from 'react-redux';
+import {useStore} from 'react-redux';
 import {RootState} from '../../store/store';
-import {TodoGroup as TodoGroupState, TodoTicket as TodoTicketState, sortGroups, createGroup} from '../../store/todos';
+import {TodoGroup as TodoGroupState, TodoTicket as TodoTicketState, sortGroups} from '../../store/todos';
+import {useFetchTodoGroups} from '../../gql-client/todos/fetch';
+import { useCreateTodoGroup } from '../../gql-client/todos/create';
 import TodoGroup from './todo-group';
 import FloatingTextInput from './floating-text-input';
 import './side-menu.scss';
@@ -13,8 +15,9 @@ function SideMenu() {
     const [showGroupInput, setShowGroupInput] = useState(false);
     const menuRef = useRef() as RefObject<HTMLDivElement>;
     const headerRef = useRef() as RefObject<HTMLDivElement>;
+    const fetchTodos = useFetchTodoGroups();
+    const createTodoGroup = useCreateTodoGroup();
     const store = useStore();
-    const dispatch = useDispatch();
 
     useEffect(()=>{
         if(isInitialized) { return; }
@@ -22,13 +25,13 @@ function SideMenu() {
         const el = menuRef.current;
         if(el === undefined || el === null) { return; }
 
-        store.subscribe(fetchTodos);
-        fetchTodos();
+        store.subscribe(fetchTodosFromStore);
+        fetchTodos().then(() => fetchTodosFromStore());
 
         setInit(true);
     });
 
-    const fetchTodos = () => {
+    const fetchTodosFromStore = () => {
         setTodoGroups(sortGroups((store.getState() as RootState).todosState.content));
     };
 
@@ -58,7 +61,7 @@ function SideMenu() {
                 close={()=>setShowGroupInput(false)}
                 save={(val: string)=>{
                     const ordinal = (todoGroups.length === 0) ? 0 : todoGroups[todoGroups.length - 1].ordinal + 1;
-                    dispatch(createGroup({groupId: Date.now().toFixed(),  ordinal: ordinal, name: val}));
+                    createTodoGroup(val, ordinal);
                 }}
             />
         );

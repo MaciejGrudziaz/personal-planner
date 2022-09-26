@@ -85,7 +85,7 @@ type Mutation {
     createTodo(content: String, group_id: Int!, priority: Int): Int
     modifyTodo(id: Int!, content: String, priority: Int, group_id: Int, done: Boolean): Boolean!
     deleteTodo(id: [Int]!): Boolean!
-    moveTodo(id: Int!, up: Boolean, down: Boolean): [ToDoPriority]
+    moveTodo(id: Int!, target_id: Int!): [ToDoPriority]
 
     updateCalendarMonthViewFontSize(size: Int!): Boolean!
 }

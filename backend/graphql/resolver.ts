@@ -94,7 +94,7 @@ function getResolver(db: DBClient): Resolver {
             return await deleteTodos(db, args.id);
         },
         moveTodo: async (args: any): Promise<TodoPriority[] | null> => {
-            return await moveTodo(db, args.id, args.up, args.down);
+            return await moveTodo(db, args.id, args.target_id);
         },
         updateCalendarMonthViewFontSize: async (args: any): Promise<boolean> => {
             return await db.updateConfig("calendarMonthView_fontSize", args.size);
