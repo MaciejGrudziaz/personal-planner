@@ -25,7 +25,7 @@ async function fetchAffectedGroups(db: DBClient, id: number, dir: MoveDirection)
     const orderBy = (dir === "up") ? "DESC" : "ASC";
 
     const fetchAffectedGroups = {
-        name: "fetch-todo-groups-by-ordinal",
+        name: `fetch-todo-groups-by-ordinal-${comparisionSign}-${orderBy}`,
         text: `
             SELECT id, ordinal
             FROM todo_groups

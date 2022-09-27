@@ -3,7 +3,7 @@ import { ToDoGroup, parseToDoGroup } from './types';
 
 export async function fetchTodoGroups(db: DBClient, id?: number[]): Promise<ToDoGroup[] | null> {
     const fetchTodoGroupQuery = {
-        name: "fetch-todo-groups",
+        name: `fetch-todo-groups${(id === undefined) ? "-all" : ""}`,
         text: `
             SELECT g.id as group_id, g.name as group_name, g.ordinal group_ordinal, t.id as id, t.content as content, t.priority as priority, dt.task_id as done_task_id
             FROM todo_groups g

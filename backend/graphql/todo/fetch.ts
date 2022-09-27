@@ -1,29 +1,26 @@
-import { DBClient } from "../../db-client/client";
-import { ToDo, parseToDo } from "./types";
+import { DBClient } from "../../db-client/client"; import { ToDo, parseToDo } from "./types";
 
-export async function fetchTodos(db: DBClient, id?: number[], priority?: number): Promise<ToDo[] | null> {
+export async function fetchTodos(db: DBClient, id?: number[]): Promise<ToDo[] | null> {
     const prepareQuery = () => {
         const baseQuery = `
             SELECT id, group_id, content, priority, task_id as done_task_id
             FROM todo_tasks t
             LEFT JOIN done_tasks dt
                 ON dt.task_id = t.id`;
-        if(id === undefined && priority === undefined) return baseQuery;
+        if(id === undefined) return baseQuery;
 
-        let argCounter = 0;
         return `${baseQuery}
             WHERE
-            ${(id !== undefined) ? `t.id = ANY ($${++argCounter})` : ""}
-            ${(priority !== undefined) ? `t.priority = $${++argCounter}` : ""}
+            ${(id !== undefined) ? `t.id = ANY ($1)` : ""}
         `;
     };
 
     console.log(prepareQuery());
 
     const fetchTodosQuery = {
-        name: "fetch-todos",
+        name: `fetch-todos${(id === undefined) ? "-all" : ""}`,
         text: prepareQuery(),
-        values: [id, priority].filter((val: any) => val !== undefined)
+        values: (id === undefined) ? [] : [id]
     };
 
     const client = await db.connect();

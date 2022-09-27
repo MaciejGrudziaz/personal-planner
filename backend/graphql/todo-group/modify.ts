@@ -16,8 +16,12 @@ export async function modifyTodoGroup(db: DBClient, id: number, name?: string, o
         `;
     }
 
+    const prepareQueryName = () => {
+        return `update-todo-group${(name !== undefined) ? "-name" : ""}${(ordinal !== undefined) ? "-ordinal" : ""}`;
+    }
+
     const updateTodoGroup = {
-        name: "update-todo-group",
+        name: prepareQueryName(),
         text: prepareQuery(),
         values: [id, name, ordinal].filter((val: any) => val !== undefined)
     };

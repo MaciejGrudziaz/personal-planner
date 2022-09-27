@@ -50,7 +50,7 @@ function getResolver(db: DBClient): Resolver {
             });
         },
         fetchTodos: async (args: any): Promise<ToDo[] | null> => {
-            return await fetchTodos(db, args.id, args.priority);
+            return await fetchTodos(db, args.id);
         },
         fetchTodoGroups: async (args: any): Promise<ToDoGroup[] | null> => {
             return await fetchTodoGroups(db, args.id);
