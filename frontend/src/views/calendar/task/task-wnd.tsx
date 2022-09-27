@@ -3,7 +3,6 @@ import TaskInput, {TaskInputStyle} from './task-input';
 import TaskTextArea from './task-text-area';
 import CalendarMonthView from './../month-view/month-view';
 import TaskDropdownSelect from './task-dropdown-select';
-import {useStore} from 'react-redux';
 import {TaskState, TaskDate, TaskTime, TaskCategory, parseDateToBuiltin, parseDateToStr} from '../../../store/tasks';
 import {useUpdateTask} from '../../../gql-client/tasks/update';
 import {useCreateTask} from '../../../gql-client/tasks/create';

@@ -1,5 +1,4 @@
 import React, {RefObject, useEffect, useState, useRef} from 'react';
-import {useDispatch, useSelector} from 'react-redux';
 import {Position, getColor as getTaskColor, getBorderColor as getTaskBorderColor} from './task/task';
 import {TaskState} from '../../store/tasks';
 import HourView, {CellBasicInfo} from './hour';
@@ -20,6 +19,7 @@ interface Props {
     moveTask(task: TaskState, mousePos: Position, x: number, y: number, width: number, height: number): void;
     onGridSizeChange?(): void;
     select?(task: TaskState): void;
+    createDailyTask?(): void;
 }
 
 export class Cell {
@@ -33,14 +33,12 @@ export class Cell {
         this.position = new Position(el.offsetLeft, el.offsetTop);
         this.width = el.offsetWidth;
         this.height = el.offsetHeight;
-        //this.ref = React.createRef();
     }
 
     quarter: number;
     position: Position | undefined;
     width: number | undefined;
     height: number | undefined;
-    //ref: RefObject<HTMLDivElement>;
 
     isInside(pos: Position): boolean {
         if(this.position === undefined || this.width === undefined || this.height === undefined) { return false; }
@@ -159,7 +157,11 @@ function Day(props: Props) {
         <div className="day">
             <div className="day-header-tab">
                 <div className="day-header"><b>{props.dayName}</b> {getDate()}</div>
-                <button className="day-add-btn">+</button>
+                <button className="day-add-btn" onClick={() => {
+                    if(props.createDailyTask) {
+                        props.createDailyTask();
+                    }
+                }}>+</button>
             </div>
             <div className="day-cells-grid">
                 <div ref={dailyTasksRef} className="day-daily-task-tab" 

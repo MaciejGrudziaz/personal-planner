@@ -32,6 +32,12 @@ export class Position {
     y: number;
 }
 
+export function getAbsDate(dayOfWeek: number, baseDate: Date): TaskDate {
+    const msInDay = 1000 * 60 * 60 * 24;
+    const date = new Date(baseDate.getTime() + dayOfWeek * msInDay);
+    return {year: date.getFullYear(), month: date.getMonth(), day: date.getDate()};
+}
+
 export class Task {
     id: string;
 
@@ -89,9 +95,7 @@ export class Task {
     }
 
     getDate(baseDate: Date): TaskDate {
-        const msInDay = 1000 * 60 * 60 * 24;
-        const date = new Date(baseDate.getTime() + this.dayOfWeek * msInDay);
-        return {year: date.getFullYear(), month: date.getMonth(), day: date.getDate()};
+        return getAbsDate(this.dayOfWeek, baseDate);
     }
 
     setPosition(position: Position) {

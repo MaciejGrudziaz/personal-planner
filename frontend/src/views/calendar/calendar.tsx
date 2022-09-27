@@ -1,10 +1,10 @@
 import React, {RefObject, useEffect, useState} from 'react';
-import {useDispatch, useSelector, useStore} from 'react-redux';
+import {useStore} from 'react-redux';
 import {RootState} from '../../store/store';
-import Day, {Hour, Cell} from './day';
+import Day from './day';
 import TaskWnd from './task/task-wnd';
 import {CellBasicInfo, extractDate, extractStartTime, extractEndTime} from './hour';
-import CalendarTask, {Task, Position, ResizeDir} from './task/task';
+import CalendarTask, {Task, Position, ResizeDir, getAbsDate} from './task/task';
 import CurrentTimePointer, {PointerState} from './current-time-pointer';
 import {TaskState, findTasksForWeek, parseDateToBuiltin, TaskDate, TaskTime, TaskCategory} from '../../store/tasks';
 import {useFetchTasks} from '../../gql-client/tasks/fetch';
@@ -247,10 +247,6 @@ function Calendar(props: Props) {
         return cells;
     }
 
-    const showTaskWnd = ()=>{
-        setWndTaskInfo({...wndTaskInfo, show: true});
-    }
-
     const hideTaskWnd = ()=>{
         setWndTaskInfo({...wndTaskInfo, show: false});
     }
@@ -333,6 +329,18 @@ function Calendar(props: Props) {
             }}
             select={(task: TaskState) => {
                 setWndTaskInfo({...task, show: true});
+            }}
+            createDailyTask={() => {
+                setWndTaskInfo({
+                    id:  undefined,
+                    date: getAbsDate(value[0], props.weekStartDate),
+                    startTime: undefined,
+                    endTime: undefined,
+                    basicInfo: "",
+                    description: "",
+                    category: undefined,
+                    show: true
+                });
             }}
         />
     ));
