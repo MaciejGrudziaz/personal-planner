@@ -204,7 +204,6 @@ export function getBorderColor(category: TaskCategory): string {
 }
 
 function CalendarTask(props: Props) {
-    // const padding = 0.3 * parseFloat(getComputedStyle(document.documentElement).fontSize);
     const [clickRecorded, setClickRecord] = useState(false);
 
     const resetClick = () => {

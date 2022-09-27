@@ -213,7 +213,9 @@ export class DBClient {
         try {
             const client = await this.connect();
             const res = (typeof val === "string") ? await client.query(updateQueryStr) : await client.query(updateQueryInt);
-            return res.rowCount > 0;
+            if(res.rowCount === 1) {
+                return true;
+            }
         } catch(err: any) {
             console.error(err.stack);
         }
