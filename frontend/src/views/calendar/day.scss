@@ -44,5 +44,17 @@ $daily-task-height: 1.5rem;
     border-radius: 0.3rem;
     margin: 0.2rem 0.2rem;
     padding: 0 0.3rem;
+    display: flex;
+}
+
+.day-daily-task-del-btn {
+    display: block;
+    float: right;
+    font-size: 0.5rem;
+    font-weight: bold;
+    width: 1.2rem;
+    height: 1.2rem;
+    margin: auto 0 auto auto;
+    text-align: top;
 }
 

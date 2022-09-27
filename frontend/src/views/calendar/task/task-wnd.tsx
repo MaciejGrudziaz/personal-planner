@@ -6,6 +6,7 @@ import TaskDropdownSelect from './task-dropdown-select';
 import {TaskState, TaskDate, TaskTime, TaskCategory, parseDateToBuiltin, parseDateToStr} from '../../../store/tasks';
 import {useUpdateTask} from '../../../gql-client/tasks/update';
 import {useCreateTask} from '../../../gql-client/tasks/create';
+import {useDeleteTask} from '../../../gql-client/tasks/delete';
 import './task-wnd.scss';
 
 interface Props {
@@ -112,6 +113,7 @@ function setNewEndMinute(task: TaskState, val: string): TaskTime | undefined {
 function TaskWnd(props: Props) {
     const updateTask = useUpdateTask();
     const createTask = useCreateTask();
+    const deleteTask = useDeleteTask();
     const [task, setTask] = useState(createDefaultTaskState(props));
     const [showCalendar, setShowCalendar] = useState(props.startTime === undefined || props.endTime === undefined);
     const dateInputRef = useRef() as RefObject<HTMLDivElement>;
@@ -296,6 +298,10 @@ function TaskWnd(props: Props) {
                         }
                     }>save</button>
                     <button className="task-action-btn" onClick={hideWindow}>cancel</button>
+                    <button className="task-action-btn" onClick={() => {
+                        deleteTask(task.id);
+                        hideWindow();
+                    }}>delete</button>
                 </div>
             </div>
         </>

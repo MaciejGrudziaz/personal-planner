@@ -2,6 +2,7 @@ import React, {RefObject, useEffect, useState, useRef} from 'react';
 import {Position, getColor as getTaskColor, getBorderColor as getTaskBorderColor} from './task/task';
 import {TaskState} from '../../store/tasks';
 import HourView, {CellBasicInfo} from './hour';
+import {useDeleteTask} from '../../gql-client/tasks/delete';
 import './day.scss';
 
 interface Props {
@@ -74,6 +75,7 @@ function Day(props: Props) {
     const [clickRecorded, setClickRecord] = useState(false);
     const [isInitialized, setInit] = useState(false);
     const dailyTasksRef = useRef() as RefObject<HTMLDivElement>;
+    const deleteTask = useDeleteTask();
 
     const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
 
@@ -150,6 +152,7 @@ function Day(props: Props) {
             }}
         >
             {task.basicInfo}
+            <button className="day-daily-task-del-btn" onClick={() => deleteTask(task.id)}>X</button>
         </div>
     ));
 
