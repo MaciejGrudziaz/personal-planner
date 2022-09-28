@@ -10,6 +10,30 @@ CREATE TABLE tasks
     PRIMARY KEY(id)
 );
 
+-- repetitive_tasks.type:
+--   0 - every <n> days
+--   1 - every <n> weeks
+--   2 - same date every <n> months
+--   3 - same date every <n> years
+-- repetitive_tasks.count = <n>
+
+CREATE TABLE repetitive_tasks
+(
+    id integer,
+    type integer not null,
+    count integer not null,
+    end_date date,
+    PRIMARY KEY(id),
+    FOREIGN KEY(id) REFERENCES tasks(id) ON DELETE CASCADE
+);
+
+CREATE TABLE excluded_repetitive_tasks 
+(
+    id integer,
+    date date not null,
+    FOREIGN KEY(id) REFERENCES tasks(id) ON DELETE CASCADE
+);
+
 CREATE TABLE config
 (
     name varchar(50),
