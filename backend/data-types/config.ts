@@ -1,3 +1,5 @@
+import {check, areAllCorrect} from "../utils/type-checking";
+
 export interface Config {
     calendarMonthView: CalendarMonthView;
 }
@@ -12,14 +14,16 @@ export function parseConfig(rows: any[]): Config {
     };
 
     rows.forEach((val: any)=>{
-        const name = val["name"];
-        if(name === undefined || name === null) {
+        const name = val["name"] as string;
+        if(check(name).not.isString.result) {
             return;
         }
         switch(name) {
             case "calendarMonthView_fontSize":
                 const fontSize = val["val_i"] as number;
-                if(fontSize === undefined || fontSize === null) { return; }
+                if(check(fontSize).not.isNumber.result) {
+                    return;
+                }
                 initialState.calendarMonthView.fontSize = fontSize;
                 break;
             default:

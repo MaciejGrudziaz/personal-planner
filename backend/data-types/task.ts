@@ -1,3 +1,5 @@
+import {areAllCorrect, check} from "../utils/type-checking";
+
 export interface Task {
     id: number;
     start_time: TaskTime | null;
@@ -6,6 +8,7 @@ export interface Task {
     basic_info: string;
     description: string;
     category: Category;
+    repetition: TaskRepetition;
 }
 
 type Category = "simple" | "important";
@@ -24,6 +27,32 @@ export function mapCategory(category: Category): number {
             return 0;
         case "important":
             return 1;
+    }
+}
+
+type RepetitionType = "daily" | "weekly" | "monthly" | "yearly";
+
+export interface TaskRepetition {
+    type: RepetitionType;
+    count: number;
+}
+
+function mapRepetitionTypeId(type: number): RepetitionType | undefined {
+    switch(type) {
+        case 0: return "daily";
+        case 1: return "weekly";
+        case 2: return "monthly";
+        case 3: return "yearly";
+    }
+    return undefined;
+}
+
+export function mapRepetitionType(type: RepetitionType): number {
+    switch(type) {
+        case "daily": return 0;
+        case "weekly": return 1;
+        case "monthly": return 2;
+        case "yearly": return 3;
     }
 }
 
@@ -80,7 +109,8 @@ export function parseTask(value: any): Task | undefined {
     const id = value["id"] as number;
     const categoryId = value["category"] as number;
     const date = value["date"] as Date;
-    if(!exists(id) || !exists(categoryId) || !exists(date)) {
+
+    if(!areAllCorrect([check(id).isNumber, check(categoryId).isNumber, check(date).isDate])) {
         console.log("One of mandatory values ('id', 'category', 'date') is null or undefined");
         return undefined;
     }
@@ -91,13 +121,27 @@ export function parseTask(value: any): Task | undefined {
         return undefined;
     }
 
+    const start_time = value["start_time"] as string | null;
+    const end_time = value["end_time"] as string | null;
+    const basic_info = value["basic_info"] as string | null;
+    const description = value["description"] as string | null;
+    if(!areAllCorrect([
+        check(start_time).isString.or.isNull,
+        check(end_time).isString.or.isNull,
+        check(basic_info).isString.or.isNull,
+        check(description).isString.or.isNull
+    ])) {
+        console.log("One of values 'start_time', 'end_time', 'basic_info' or 'description' has wrong value type");
+        return undefined;
+    }
+
     return {
         id: id,
-        start_time: (exists(value["start_time"])) ? taskTimeFromString(value["start_time"]) : null,
-        end_time: (exists(value["end_time"])) ? taskTimeFromString(value["end_time"]) : null,
+        start_time: (start_time) ? taskTimeFromString(start_time) : null,
+        end_time: (end_time) ? taskTimeFromString(end_time) : null,
         date: taskDateFromDate(date),
-        basic_info: (exists(value["basic_info"])) ? value["basic_info"] : "",
-        description: (exists(value["description"])) ? value["description"] : "",
+        basic_info: (basic_info) ? basic_info : "",
+        description: (description) ? description : "",
         category: category,
     };
 }

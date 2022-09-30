@@ -1,3 +1,5 @@
+import {check, areAllCorrect} from "../../utils/type-checking";
+
 export interface ToDo {
     id: number;
     group_id: number;
@@ -13,9 +15,12 @@ export function parseToDo(val: any): ToDo | undefined {
     const priority = val["priority"] as number;
     const done_task_id = val["done_task_id"] as number | null;
 
-    if(id === undefined || id === null 
-       || group_id === undefined || group_id === null 
-       || priority === undefined || priority === null) {
+    if(!areAllCorrect([
+        check(id).isNumber, 
+        check(group_id).isNumber, 
+        check(content).isString.or.isNull, 
+        check(priority).isNumber, 
+        check(done_task_id).isNumber.or.isNull])) {
         return undefined;
     }
 
