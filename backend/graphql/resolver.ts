@@ -1,5 +1,6 @@
 import { DBClient, FetchParams } from '../db-client/client';
 import { Task } from '../data-types/task';
+import { fetchTasks } from './tasks/fetch';
 import { Config } from '../data-types/config';
 import { ToDo } from './todo/types';
 import { createTodo } from './todo/create';
@@ -36,7 +37,7 @@ export interface Resolver {
 function getResolver(db: DBClient): Resolver {
     return {
         fetchTasks: async (args: any): Promise<Task[] | null> => {
-            return await db.fetchTasks(args.year, args.month, args.id);
+            return await fetchTasks(db, args.year, args.month, args.id);
         },
         createTask: async (args: any): Promise<number | null> => {
             return await db.insertTask({
@@ -46,7 +47,8 @@ function getResolver(db: DBClient): Resolver {
                 date: args.date,
                 basic_info: (args.basic_info === undefined) ? null : args.basic_info,
                 description: (args.description === undefined) ? null : args.description,
-                category: args.category
+                category: args.category,
+                repetition: args.repetition
             });
         },
         fetchTodos: async (args: any): Promise<ToDo[] | null> => {
@@ -63,7 +65,8 @@ function getResolver(db: DBClient): Resolver {
                 date: args.date,
                 basic_info: (args.basic_info === undefined) ? null : args.basic_info,
                 description: (args.description === undefined) ? null : args.description,
-                category: args.category
+                category: args.category,
+                repetition: args.repetition
             });
         },
         deleteTask: async (args: any): Promise<boolean> => {

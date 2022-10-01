@@ -1,4 +1,5 @@
-import { DBClient } from "../../db-client/client"; import { ToDo, parseToDo } from "./types";
+import { DBClient } from "../../db-client/client"; 
+import { ToDo, parseToDo } from "./types";
 
 export async function fetchTodos(db: DBClient, id?: number[]): Promise<ToDo[] | null> {
     const prepareQuery = () => {

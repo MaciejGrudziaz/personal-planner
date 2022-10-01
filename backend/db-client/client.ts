@@ -31,65 +31,9 @@ export class DBClient {
             port: (this.params.port !== undefined) ? this.params.port : 5432
         });
     }
+
     async connect(): Promise<PoolClient> {
         return this.pool.connect();
-    }
-
-    async fetchTasks(year?: number, month?: number, id?: number[]): Promise<Task[] | null> {
-        if(year !== undefined && month !== undefined) {
-            return await this.fetchTasksWithQuery(this.singleMonthQuery(month, year));
-        }
-        if(year !== undefined) {
-            return await this.fetchTasksWithQuery(this.singleYearQuery(year));
-        }
-        if(id !== undefined) {
-            return await this.fetchTasksWithQuery(this.idQuery(id));
-        }
-        return null;
-    }
-
-    async fetchTasksWithQuery(query: QueryConfig): Promise<Task[] | null> {
-        const client = await this.connect();
-        try {
-            const result = await client.query(query);
-            return result.rows
-                .map((val: any)=>parseTask(val))
-                .filter((val: Task | undefined) => val !== undefined)
-                .map((val: Task | undefined) => val!);
-        } catch(err: any) {
-            console.error(err.stack);
-            return null;
-        } finally {
-            client.release();
-        }
-    }
-
-    singleMonthQuery(month: number, year: number): QueryConfig {
-        const lower = `${year}-${month}-01`;
-        const upper = `${(month === 12) ? year + 1 : year}-${(month === 12) ? 1 : month + 1}-01`;
-        return {
-            name: "select-tasks-by-month",
-            text: "SELECT * FROM tasks WHERE date >= $1 AND date < $2",
-            values: [lower, upper],
-        };
-    }
-
-    singleYearQuery(year: number): QueryConfig {
-        const lower = `${year}-01-01`;
-        const upper = `${year + 1}-01-01`;
-        return {
-            name: "select-tasks-by-year",
-            text: "SELECT * FROM tasks WHERE date >= $1 AND date < $2",
-            values: [lower, upper]
-        };
-    }
-
-    idQuery(id: number[]): QueryConfig {
-        return {
-            name: "select-task-by-id",
-            text: "SELECT * FROM tasks WHERE id = ANY ($1)",
-            values: [id]
-        };
     }
 
     async insertTask(task: Task): Promise<number | null> {

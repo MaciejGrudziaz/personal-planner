@@ -8,7 +8,7 @@ export interface Task {
     basic_info: string;
     description: string;
     category: Category;
-    repetition: TaskRepetition;
+    repetition: TaskRepetition | null;
 }
 
 type Category = "simple" | "important";
@@ -30,14 +30,14 @@ export function mapCategory(category: Category): number {
     }
 }
 
-type RepetitionType = "daily" | "weekly" | "monthly" | "yearly";
+export type RepetitionType = "daily" | "weekly" | "monthly" | "yearly";
 
 export interface TaskRepetition {
     type: RepetitionType;
     count: number;
 }
 
-function mapRepetitionTypeId(type: number): RepetitionType | undefined {
+export function mapRepetitionTypeId(type: number): RepetitionType | undefined {
     switch(type) {
         case 0: return "daily";
         case 1: return "weekly";
@@ -93,7 +93,7 @@ interface TaskDate {
     day: number;
 }
 
-function taskDateFromDate(date: Date): TaskDate {
+export function taskDateFromDate(date: Date): TaskDate {
     return {year: date.getFullYear(), month: date.getMonth() + 1, day: date.getDate()};
 }
 
@@ -143,6 +143,7 @@ export function parseTask(value: any): Task | undefined {
         basic_info: (basic_info) ? basic_info : "",
         description: (description) ? description : "",
         category: category,
+        repetition: null
     };
 }
 
