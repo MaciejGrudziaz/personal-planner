@@ -23,7 +23,7 @@ export async function fetchRepetitiveTasks(db: DBClient, start_date: Date, end_d
             INNER JOIN tasks t
                 ON t.id = rt.id
             WHERE t.date < $2 AND
-                (rt.end_date >= $1 OR rt.end_date = NULL)
+                (rt.end_date >= $1 OR rt.end_date IS NULL)
         `,
         values: [start_date, end_date]
     };
