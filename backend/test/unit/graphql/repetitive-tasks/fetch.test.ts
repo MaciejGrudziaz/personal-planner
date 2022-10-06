@@ -5,10 +5,11 @@ import { QueryConfig, PoolClient } from "pg";
 
 interface QueryRow {
     id: number;
-    type: number;
-    count: number;
-    start_date: Date;
-    end_date: Date | null;
+    type?: number;
+    count?: number;
+    start_date?: Date;
+    end_date?: Date | null;
+    date?: Date;
 }
 
 interface QueryResult {
@@ -17,14 +18,29 @@ interface QueryResult {
 
 class MockClient {
     async query(query: QueryConfig<any>): Promise<QueryResult> {
+        if(query.name === "fetch-repetitive-tasks-query") {
+            return {
+                rows: [{
+                    id: 123,
+                    type: 0,
+                    count: 4,
+                    start_date: new Date("2022-01-01"),
+                    end_date: null
+                }]
+            };
+        }
+        if(query.name === "fetch-excluded-repetitive-tasks-query") {
+            return {
+                rows: [
+                    {id: 123, date: new Date("2021-12-01")},
+                    {id: 123, date: new Date("2022-01-05")},
+                    {id: 123, date: new Date("2022-01-25")},
+                    {id: 456, date: new Date("2022-01-09")},
+                ]
+            };
+        }
         return {
-            rows: [{
-                id: 123,
-                type: 0,
-                count: 4,
-                start_date: new Date("2022-01-01"),
-                end_date: null
-            }]
+            rows: []
         };
     }
 
@@ -46,12 +62,6 @@ describe("graphql::repetitive-tasks::fetch::fetchRepetitiveTasks", () => {
                {
                  id: 123,
                  date: new Date("2022-01-01"),
-                 type: 'daily',
-                 count: 4
-               },
-               {
-                 id: 123,
-                 date: new Date("2022-01-05"),
                  type: 'daily',
                  count: 4
                },
@@ -81,12 +91,6 @@ describe("graphql::repetitive-tasks::fetch::fetchRepetitiveTasks", () => {
                },
                {
                  id: 123,
-                 date: new Date("2022-01-25"),
-                 type: 'daily',
-                 count: 4
-               },
-               {
-                 id: 123,
                  date: new Date("2022-01-29"),
                  type: 'daily',
                  count: 4
@@ -94,6 +98,9 @@ describe("graphql::repetitive-tasks::fetch::fetchRepetitiveTasks", () => {
             ]);
         });
     });
+});
+
+test("graphql::repetitive-tasks::fetch::excludedTasks", () => {
 });
 
 test("graphql::repetitive-tasks::fetch::calcRepetitiveTasksDatesForDateRange-daily", () => {
@@ -168,7 +175,7 @@ test("graphql::repetitive-tasks::fetch::calcRepetitiveTasksDatesForDateRange-mon
     ])
 });
 
-test("graphql::repetitiveTasks-tasks::fetch::calcRepetitiveTasksDatesForDateRange-yearly", () => {
+test("graphql::repetitive-tasks-tasks::fetch::calcRepetitiveTasksDatesForDateRange-yearly", () => {
     const startDate = new Date("2022-01-01");
     const endDate = new Date("2025-12-01");
     const repetitiveTasks = [
@@ -182,4 +189,5 @@ test("graphql::repetitiveTasks-tasks::fetch::calcRepetitiveTasksDatesForDateRang
         { id: 0, date: new Date("2025-05-17"), type: "yearly", count: 1 }
     ]);
 });
+
 

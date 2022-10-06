@@ -1,6 +1,7 @@
 import { DBClient } from "../../db-client/client";
 import { RepetitiveTask, parseRepetitiveTask } from "./types";
 import { RepetitionType, Task } from "../../data-types/task";
+import { areAllCorrect, check } from "../../utils/type-checking";
 
 export interface TaskRepetitonSummary {
     id: number;
@@ -31,11 +32,13 @@ export async function fetchRepetitiveTasks(db: DBClient, start_date: Date, end_d
     const client = await db.connect();
     try {
         const res = await client.query(fetchRepetitiveTasksQuery);
-        return calcRepetitiveTasksDatesForDateRange(start_date, end_date, 
-            res.rows
-                .map((val: any) => parseRepetitiveTask(val))
-                .filter((val: RepetitiveTask | undefined) => val !== undefined)
-                .map((val: RepetitiveTask | undefined) => val!)
+        return filterExcludedTasks(db,
+            calcRepetitiveTasksDatesForDateRange(start_date, end_date, 
+                res.rows
+                    .map((val: any) => parseRepetitiveTask(val))
+                    .filter((val: RepetitiveTask | undefined) => val !== undefined)
+                    .map((val: RepetitiveTask | undefined) => val!)
+            )
         );
     } catch(err: any) {
         console.error(err.stack);
@@ -43,6 +46,59 @@ export async function fetchRepetitiveTasks(db: DBClient, start_date: Date, end_d
         client.release();
     }
     return null;
+}
+
+export interface TaskDate {
+    id: number
+    date: Date;
+}
+
+function parseTaskDate(val: any): TaskDate | undefined {
+    const id = val["id"] as number;
+    const date = val["date"] as Date;
+    if(!areAllCorrect([check(id).isNumber, check(date).isDate])) {
+        return undefined;
+    }
+    return {id: id, date: date};
+}
+
+async function fetchExcludedRepetitiveTasks(db: DBClient, ids: number[]): Promise<TaskDate[] | null> {
+    const fetchExcludedRepetitiveTasksQuery = {
+        name: "fetch-excluded-repetitive-tasks-query",
+        text: `
+            SELECT id, date
+            FROM excluded_repetitive_tasks
+            WHERE id = ANY ($1)
+        `,
+        values: [ids]
+    };
+
+    const client = await db.connect();
+    try {
+        const res = await client.query(fetchExcludedRepetitiveTasksQuery);
+        return res.rows
+            .map((val: any) => parseTaskDate(val))
+            .filter((val: TaskDate | undefined) => val !== undefined)
+            .map((val: TaskDate | undefined) => val!);
+    } catch(err: any) {
+        console.error(err.stack);
+    } finally {
+        client.release();
+    }
+    return null;
+}
+
+async function filterExcludedTasks(db: DBClient, tasks: TaskRepetitonSummary[]): Promise<TaskRepetitonSummary[] | null> {
+    const ids = new Set() as Set<number>;
+    tasks.forEach((task: TaskRepetitonSummary) => ids.add(task.id));
+    const excludedTasks = await fetchExcludedRepetitiveTasks(db, Array.from(ids.values()));
+    if(excludedTasks === null) {
+        return null;
+    }
+    return tasks.filter((task: TaskRepetitonSummary) => {
+        const excludedTask = excludedTasks.find((val: TaskDate) => val.id === task.id && val.date.getTime() === task.date.getTime());
+        return excludedTask === undefined;
+    });
 }
 
 function calcEventIterationBegin(start_date: number, end_date: number, event_begin: number, diff: number): number | undefined {
