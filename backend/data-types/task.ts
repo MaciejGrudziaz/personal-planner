@@ -56,7 +56,7 @@ export function mapRepetitionType(type: RepetitionType): number {
     }
 }
 
-interface TaskTime {
+export interface TaskTime {
     hour: number;
     minute: number;
 }
@@ -72,7 +72,7 @@ function numToFixedString(val: number): string {
     return (val < 10) ? "0" + val.toFixed() : val.toFixed();
 }
 
-function taskTimeFromString(time: string): TaskTime | null {
+export function taskTimeFromString(time: string): TaskTime | null {
     const splits = time.split(":");
     if(splits.length < 2) {
         console.log(`wrong time format ${time} (expected: hh:mm[:ss])`);

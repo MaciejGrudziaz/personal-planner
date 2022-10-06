@@ -9,6 +9,8 @@ interface QueryRow {
     count?: number;
     start_date?: Date;
     end_date?: Date | null;
+    start_time?: string | null;
+    end_time?: string | null;
     date?: Date;
 }
 
@@ -39,6 +41,16 @@ class MockClient {
                 ]
             };
         }
+        if(query.name === "fetch-updated-repetitive-tasks-query") {
+            return {
+                rows: [
+                    {id: 123, date: new Date("2021-12-01"), start_time: "12:00", end_time: "18:00"},
+                    {id: 123, date: new Date("2022-01-01"), start_time: "14:00", end_time: "16:00"},
+                    {id: 123, date: new Date("2022-01-21"), start_time: null, end_time: null},
+                    {id: 456, date: new Date("2022-01-17"), start_time: "10:00", end_time: "12:00"}
+                ]
+            };
+        }
         return {
             rows: []
         };
@@ -63,7 +75,9 @@ describe("graphql::repetitive-tasks::fetch::fetchRepetitiveTasks", () => {
                  id: 123,
                  date: new Date("2022-01-01"),
                  type: 'daily',
-                 count: 4
+                 count: 4,
+                 start_time: {hour: 14, minute: 0},
+                 end_time: {hour: 16, minute: 0}
                },
                {
                  id: 123,
@@ -87,7 +101,9 @@ describe("graphql::repetitive-tasks::fetch::fetchRepetitiveTasks", () => {
                  id: 123,
                  date: new Date("2022-01-21"),
                  type: 'daily',
-                 count: 4
+                 count: 4,
+                 start_time: null,
+                 end_time: null
                },
                {
                  id: 123,
@@ -98,9 +114,6 @@ describe("graphql::repetitive-tasks::fetch::fetchRepetitiveTasks", () => {
             ]);
         });
     });
-});
-
-test("graphql::repetitive-tasks::fetch::excludedTasks", () => {
 });
 
 test("graphql::repetitive-tasks::fetch::calcRepetitiveTasksDatesForDateRange-daily", () => {

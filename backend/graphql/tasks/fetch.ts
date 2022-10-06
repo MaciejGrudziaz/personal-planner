@@ -102,7 +102,11 @@ async function fetchTasksInDateRange(db: DBClient, year: number, month?: number)
             taskIdsToFetch.add(repetitionTask.id);
             return;
         }
-        result.push({...task, date: taskDateFromDate(repetitionTask.date), repetition: {type: repetitionTask.type, count: repetitionTask.count}});
+        if(repetitionTask.start_time === undefined || repetitionTask.end_time === undefined) {
+            result.push({...task, date: taskDateFromDate(repetitionTask.date), repetition: {type: repetitionTask.type, count: repetitionTask.count}});
+            return;
+        }
+        result.push({...task, date: taskDateFromDate(repetitionTask.date), repetition: {type: repetitionTask.type, count: repetitionTask.count}, start_time: repetitionTask.start_time, end_time: repetitionTask.end_time});
     });
 
     result.push(...tasks.filter((task: Task) => repetitiveTasks.find((repTask: TaskRepetitonSummary) => repTask.id === task.id) === undefined));
@@ -119,7 +123,11 @@ async function fetchTasksInDateRange(db: DBClient, year: number, month?: number)
             if(task === undefined) {
                 return;
             }
-            result.push({...task, date: taskDateFromDate(repTask.date), repetition: {type: repTask.type, count: repTask.count}});
+            if(repTask.start_time === undefined || repTask.end_time === undefined) {
+                result.push({...task, date: taskDateFromDate(repTask.date), repetition: {type: repTask.type, count: repTask.count}});
+                return;
+            }
+            result.push({...task, date: taskDateFromDate(repTask.date), repetition: {type: repTask.type, count: repTask.count}, start_time: repTask.start_time, end_time: repTask.end_time});
         });
 
     return result;

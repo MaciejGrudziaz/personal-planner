@@ -1,11 +1,13 @@
 import { DBClient } from "../../db-client/client";
 import { RepetitiveTask, parseRepetitiveTask } from "./types";
-import { RepetitionType, Task } from "../../data-types/task";
+import { RepetitionType, Task, TaskTime, taskTimeFromString } from "../../data-types/task";
 import { areAllCorrect, check } from "../../utils/type-checking";
 
 export interface TaskRepetitonSummary {
     id: number;
     date: Date;
+    start_time?: TaskTime | null;
+    end_time?: TaskTime | null;
     type: RepetitionType;
     count: number;
 }
@@ -32,12 +34,14 @@ export async function fetchRepetitiveTasks(db: DBClient, start_date: Date, end_d
     const client = await db.connect();
     try {
         const res = await client.query(fetchRepetitiveTasksQuery);
-        return filterExcludedTasks(db,
-            calcRepetitiveTasksDatesForDateRange(start_date, end_date, 
-                res.rows
-                    .map((val: any) => parseRepetitiveTask(val))
-                    .filter((val: RepetitiveTask | undefined) => val !== undefined)
-                    .map((val: RepetitiveTask | undefined) => val!)
+        return updateTasks(db,
+            filterExcludedTasks(db,
+                calcRepetitiveTasksDatesForDateRange(start_date, end_date, 
+                    res.rows
+                        .map((val: any) => parseRepetitiveTask(val))
+                        .filter((val: RepetitiveTask | undefined) => val !== undefined)
+                        .map((val: RepetitiveTask | undefined) => val!)
+                )
             )
         );
     } catch(err: any) {
@@ -98,6 +102,79 @@ async function filterExcludedTasks(db: DBClient, tasks: TaskRepetitonSummary[]):
     return tasks.filter((task: TaskRepetitonSummary) => {
         const excludedTask = excludedTasks.find((val: TaskDate) => val.id === task.id && val.date.getTime() === task.date.getTime());
         return excludedTask === undefined;
+    });
+}
+
+interface TaskDateTime {
+    id: number;
+    date: Date;
+    startTime: TaskTime | null;
+    endTime: TaskTime | null;
+}
+
+function parseTaskDateTime(val: any): TaskDateTime | undefined {
+    const id = val["id"] as number;
+    const date = val["date"] as Date;
+    const startTime = val["start_time"] as string | null;
+    const endTime = val["end_time"] as string | null;
+
+    if(!areAllCorrect([check(id).isNumber, check(date).isDate, check(startTime).isString.or.isNull, check(endTime).isString.or.isNull])) {
+        return undefined;
+    }
+
+    return {
+        id: id,
+        date: date,
+        startTime: (startTime !== null) ? taskTimeFromString(startTime) : null,
+        endTime: (endTime !== null) ? taskTimeFromString(endTime) : null
+    };
+}
+
+async function fetchUpdatedRepetitiveTasks(db: DBClient, ids: number[]): Promise<TaskDateTime[] | null> {
+    const fetchUpdatedRepetitiveTasksQuery = {
+        name: "fetch-updated-repetitive-tasks-query",
+        text: `
+            SELECT id, date, start_time, end_time
+            FROM changed_repetitive_tasks
+            WHERE id = ANY ($1)
+        `,
+        values: [ids]
+    };
+
+    const client = await db.connect();
+    try {
+        const res = await client.query(fetchUpdatedRepetitiveTasksQuery);
+        return res.rows
+            .map((val: any) => parseTaskDateTime(val))
+            .filter((val: TaskDateTime | undefined) => val !== undefined)
+            .map((val: TaskDateTime | undefined) => val!);
+    } catch(err: any) {
+        console.error(err.stack);
+    } finally {
+        client.release();
+    }
+    return null;
+}
+
+async function updateTasks(db: DBClient, tasksPromise: Promise<TaskRepetitonSummary[] | null>): Promise<TaskRepetitonSummary[] | null> {
+    const tasks = await tasksPromise;
+    if(tasks === null) {
+        return null;
+    }
+
+    const ids = new Set() as Set<number>;
+    tasks.forEach((task: TaskRepetitonSummary) => ids.add(task.id));
+
+    const updatedTasks = await fetchUpdatedRepetitiveTasks(db, Array.from(ids.values()));
+    if(updatedTasks === null) {
+        return null;
+    }
+    return tasks.map((task: TaskRepetitonSummary) => {
+        const updatedTask = updatedTasks.find((val: TaskDateTime) => val.id === task.id && val.date.getTime() === task.date.getTime());
+        if(updatedTask === undefined) {
+            return task;
+        }
+        return {...task, start_time: updatedTask.startTime, end_time: updatedTask.endTime};
     });
 }
 
