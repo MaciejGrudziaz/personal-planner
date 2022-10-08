@@ -31,7 +31,7 @@ CREATE TABLE excluded_repetitive_tasks
 (
     id integer,
     date date not null,
-    FOREIGN KEY(id) REFERENCES tasks(id) ON DELETE CASCADE
+    FOREIGN KEY(id) REFERENCES repetitive_tasks(id) ON DELETE CASCADE
 );
 
 CREATE TABLE changed_repetitive_tasks
@@ -40,7 +40,8 @@ CREATE TABLE changed_repetitive_tasks
     date date not null,
     start_time time,
     end_time time,
-    FOREIGN KEY(id) REFERENCES tasks(id) ON DELETE CASCADE
+    PRIMARY KEY(id, date),
+    FOREIGN KEY(id) REFERENCES repetitive_tasks(id) ON DELETE CASCADE
 );
 
 CREATE TABLE config

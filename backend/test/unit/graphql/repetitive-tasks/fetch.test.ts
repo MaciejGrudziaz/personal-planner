@@ -77,25 +77,29 @@ describe("graphql::repetitive-tasks::fetch::fetchRepetitiveTasks", () => {
                  type: 'daily',
                  count: 4,
                  start_time: {hour: 14, minute: 0},
-                 end_time: {hour: 16, minute: 0}
+                 end_time: {hour: 16, minute: 0},
+                 end_date: null
                },
                {
                  id: 123,
                  date: new Date("2022-01-09"),
                  type: 'daily',
-                 count: 4
+                 count: 4,
+                 end_date: null
                },
                {
                  id: 123,
                  date: new Date("2022-01-13"),
                  type: 'daily',
-                 count: 4
+                 count: 4,
+                 end_date: null
                },
                {
                  id: 123,
                  date: new Date("2022-01-17"),
                  type: 'daily',
-                 count: 4
+                 count: 4,
+                 end_date: null
                },
                {
                  id: 123,
@@ -103,13 +107,15 @@ describe("graphql::repetitive-tasks::fetch::fetchRepetitiveTasks", () => {
                  type: 'daily',
                  count: 4,
                  start_time: null,
-                 end_time: null
+                 end_time: null,
+                 end_date: null
                },
                {
                  id: 123,
                  date: new Date("2022-01-29"),
                  type: 'daily',
-                 count: 4
+                 count: 4,
+                 end_date: null
                }
             ]);
         });
@@ -127,16 +133,16 @@ test("graphql::repetitive-tasks::fetch::calcRepetitiveTasksDatesForDateRange-dai
     const tasks = calcRepetitiveTasksDatesForDateRange(startDate, endDate, repetitiveTasks);
     expect(tasks.length).toEqual(10);
     expect(tasks).toEqual([
-        { id: 0, date: new Date("2022-01-07"), type: "daily", count: 7 },
-        { id: 0, date: new Date("2022-01-14"), type: "daily", count: 7 },
-        { id: 0, date: new Date("2022-01-21"), type: "daily", count: 7 },
-        { id: 0, date: new Date("2022-01-28"), type: "daily", count: 7 },
-        { id: 1, date: new Date("2022-01-05"), type: "daily", count: 10 },
-        { id: 1, date: new Date("2022-01-15"), type: "daily", count: 10 },
-        { id: 1, date: new Date("2022-01-25"), type: "daily", count: 10 },
-        { id: 2, date: new Date("2022-01-12"), type: "daily", count: 8 },
-        { id: 2, date: new Date("2022-01-20"), type: "daily", count: 8 },
-        { id: 2, date: new Date("2022-01-28"), type: "daily", count: 8 }
+        { id: 0, date: new Date("2022-01-07"), type: "daily", count: 7, end_date: null },
+        { id: 0, date: new Date("2022-01-14"), type: "daily", count: 7, end_date: null },
+        { id: 0, date: new Date("2022-01-21"), type: "daily", count: 7, end_date: null },
+        { id: 0, date: new Date("2022-01-28"), type: "daily", count: 7, end_date: null },
+        { id: 1, date: new Date("2022-01-05"), type: "daily", count: 10, end_date: new Date("2022-08-12") },
+        { id: 1, date: new Date("2022-01-15"), type: "daily", count: 10, end_date: new Date("2022-08-12")},
+        { id: 1, date: new Date("2022-01-25"), type: "daily", count: 10, end_date: new Date("2022-08-12")},
+        { id: 2, date: new Date("2022-01-12"), type: "daily", count: 8, end_date: null },
+        { id: 2, date: new Date("2022-01-20"), type: "daily", count: 8, end_date: null },
+        { id: 2, date: new Date("2022-01-28"), type: "daily", count: 8, end_date: null }
       ]
     );
 });
@@ -152,13 +158,13 @@ test("graphql::repetitive-tasks::fetch::calcRepetitiveTasksDatesForDateRange-wee
     const tasks = calcRepetitiveTasksDatesForDateRange(startDate, endDate, repetitiveTasks);
     expect(tasks.length).toEqual(7);
     expect(tasks).toEqual([
-        { id: 0, date: new Date("2022-01-10"), type: "weekly", count: 2 },
-        { id: 0, date: new Date("2022-01-24"), type: "weekly", count: 2 },
-        { id: 0, date: new Date("2022-02-07"), type: "weekly", count: 2 },
-        { id: 0, date: new Date("2022-02-21"), type: "weekly", count: 2 },
-        { id: 1, date: new Date("2022-01-26"), type: "weekly", count: 7 },
-        { id: 2, date: new Date("2022-01-12"), type: "weekly", count: 4 },
-        { id: 2, date: new Date("2022-02-09"), type: "weekly", count: 4 }
+        { id: 0, date: new Date("2022-01-10"), type: "weekly", count: 2, end_date: null },
+        { id: 0, date: new Date("2022-01-24"), type: "weekly", count: 2, end_date: null },
+        { id: 0, date: new Date("2022-02-07"), type: "weekly", count: 2, end_date: null },
+        { id: 0, date: new Date("2022-02-21"), type: "weekly", count: 2, end_date: null },
+        { id: 1, date: new Date("2022-01-26"), type: "weekly", count: 7, end_date: new Date("2022-08-12") },
+        { id: 2, date: new Date("2022-01-12"), type: "weekly", count: 4, end_date: null },
+        { id: 2, date: new Date("2022-02-09"), type: "weekly", count: 4, end_date: null }
     ]);
 });
 
@@ -173,18 +179,18 @@ test("graphql::repetitive-tasks::fetch::calcRepetitiveTasksDatesForDateRange-mon
     const tasks = calcRepetitiveTasksDatesForDateRange(startDate, endDate, repetitiveTasks);
     expect(tasks.length).toEqual(12);
     expect(tasks).toEqual([
-        { id: 0, date: new Date("2022-02-17"), type: "monthly", count: 3 },
-        { id: 0, date: new Date("2022-05-17"), type: "monthly", count: 3 },
-        { id: 0, date: new Date("2022-08-17"), type: "monthly", count: 3 },
-        { id: 0, date: new Date("2022-11-17"), type: "monthly", count: 3 },
-        { id: 1, date: new Date("2022-01-23"), type: "monthly", count: 2 },
-        { id: 1, date: new Date("2022-03-23"), type: "monthly", count: 2 },
-        { id: 1, date: new Date("2022-05-23"), type: "monthly", count: 2 },
-        { id: 1, date: new Date("2022-07-23"), type: "monthly", count: 2 },
-        { id: 1, date: new Date("2022-09-23"), type: "monthly", count: 2 },
-        { id: 1, date: new Date("2022-11-23"), type: "monthly", count: 2 },
-        { id: 2, date: new Date("2022-01-12"), type: "monthly", count: 7 },
-        { id: 2, date: new Date("2022-08-12"), type: "monthly", count: 7 }
+        { id: 0, date: new Date("2022-02-17"), type: "monthly", count: 3, end_date: null },
+        { id: 0, date: new Date("2022-05-17"), type: "monthly", count: 3, end_date: null },
+        { id: 0, date: new Date("2022-08-17"), type: "monthly", count: 3, end_date: null },
+        { id: 0, date: new Date("2022-11-17"), type: "monthly", count: 3, end_date: null },
+        { id: 1, date: new Date("2022-01-23"), type: "monthly", count: 2, end_date: new Date("2022-08-12") },
+        { id: 1, date: new Date("2022-03-23"), type: "monthly", count: 2, end_date: new Date("2022-08-12") },
+        { id: 1, date: new Date("2022-05-23"), type: "monthly", count: 2, end_date: new Date("2022-08-12") },
+        { id: 1, date: new Date("2022-07-23"), type: "monthly", count: 2, end_date: new Date("2022-08-12") },
+        { id: 1, date: new Date("2022-09-23"), type: "monthly", count: 2, end_date: new Date("2022-08-12") },
+        { id: 1, date: new Date("2022-11-23"), type: "monthly", count: 2, end_date: new Date("2022-08-12") },
+        { id: 2, date: new Date("2022-01-12"), type: "monthly", count: 7, end_date: null },
+        { id: 2, date: new Date("2022-08-12"), type: "monthly", count: 7, end_date: null }
     ])
 });
 
@@ -197,9 +203,9 @@ test("graphql::repetitive-tasks-tasks::fetch::calcRepetitiveTasksDatesForDateRan
     const tasks = calcRepetitiveTasksDatesForDateRange(startDate, endDate, repetitiveTasks);
     expect(tasks.length).toEqual(3);
     expect(tasks).toEqual([
-        { id: 0, date: new Date("2023-05-17"), type: "yearly", count: 1 },
-        { id: 0, date: new Date("2024-05-17"), type: "yearly", count: 1 },
-        { id: 0, date: new Date("2025-05-17"), type: "yearly", count: 1 }
+        { id: 0, date: new Date("2023-05-17"), type: "yearly", count: 1, end_date: null },
+        { id: 0, date: new Date("2024-05-17"), type: "yearly", count: 1, end_date: null },
+        { id: 0, date: new Date("2025-05-17"), type: "yearly", count: 1, end_date: null }
     ]);
 });
 

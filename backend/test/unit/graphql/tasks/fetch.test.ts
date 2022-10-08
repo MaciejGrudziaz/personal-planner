@@ -87,7 +87,7 @@ describe("graphql::repetitive-tasks::fetch::fetchRepetitiveTasks", () => {
                   basic_info: 'repetitive task',
                   description: 'repetitive task description',
                   category: 'simple',
-                  repetition: { type: 'daily', count: 12 }
+                  repetition: { type: 'daily', count: 12, end_date: null }
                 },
                 {
                   id: 123,
@@ -97,7 +97,7 @@ describe("graphql::repetitive-tasks::fetch::fetchRepetitiveTasks", () => {
                   basic_info: 'repetitive task',
                   description: 'repetitive task description',
                   category: 'simple',
-                  repetition: { type: 'daily', count: 12 }
+                  repetition: { type: 'daily', count: 12, end_date: null }
                 },
                 {
                   id: 123,
@@ -107,7 +107,7 @@ describe("graphql::repetitive-tasks::fetch::fetchRepetitiveTasks", () => {
                   basic_info: 'repetitive task',
                   description: 'repetitive task description',
                   category: 'simple',
-                  repetition: { type: 'daily', count: 12 }
+                  repetition: { type: 'daily', count: 12, end_date: null }
                 }
             ]);
         });

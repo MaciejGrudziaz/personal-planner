@@ -21,7 +21,9 @@ export interface Resolver {
     fetchTodoGroups(args: any): Promise<ToDoGroup[] | null>;
     createTask(args: any): Promise<number | null>;
     updateTask(args: any): Promise<boolean>;
+    updateSingleRepetitiveTask(args: any): Promise<boolean>;
     deleteTask(args: any): Promise<boolean>;
+    deleteSingleRepetitiveTask(args: any): Promise<boolean>;
     config(): Promise<Config | null>;
     createTodoGroup(args: any): Promise<number | null>;
     modifyTodoGroup(args: any): Promise<boolean>;
@@ -48,7 +50,7 @@ function getResolver(db: DBClient): Resolver {
                 basic_info: (args.basic_info === undefined) ? null : args.basic_info,
                 description: (args.description === undefined) ? null : args.description,
                 category: args.category,
-                repetition: args.repetition
+                repetition: (args.repetition === undefined) ? null : args.repetition
             });
         },
         fetchTodos: async (args: any): Promise<ToDo[] | null> => {
@@ -66,11 +68,22 @@ function getResolver(db: DBClient): Resolver {
                 basic_info: (args.basic_info === undefined) ? null : args.basic_info,
                 description: (args.description === undefined) ? null : args.description,
                 category: args.category,
-                repetition: args.repetition
+                repetition: (args.repetition === undefined) ? null : args.repetition
             });
+        },
+        updateSingleRepetitiveTask: async (args: any): Promise<boolean> => {
+            return await db.updateSingleRepetitiveTaskTime(
+                args.id,
+                args.date,
+                (args.start_time === undefined) ? null : args.start_time,
+                (args.end_time === undefined) ? null : args.end_time
+            )
         },
         deleteTask: async (args: any): Promise<boolean> => {
             return await db.deleteTask(args.id);
+        },
+        deleteSingleRepetitiveTask: async (args: any): Promise<boolean> => {
+            return await db.deleteSingleRepetitiveTask(args.id, args.date);
         },
         config: async (): Promise<Config | null> => {
             return await db.fetchConfig();

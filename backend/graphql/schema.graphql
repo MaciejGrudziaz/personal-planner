@@ -23,6 +23,13 @@ type Task {
 type TaskRepetition {
     type: String!
     count: Int!
+    end_date: Date
+}
+
+input InputTaskRepetition {
+  type: String!
+  count: Int!
+  end_date: InputDate
 }
 
 input InputTime {
@@ -79,9 +86,11 @@ type Query {
 
 
 type Mutation {
-    createTask(start_time: InputTime, end_time: InputTime, date: InputDate!, basic_info: String, description: String, category: String!): Int
-    updateTask(id: Int!, start_time: InputTime, end_time: InputTime, date: InputDate!, basic_info: String, description: String, category: String!): Boolean!
+    createTask(start_time: InputTime, end_time: InputTime, date: InputDate!, basic_info: String, description: String, category: String!, repetition: InputTaskRepetition): Int
+    updateTask(id: Int!, start_time: InputTime, end_time: InputTime, date: InputDate!, basic_info: String, description: String, category: String!, repetition: InputTaskRepetition): Boolean!
+    updateSingleRepetitiveTask(id: Int!, date: InputDate!, start_time: InputTime, end_time: InputTime): Boolean!
     deleteTask(id: Int!): Boolean!
+    deleteSingleRepetitiveTask(id: Int!, date: InputDate!): Boolean!
 
     createTodoGroup(name: String, ordinal: Int): Int
     modifyTodoGroup(id: Int!, name: String, ordinal: Int): Boolean!

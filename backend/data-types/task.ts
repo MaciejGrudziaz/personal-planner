@@ -35,6 +35,7 @@ export type RepetitionType = "daily" | "weekly" | "monthly" | "yearly";
 export interface TaskRepetition {
     type: RepetitionType;
     count: number;
+    end_date: TaskDate | null;
 }
 
 export function mapRepetitionTypeId(type: number): RepetitionType | undefined {
@@ -87,10 +88,17 @@ export function taskTimeFromString(time: string): TaskTime | null {
     return {hour: hour, minute: minute};
 }
 
-interface TaskDate {
+export interface TaskDate {
     year: number;
     month: number;
     day: number;
+}
+
+export function optionalTaskDateFromDate(date: Date | null): TaskDate | null {
+    if(date === null) {
+        return null;
+    }
+    return taskDateFromDate(date);
 }
 
 export function taskDateFromDate(date: Date): TaskDate {
@@ -99,6 +107,13 @@ export function taskDateFromDate(date: Date): TaskDate {
 
 export function taskDateToDate(date: TaskDate): Date {
     return new Date(date.year, date.month - 1, date.day);
+}
+
+export function optionalTaskDateToDate(date: TaskDate | null): Date | null {
+    if(date === null) {
+        return null;
+    }
+    return taskDateToDate(date);
 }
 
 export function taskDateToString(date: TaskDate): string {

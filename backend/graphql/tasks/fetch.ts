@@ -1,5 +1,5 @@
 import { DBClient } from "../../db-client/client";
-import { Task, parseTask, RepetitionType, taskDateFromDate } from "../../data-types/task";
+import { Task, parseTask, RepetitionType, taskDateFromDate, optionalTaskDateFromDate } from "../../data-types/task";
 import { fetchRepetitiveTasks, TaskRepetitonSummary } from "../repetitive-tasks/fetch";
 import { QueryConfig } from "pg";
 import {RepetitiveTask} from "../repetitive-tasks/types";
@@ -103,10 +103,10 @@ async function fetchTasksInDateRange(db: DBClient, year: number, month?: number)
             return;
         }
         if(repetitionTask.start_time === undefined || repetitionTask.end_time === undefined) {
-            result.push({...task, date: taskDateFromDate(repetitionTask.date), repetition: {type: repetitionTask.type, count: repetitionTask.count}});
+            result.push({...task, date: taskDateFromDate(repetitionTask.date), repetition: {type: repetitionTask.type, count: repetitionTask.count, end_date: optionalTaskDateFromDate(repetitionTask.end_date)}});
             return;
         }
-        result.push({...task, date: taskDateFromDate(repetitionTask.date), repetition: {type: repetitionTask.type, count: repetitionTask.count}, start_time: repetitionTask.start_time, end_time: repetitionTask.end_time});
+        result.push({...task, date: taskDateFromDate(repetitionTask.date), repetition: {type: repetitionTask.type, count: repetitionTask.count, end_date: optionalTaskDateFromDate(repetitionTask.end_date)}, start_time: repetitionTask.start_time, end_time: repetitionTask.end_time});
     });
 
     result.push(...tasks.filter((task: Task) => repetitiveTasks.find((repTask: TaskRepetitonSummary) => repTask.id === task.id) === undefined));
@@ -124,10 +124,10 @@ async function fetchTasksInDateRange(db: DBClient, year: number, month?: number)
                 return;
             }
             if(repTask.start_time === undefined || repTask.end_time === undefined) {
-                result.push({...task, date: taskDateFromDate(repTask.date), repetition: {type: repTask.type, count: repTask.count}});
+                result.push({...task, date: taskDateFromDate(repTask.date), repetition: {type: repTask.type, count: repTask.count, end_date: optionalTaskDateFromDate(repTask.end_date)}});
                 return;
             }
-            result.push({...task, date: taskDateFromDate(repTask.date), repetition: {type: repTask.type, count: repTask.count}, start_time: repTask.start_time, end_time: repTask.end_time});
+            result.push({...task, date: taskDateFromDate(repTask.date), repetition: {type: repTask.type, count: repTask.count, end_date: optionalTaskDateFromDate(repTask.end_date)}, start_time: repTask.start_time, end_time: repTask.end_time});
         });
 
     return result;

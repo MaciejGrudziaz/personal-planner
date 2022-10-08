@@ -7,6 +7,7 @@ import fetchUpdatedRepetitiveTasks, { TaskDateTime } from "./fetch-updated-tasks
 export interface TaskRepetitonSummary {
     id: number;
     date: Date;
+    end_date: Date | null;
     start_time?: TaskTime | null;
     end_time?: TaskTime | null;
     type: RepetitionType;
@@ -151,7 +152,7 @@ export function calcRepetitiveTasksDatesForDateRange(start_date: Date, end_date:
         const eventBegin = getDateNumericRepresentation(val.start_date, val.type);
         const eventEnd = (val.end_date === null) ? null : getDateNumericRepresentation(val.end_date, val.type);
         calcOccurences(startDate, endDate, eventBegin, eventEnd, val.count * getRepetitionTypeDiff(val.type)).forEach((numericDate: number) => {
-            result.push({id: val.id, date: parseNumericDateToBuiltin(val, numericDate), type: val.type, count: val.count});
+            result.push({id: val.id, date: parseNumericDateToBuiltin(val, numericDate), type: val.type, count: val.count, end_date: val.end_date});
         });
     });
     return result;

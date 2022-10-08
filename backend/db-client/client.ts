@@ -1,7 +1,8 @@
 import { Pool, Client, QueryConfig, QueryArrayConfig, QueryResult, PoolClient } from 'pg';
-import { Task, parseTask, taskTimeToString, taskDateToDate, mapCategory } from '../data-types/task';
+import { Task, parseTask, taskTimeToString, taskDateToDate, optionalTaskDateToDate, mapCategory, TaskRepetition, mapRepetitionType, TaskTime, TaskDate } from '../data-types/task';
 import { Config, parseConfig } from '../data-types/config';
 import { setTimeout } from 'timers/promises';
+import { TaskDate as ExcludedTaskDate } from '../graphql/repetitive-tasks/excluded-tasks';
 
 export interface FetchParams {
     year?: number;
@@ -55,6 +56,7 @@ export class DBClient {
         };
 
         const client = await this.connect();
+        await client.query("BEGIN");
         try {
             const result = await client.query(query);
             if(result.rows.length != 1) {
@@ -64,13 +66,196 @@ export class DBClient {
             if(id === null || id === undefined) {
                 return null;
             }
+
+            if(task.repetition !== null) {
+                const res = await this.insertTaskRepetition(client, id, task.repetition);
+                if(!res) {
+                    await client.query("ROLLBACK");
+                    return null;
+                }
+            }
+            await client.query("COMMIT");
             return id;
         } catch(err: any) {
             console.log(err.stack);
-            return null;
         } finally {
             client.release();
         }
+        await client.query("ROLLBACK");
+        return null;
+    }
+
+    async insertTaskRepetition(client: PoolClient, id: number, taskRepetition: TaskRepetition): Promise<boolean> {
+        const query = {
+            name: "insert-task-repetition-query",
+            text: `
+                INSERT INTO repetitive_tasks
+                (id, type, count, end_date)
+                VALUES
+                ($1, $2,   $3,    $4)
+            `,
+            values: [
+                id, 
+                mapRepetitionType(taskRepetition.type), 
+                taskRepetition.count,
+                optionalTaskDateToDate(taskRepetition.end_date)
+            ]
+        };
+
+        try {
+            const result = await client.query(query);
+            return result.rowCount === 1;
+        } catch(err: any) {
+            console.error(err.stack);
+        }
+        return false;
+    }
+
+    async checkIfTaskRepetitionExist(client: PoolClient, id: number): Promise<boolean> {
+        const query = {
+            name: "select-task-repetition-query",
+            text: "SELECT id FROM repetitive_tasks WHERE id = $1",
+            values: [id]
+        };
+
+        try {
+            const result = await client.query(query);
+            return result.rowCount === 1;
+        } catch(err: any) {
+            console.error(err.stack);
+        }
+        return false;
+    }
+
+    async deleteTaskRepetition(client: PoolClient, id: number): Promise<boolean> {
+        const query = {
+            name: "delete-task-repetition-query",
+            text: "DELETE FROM repetitive_tasks WHERE id = $1",
+            values: [id]
+        };
+
+        try {
+            const result = await client.query(query);
+            return result.rowCount === 1;
+        } catch(err: any) {
+            console.error(err.stack);
+        }
+        return false;
+    }
+
+    async updateTaskRepetitionType(client: PoolClient, id: number, taskRepetition: TaskRepetition): Promise<boolean> {
+        const updateTaskRepetitionTypeQuery = {
+            name: "update-task-repetition-type-query",
+            text: `
+                UPDATE repetitive_tasks
+                SET type     = $2,
+                    count    = $3,
+                    end_date = $4
+                WHERE id = $1
+            `,
+            values: [
+                id,
+                mapRepetitionType(taskRepetition.type),
+                taskRepetition.count,
+                optionalTaskDateToDate(taskRepetition.end_date)
+            ]
+        };
+
+        try {
+            const result = await client.query(updateTaskRepetitionTypeQuery);
+            if(result.rowCount === 1) {
+                return true;
+            }
+            return this.insertTaskRepetition(client, id, taskRepetition);
+        } catch(err: any) {
+            console.error(err.stack);
+        }
+        return false;
+    }
+
+    async updateSingleRepetitiveTaskTime(id: number, date: TaskDate, startTime: TaskTime | null, endTime: TaskTime | null): Promise<boolean> {
+        const updateSingleRepetitiveTaskTimeQuery = {
+            name: "update-single-repetitive-task-time-query",
+            text: `
+                UPDATE changed_repetitive_tasks
+                SET start_time = $3
+                    end_time = $4
+                WHERE id = $1 AND date = $2
+            `,
+            values: [
+                id,
+                taskDateToDate(date),
+                (startTime === null || endTime === null) ? null : taskTimeToString(startTime),
+                (startTime === null || endTime === null) ? null : taskTimeToString(endTime)
+            ]
+        };
+
+        const client = await this.connect();
+        try {
+            const result = await client.query(updateSingleRepetitiveTaskTimeQuery);
+            if(result.rowCount !== 1) {
+                return this.insertSingleRepetitiveTaskTime(id, date, startTime, endTime);
+            }
+            return true;
+        } catch(err: any) {
+            console.error(err.stack);
+        } finally {
+            client.release();
+        }
+        return false;
+    }
+
+    async insertSingleRepetitiveTaskTime(id: number, date: TaskDate, startTime: TaskTime | null, endTime: TaskTime | null): Promise<boolean> {
+        const insertSingleRepetitiveTaskTimeQuery = {
+            name: "insert-single-repetitive-task-time-query",
+            text: `
+                INSERT INTO changed_repetitive_tasks
+                (id, date, start_time, end_time)
+                VALUES
+                ($1, $2,   $3,         $4)
+            `,
+            values: [
+                id,
+                taskDateToDate(date),
+                (startTime === null || endTime === null) ? null : taskTimeToString(startTime),
+                (startTime === null || endTime === null) ? null : taskTimeToString(endTime)
+            ]
+        };
+
+        const client = await this.connect();
+        try {
+            const result = await client.query(insertSingleRepetitiveTaskTimeQuery);
+            return result.rowCount === 1;
+        } catch(err: any) {
+            console.error(err.stack);
+        } finally {
+            client.release();
+        }
+        return false;
+    }
+
+    async deleteSingleRepetitiveTask(id: number, date: TaskDate): Promise<boolean> {
+        const insertExcludedRepetitiveTaskQuery = {
+            name: "insert-excluded-repetitive-task-query",
+            text: `
+                INSERT INTO excluded_repetitive_tasks
+                (id, date)
+                VALUES
+                ($1, $2)
+            `,
+            values: [id, taskDateToDate(date)]
+        };
+
+        const client = await this.connect();
+        try {
+            const result = await client.query(insertExcludedRepetitiveTaskQuery);
+            return result.rowCount === 1;
+        } catch(err: any) {
+            console.error(err.stack);
+        } finally {
+            client.release();
+        }
+        return false;
     }
 
     async updateTask(task: Task): Promise<boolean> {
@@ -96,15 +281,37 @@ export class DBClient {
         };
 
         const client = await this.connect();
+        await client.query("BEGIN");
         try {
             const res = await client.query(query);
-            return res.rowCount > 0;
+            if(res.rowCount !== 1) {
+                await client.query("ROLLBACK");
+                return false
+            }
+            const repetitionExists = await this.checkIfTaskRepetitionExist(client, task.id);
+            if(task.repetition === null && repetitionExists) {
+                const res = await this.deleteTaskRepetition(client, task.id);
+                if(!res) {
+                    await client.query("ROLLBACK");
+                    return false;
+                }
+            }
+            if(task.repetition !== null) {
+                const res = await this.updateTaskRepetitionType(client, task.id, task.repetition);
+                if(!res) {
+                    await client.query("ROLLBACK");
+                    return false;
+                }
+            }
+            await client.query("COMMIT");
+            return true;
         } catch(err: any) {
             console.error(err.stack);
-            return false;
         } finally {
             client.release();
         }
+        await client.query("ROLLBACK");
+        return false;
     }
 
     async deleteTask(id: number): Promise<boolean> {
