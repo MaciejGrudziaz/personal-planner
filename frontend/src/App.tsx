@@ -8,10 +8,10 @@ const getFirstDayOfTheWeek = (date: Date): Date => {
     day = (day === 0) ? 6 : day - 1;
     const msInDay = 1000 * 60 * 60 * 24;
     const startDate = new Date(date.getTime() - (day * msInDay));
-    startDate.setHours(0);
-    startDate.setMinutes(0);
-    startDate.setSeconds(0);
-    startDate.setMilliseconds(0);
+    startDate.setUTCHours(0);
+    startDate.setUTCMinutes(0);
+    startDate.setUTCSeconds(0);
+    startDate.setUTCMilliseconds(0);
     return startDate;
 }
 
