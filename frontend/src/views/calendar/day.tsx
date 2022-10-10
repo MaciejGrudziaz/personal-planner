@@ -21,6 +21,7 @@ interface Props {
     onGridSizeChange?(): void;
     select?(task: TaskState): void;
     createDailyTask?(): void;
+    deleteTask?(task: TaskState): void;
 }
 
 export class Cell {
@@ -152,7 +153,11 @@ function Day(props: Props) {
             }}
         >
             {task.basicInfo}
-            <button className="day-daily-task-del-btn" onClick={() => deleteTask(task.id)}>X</button>
+            <button className="day-daily-task-del-btn" onClick={() => {
+                if(props.deleteTask) {
+                    props.deleteTask(task);
+                }
+            }}>X</button>
         </div>
     ));
 

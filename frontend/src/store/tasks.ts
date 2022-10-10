@@ -101,14 +101,28 @@ export const tasksSlice = createSlice({
             });
             return state.filter((val: TaskState) => val.id !== newTask.id).concat(repetitiveTasks);
         },
+        updateSingleTask: (state, action: PayloadAction<TaskState>) => {
+            const task = action.payload;
+            if(task.id === "") {
+                return state;
+            }
+            return state.filter((val: TaskState) => {
+                return val.id !== task.id || val.date.year !== task.date.year || val.date.month !== task.date.month || val.date.day !== task.date.day;
+            }).concat(task);
+        },
         deleteTask: (state, action: PayloadAction<string>) => {
             const taskId = action.payload;
             return state.filter((task: TaskState) => task.id !== taskId);
+        },
+        deleteSingleTask: (state, action: PayloadAction<{id: string, date: TaskDate}>) => {
+            const taskId = action.payload.id;
+            const taskDate = action.payload.date;
+            return state.filter((task: TaskState) => task.id !== taskId || task.date.year !== taskDate.year || task.date.month !== taskDate.month || task.date.day !== taskDate.day);
         }
     }
 })
 
-export const { setTasks, updateTask, deleteTask } = tasksSlice.actions;
+export const { setTasks, updateTask, updateSingleTask, deleteTask, deleteSingleTask } = tasksSlice.actions;
 
 export default tasksSlice.reducer;
 

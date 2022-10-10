@@ -127,6 +127,38 @@ export class DBClient {
         return false;
     }
 
+    async checkIfRepetitiveTaskWasUpdated(client: PoolClient, id: number, date: Date): Promise<boolean> {
+        const query = {
+            name: "select-changed-repetitive-tasks-query",
+            text: "SELECT id FROM changed_repetitive_tasks WHERE id=$1 AND date=$2",
+            values: [id, date]
+        };
+
+        try {
+            const result = await client.query(query);
+            return result.rowCount === 1;
+        } catch(err: any) {
+            console.error(err.stack);
+        }
+        return false;
+    }
+
+    async removeRepetitiveTaskUpdate(client: PoolClient, id: number, date: Date): Promise<boolean> {
+        const query = {
+            name: "update-changed-repetitive-tasks-query",
+            text: "DELETE FROM changed_repetitive_tasks WHERE id=$1 AND date=$2",
+            values: [id, date]
+        };
+
+        try {
+            const result = await client.query(query);
+            return result.rowCount === 1;
+        } catch(err: any) {
+            console.error(err.stack);
+        }
+        return false;
+    }
+
     async deleteTaskRepetition(client: PoolClient, id: number): Promise<boolean> {
         const query = {
             name: "delete-task-repetition-query",
@@ -178,7 +210,7 @@ export class DBClient {
             name: "update-single-repetitive-task-time-query",
             text: `
                 UPDATE changed_repetitive_tasks
-                SET start_time = $3
+                SET start_time = $3,
                     end_time = $4
                 WHERE id = $1 AND date = $2
             `,
@@ -260,25 +292,29 @@ export class DBClient {
 
     async updateTask(task: Task): Promise<boolean> {
         const query = {
-            name: "update-task",
+            name: `update-task-${(task.repetition !== null) ? 'without-date' : 'with-date'}`,
             text: `UPDATE tasks
-                   SET start_time=$1,
-                       end_time=$2,
-                       date=$3,
+                   SET start_time=$2,
+                       end_time=$3,
                        basic_info=$4,
                        description=$5,
                        category=$6
-                   WHERE id=$7`,
+                       ${(task.repetition !== null) ? '' : ',date=$7'}
+                   WHERE id=$1`,
             values: [
+                task.id,
                 taskTimeToString(task.start_time),
                 taskTimeToString(task.end_time),
-                taskDateToDate(task.date),
                 task.basic_info,
                 task.description,
                 mapCategory(task.category),
-                task.id
+                taskDateToDate(task.date)
             ],
         };
+
+        if(task.repetition !== null) {
+            query.values.pop();
+        }
 
         const client = await this.connect();
         await client.query("BEGIN");
@@ -298,6 +334,14 @@ export class DBClient {
             }
             if(task.repetition !== null) {
                 const res = await this.updateTaskRepetitionType(client, task.id, task.repetition);
+                if(!res) {
+                    await client.query("ROLLBACK");
+                    return false;
+                }
+            }
+            const wasRepetitionUpdated = await this.checkIfRepetitiveTaskWasUpdated(client, task.id, taskDateToDate(task.date));
+            if(wasRepetitionUpdated) {
+                const res = await this.removeRepetitiveTaskUpdate(client, task.id, taskDateToDate(task.date));
                 if(!res) {
                     await client.query("ROLLBACK");
                     return false;

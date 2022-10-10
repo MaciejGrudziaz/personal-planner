@@ -1,0 +1,46 @@
+@import '../global';
+
+.popup-message {
+    position: fixed;
+    width: 45rem;
+    height: 10rem;
+    top: 50%;
+    transform: translateY(-50%);
+    border: 5px solid black;
+    background-color: white;
+    z-index: calc($max-z-index - 1);
+    display: flex;
+    flex-flow: column;
+    font-size: 1rem;
+}
+
+.popup-msg-bckg-diffusion {
+    position: fixed;
+    z-index: calc($max-z-index - 2);
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: black;
+    opacity: 0.5;
+}
+
+.popup-message-message {
+    flex: 1 1 auto;
+    margin: auto auto;
+    padding: 2rem 2rem;
+}
+
+.popup-message-btn {
+    height: 2rem;
+    width: 7rem;
+    margin: auto 1rem;
+}
+
+.popup-message-btn-row {
+    display: flex;
+    flex: 0 1 3rem;
+    margin: auto auto;
+    line-height: 3rem;
+}
+

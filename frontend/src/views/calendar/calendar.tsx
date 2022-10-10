@@ -6,10 +6,11 @@ import TaskWnd from './task/task-wnd';
 import {CellBasicInfo, extractDate, extractStartTime, extractEndTime} from './hour';
 import CalendarTask, {Task, Position, ResizeDir, getAbsDate} from './task/task';
 import CurrentTimePointer, {PointerState} from './current-time-pointer';
+import PopupMessage from '../../components/popup-message';
 import {TaskState, findTasksForWeek, parseDateToBuiltin, TaskDate, TaskTime, TaskCategory, TaskRepetition} from '../../store/tasks';
 import {useFetchTasks} from '../../gql-client/tasks/fetch';
-import {useUpdateTask} from '../../gql-client/tasks/update';
-import {useDeleteTask} from '../../gql-client/tasks/delete';
+import {useUpdateTask, useUpdateSingleTask} from '../../gql-client/tasks/update';
+import {useDeleteTask, useDeleteSingleTask} from '../../gql-client/tasks/delete';
 import {useUpdateCalendarViewFontSize} from '../../gql-client/config/update';
 import './calendar.css';
 import {getQueriesForElement} from '@testing-library/react';
@@ -66,10 +67,23 @@ interface WndTaskInfo {
     show: boolean;
 }
 
+interface PopupMessageInfo {
+    msg: string;
+    option1?: string;
+    option2?: string;
+    option3?: string;
+    callback1?: ()=>void;
+    callback2?: ()=>void;
+    callback3?: ()=>void;
+    show: boolean;
+}
+
 function Calendar(props: Props) {
     const gqlFetchTasks = useFetchTasks();
-    const updateTask = useUpdateTask();
-    const deleteTask = useDeleteTask();
+    const gqlUpdateTask = useUpdateTask();
+    const gqlUpdateSingleTask = useUpdateSingleTask();
+    const gqlDeleteTask = useDeleteTask();
+    const gqlDeleteSingleTask = useDeleteSingleTask();
     const updateCalendarViewFontSize = useUpdateCalendarViewFontSize();
     const [isGrabbed, setGrabbed] = useState(false);
     const [resizeAction, setResize] = useState({state: false} as ResizeAction);
@@ -81,6 +95,7 @@ function Calendar(props: Props) {
     const [calendarFont, setCalendarFont] = useState({size: 12, changed: false} as FontState);
     const [selectedCells, setSelectedCells] = useState([] as CellBasicInfo[]);
     const [wndTaskInfo, setWndTaskInfo] = useState({id: undefined, date: undefined, startTime: undefined, endTime: undefined, show: false} as WndTaskInfo);
+    const [popupMsgInfo, setPopupMsgInfo] = useState({msg: "", show: false} as PopupMessageInfo);
     const [isInitialized, init] = useState(false);
     const dayMapping: Map<number, string> = new Map([[0, "monday"], [1, "tuesday"], [2, "wednesday"], [3, "thursday"], [4, "friday"], [5, "saturday"], [6, "sunday"]]);
 
@@ -121,16 +136,14 @@ function Calendar(props: Props) {
         }
     }
 
-    const fetchTasksFromApi = () => {
+    const fetchTasksFromApi = (): Promise<boolean> => {
         const start = props.weekStartDate;
         const msInDay = 1000 * 60 * 60 * 24;
         const end = new Date(start.getTime() + 6 * msInDay);
         if(start.getUTCFullYear() !== end.getUTCFullYear() || start.getUTCMonth() !== end.getUTCMonth()) {
-            gqlFetchTasks({months: [{year: start.getFullYear(), month: start.getUTCMonth() + 1}, {year: end.getUTCFullYear(), month: end.getUTCMonth() + 1}]});
-            return;
+            return gqlFetchTasks({months: [{year: start.getFullYear(), month: start.getUTCMonth() + 1}, {year: end.getUTCFullYear(), month: end.getUTCMonth() + 1}]});
         }
-        gqlFetchTasks({year: props.weekStartDate.getFullYear(), month: props.weekStartDate.getMonth() + 1});
-        return;
+        return gqlFetchTasks({year: props.weekStartDate.getFullYear(), month: props.weekStartDate.getMonth() + 1});
     }
 
     const fetchTasks = ()=>{
@@ -232,6 +245,41 @@ function Calendar(props: Props) {
         if(matchingCell.quarter === undefined) { return; }
         const verticalOffset = Math.floor((currentDate.getMinutes() - matchingCell.quarter * 15) / 15 * matchingCell.height);
         setPointerState({width: matchingCell.width, x: matchingCell.x, y: matchingCell.y + verticalOffset, baseX: baseCell.x, endX: endCell.x});
+    }
+
+    const resetPopupMessageState = () => {
+        setPopupMsgInfo({msg: "", show: false});
+    }
+
+    const deleteTask = (id: string, date: TaskDate, isRepetitive: boolean) => {
+        if(!isRepetitive) {
+            setPopupMsgInfo({
+                msg: "Do you really want to delete this event?",
+                show: true,
+                option1: "ok", callback1: ()=>{
+                    gqlDeleteTask(id);
+                    fetchTasks();
+                    resetPopupMessageState();
+                },
+                option2: "cancel", callback2: ()=>resetPopupMessageState()
+            });
+            return;
+        }
+        setPopupMsgInfo({
+            msg: "Do you want to delete only this event or all the events?",
+            show: true,
+            option1: "delete event", callback1: ()=>{
+                gqlDeleteSingleTask(id, date);
+                fetchTasks();
+                resetPopupMessageState();
+            },
+            option2: "delete all", callback2: ()=>{
+                gqlDeleteTask(id);
+                fetchTasks();
+                resetPopupMessageState();
+            },
+            option3: "cancel", callback3: ()=>resetPopupMessageState()
+        });
     }
 
     const updateTimePointerWithInterval = (intervalInMs: number)=>{
@@ -365,6 +413,9 @@ function Calendar(props: Props) {
                     show: true
                 });
             }}
+            deleteTask={(task: TaskState) => {
+                deleteTask(task.id, task.date, task.repetition !== undefined);
+            }}
         />
     ));
 
@@ -385,7 +436,7 @@ function Calendar(props: Props) {
                 setWndTaskInfo({id: value.taskId, date: value.getDate(props.weekStartDate), startTime: value.startTime, endTime: value.endTime, basicInfo: value.basicInfo, description: value.description, category: value.category, repetition: value.repetition, show: true});
             }}
             deleteTask={()=>{
-                deleteTask(value.taskId);
+                deleteTask(value.taskId, value.getDate(props.weekStartDate), value.repetition !== undefined);
             }}
         />
     ));
@@ -443,14 +494,34 @@ function Calendar(props: Props) {
         setTasks([...tasks]);
     }
 
+    const updateTask = (task: TaskState) => {
+        if(task.repetition === undefined) {
+            gqlUpdateTask(task);
+            return;
+        }
+        setPopupMsgInfo({
+            msg: "Do you want to update only this event or all the events?",
+            show: true,
+            option1: "update event", callback1: ()=>{
+                gqlUpdateSingleTask(task);
+                fetchTasks();
+                resetPopupMessageState();
+            },
+            option2: "update all", callback2: ()=>{
+                gqlUpdateTask(task).then(()=>fetchTasksFromApi().then(()=>fetchTasks()));
+                resetPopupMessageState();
+            },
+            option3: "cancel", callback3: ()=>{
+                fetchTasks();
+                resetPopupMessageState();
+            }
+        });
+    }
+
     const grabActionFinalizer = ()=>{
         setGrabbed(false);
         const task = tasks.find((value: Task)=>{ return value.id === modifyObject; });
         if(task === undefined) { return; }
-
-        const getDayOfWeek = (cell: CellInfo) => {
-            return (task.repetition !== undefined) ? task.dayOfWeek : cell.day;
-        }
 
         const getMajorityCell = (): CellInfo | undefined =>{
             const firstCell = findCell(new Position(task.x, task.y));
@@ -468,7 +539,7 @@ function Calendar(props: Props) {
         if(cell === undefined) {
             const cell = findCell(startMovePos);
             if(cell !== undefined && isCellDaily(cell)) {
-                task.setDaily(getDayOfWeek(cell));
+                task.setDaily(cell.day);
                 updateTask(task.toTaskState(props.weekStartDate));
                 setTasks([...tasks]);
                 return;
@@ -477,7 +548,7 @@ function Calendar(props: Props) {
             return; 
         }
         if(isCellDaily(cell)) {
-            task.setDaily(getDayOfWeek(cell));
+            task.setDaily(cell.day);
             updateTask(task.toTaskState(props.weekStartDate));
             setTasks([...tasks]);
             return;
@@ -502,7 +573,7 @@ function Calendar(props: Props) {
             endHour += 1;
             endQuarter = 0;
         }
-        task.updateTime(getDayOfWeek(cell), cell.hour, cell.quarter, endHour, endQuarter);
+        task.updateTime(cell.day, cell.hour, cell.quarter, endHour, endQuarter);
         updateTask(task.toTaskState(props.weekStartDate));
 
         calcOverlapping();
@@ -610,6 +681,11 @@ function Calendar(props: Props) {
                     show={wndTaskInfo.show}
                     hide={hideTaskWnd}
                     save={() => forceRefresh()}
+                />
+                <PopupMessage show={popupMsgInfo.show} message={popupMsgInfo.msg}
+                    option1={popupMsgInfo.option1} callback1={popupMsgInfo.callback1}
+                    option2={popupMsgInfo.option2} callback2={popupMsgInfo.callback2}
+                    option3={popupMsgInfo.option3} callback3={popupMsgInfo.callback3}
                 />
                 {daysList}
                 {tasksList}

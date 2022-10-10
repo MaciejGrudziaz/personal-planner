@@ -209,9 +209,18 @@ export function getBorderColor(category: TaskCategory): string {
 
 function CalendarTask(props: Props) {
     const [clickRecorded, setClickRecord] = useState(false);
+    const [mouseClickStartPos, setMouseClickStartPos] = useState(undefined as Position | undefined);
 
     const resetClick = () => {
         setClickRecord(false);
+    }
+
+    const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
+
+    const calcLength =(a: Position, b: Position) => {
+        const x = a.x - b.x;
+        const y = a.y - b.y;
+        return Math.sqrt(x*x + y*y);
     }
 
     return (
@@ -223,7 +232,18 @@ function CalendarTask(props: Props) {
         />
         <div className="task" style={{top: props.top, left: props.left, width: props.width, height: props.height, borderColor: getBorderColor(props.category), backgroundColor: getColor(props.category), zIndex: props.zIndex}} 
             onMouseDown={(event: React.MouseEvent<HTMLDivElement>)=>{
+                setMouseClickStartPos({x: event.pageX, y: event.pageY});
+            }}
+            onMouseUp={()=>setMouseClickStartPos(undefined)}
+            onMouseMove={(event: React.MouseEvent<HTMLDivElement>)=>{
+                if(mouseClickStartPos === undefined) {
+                    return;
+                }
+                if(calcLength(mouseClickStartPos, {x: event.pageX, y: event.pageY}) < rem) {
+                    return;
+                }
                 props.grabbed(new Position(event.pageX, event.pageY));
+                setMouseClickStartPos(undefined);
             }}
             onClick={()=>{
                 if(clickRecorded) {
