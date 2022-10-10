@@ -25,6 +25,14 @@ export function parseDateToBuiltin(date: TaskDate): Date {
 
 export type TaskCategory = "simple" | "important";
 
+export interface TaskRepetition {
+    type: RepetitionType;
+    count: number;
+    endDate: TaskDate | undefined;
+}
+
+export type RepetitionType = "daily" | "weekly" | "monthly" | "yearly";
+
 export interface TaskState {
     id: string;
     date: TaskDate;
@@ -33,6 +41,7 @@ export interface TaskState {
     basicInfo: string;
     description: string;
     category: TaskCategory;
+    repetition: TaskRepetition | undefined;
 }
 
 export function findTasksForWeek(date: Date, state: TaskState[]): TaskState[] {
@@ -40,15 +49,15 @@ export function findTasksForWeek(date: Date, state: TaskState[]): TaskState[] {
     day = (day === 0) ? day = 6 : day - 1;
     const msInDay = 1000 * 60 * 60 * 24;
     const startDate = new Date(date.getTime() - (day * msInDay));
-    startDate.setHours(0)
-    startDate.setMinutes(0);
-    startDate.setSeconds(0);
-    startDate.setMilliseconds(0);
+    startDate.setUTCHours(0)
+    startDate.setUTCMinutes(0);
+    startDate.setUTCSeconds(0);
+    startDate.setUTCMilliseconds(0);
     const endDate = new Date(date.getTime() + ((6 - day) * msInDay));
-    endDate.setHours(23);
-    endDate.setMinutes(59);
-    endDate.setSeconds(59);
-    endDate.setMilliseconds(999);
+    endDate.setUTCHours(23);
+    endDate.setUTCMinutes(59);
+    endDate.setUTCSeconds(59);
+    endDate.setUTCMilliseconds(999);
 
     return state.filter((task: TaskState)=>{
         let startHour = 0;
@@ -57,7 +66,14 @@ export function findTasksForWeek(date: Date, state: TaskState[]): TaskState[] {
             startHour = task.startTime.hour;
             startMinute = task.startTime.minute;
         }
-        const taskStartDate = new Date(task.date.year, task.date.month, task.date.day, startHour, startMinute);
+        const taskStartDate = new Date();
+        taskStartDate.setUTCFullYear(task.date.year);
+        taskStartDate.setUTCMonth(task.date.month);
+        taskStartDate.setUTCDate(task.date.day);
+        taskStartDate.setUTCHours(startHour);
+        taskStartDate.setUTCMinutes(startMinute);
+        taskStartDate.setUTCSeconds(0);
+        taskStartDate.setUTCMilliseconds(0);
         return taskStartDate >= startDate && taskStartDate <= endDate;
     });
 }
@@ -68,18 +84,22 @@ export const tasksSlice = createSlice({
     name: "tasks",
     initialState,
     reducers: {
-        addTasks: (state, action: PayloadAction<TaskState[]>) => {
+        setTasks: (state, action: PayloadAction<TaskState[]>) => {
             const tasks = action.payload;
-            return state
-                .filter((val: TaskState) => tasks.find((newTask: TaskState) => newTask.id === val.id) === undefined)
-                .concat(tasks);
+            return tasks;
         },
         updateTask: (state, action: PayloadAction<TaskState>) => {
             const newTask = action.payload;
             if(newTask.id === "") {
                 return state;
             }
-            return state.filter((val: TaskState) => val.id !== newTask.id).concat(newTask);
+            if(newTask.repetition === undefined) {
+                return state.filter((val: TaskState) => val.id !== newTask.id).concat(newTask);
+            }
+            const repetitiveTasks = state.filter((val: TaskState) => val.id === newTask.id).map((val: TaskState): TaskState => {
+                return {...newTask, date: val.date};
+            });
+            return state.filter((val: TaskState) => val.id !== newTask.id).concat(repetitiveTasks);
         },
         deleteTask: (state, action: PayloadAction<string>) => {
             const taskId = action.payload;
@@ -88,7 +108,7 @@ export const tasksSlice = createSlice({
     }
 })
 
-export const { addTasks, updateTask, deleteTask } = tasksSlice.actions;
+export const { setTasks, updateTask, deleteTask } = tasksSlice.actions;
 
 export default tasksSlice.reducer;
 

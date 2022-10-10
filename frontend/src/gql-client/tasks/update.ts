@@ -1,6 +1,7 @@
 import { useDispatch } from 'react-redux';
 import { TaskState, updateTask } from '../../store/tasks';
 import { fetchMutation } from '../fetch';
+import { parseTaskRepetition } from './create';
 
 type ReturnFunc = (task: TaskState) => Promise<boolean>;
 
@@ -36,7 +37,8 @@ export function useUpdateTask(): ReturnFunc {
                     },
                     basic_info: "${task.basicInfo}",
                     description: "${task.description}",
-                    category: "${task.category}"
+                    category: "${task.category}",
+                    repetition: ${parseTaskRepetition(task.repetition)}
                 )`
             );
             if(!res.ok) {

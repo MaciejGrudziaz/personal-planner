@@ -5,7 +5,7 @@ import './task-dropdown-select.scss';
 interface Props {
     options: string[];
     initValue: string;
-    label: string;
+    label?: string;
     select?(val: string): void;
 }
 
@@ -16,9 +16,18 @@ function TaskDropdownSelect(props: Props) {
         ));
     }
 
+    const label = () => {
+        if(props.label === undefined) {
+            return (<></>);
+        }
+        return (
+            <label className="task-dropdown-label">{props.label}:</label>
+        );
+    }
+
     return (
         <form action="#">
-            <label className="task-dropdown-label">{props.label}:</label>
+            {label()}
             <select value={props.initValue} onChange={(e: React.ChangeEvent<HTMLSelectElement>)=>{
                 if(props.select) {
                     props.select(e.target.value);

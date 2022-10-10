@@ -11,6 +11,7 @@ export interface TaskInputStyle {
 interface Props {
     initValue: string;
     maxCharacterCount?: number;
+    regexAllow?: string;
     style?: TaskInputStyle;
     setValue(val: string): void;
 }
@@ -20,6 +21,7 @@ function TaskInput(props: Props) {
     const [currentValue, setCurrentValue] = useState("");
 
     useEffect(()=>setCurrentValue(props.initValue), [isEdit]);
+    useEffect(()=>setCurrentValue(props.initValue), [props.initValue]);
 
     const openInput = ()=>{
         setEdit(true);
@@ -34,13 +36,26 @@ function TaskInput(props: Props) {
             <input className="task-input" value={currentValue} autoFocus={true}
                 style={props.style}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>)=>{
-                    if(props.maxCharacterCount === undefined) {
-                        setCurrentValue(e.target.value);
+                    const val = e.target.value;
+                    if(val === "") {
+                        setCurrentValue(val);
                         return;
                     }
-                    if(e.target.value.length <= props.maxCharacterCount) {
-                        setCurrentValue(e.target.value)
+
+                    if(props.regexAllow !== undefined) {
+                        const re = new RegExp(props.regexAllow);
+                        const matches = val.match(re);
+                        if(matches === null || matches.length !== 1) {
+                            return;
+                        }
+                        if(matches[0] !== val) {
+                            return;
+                        }
                     }
+                    if(props.maxCharacterCount !== undefined && val.length > props.maxCharacterCount) {
+                        return;
+                    }
+                    setCurrentValue(val)
                 }}
                 onBlur={()=>{
                     closeInput();

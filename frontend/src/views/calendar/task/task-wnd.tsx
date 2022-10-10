@@ -3,7 +3,7 @@ import TaskInput, {TaskInputStyle} from './task-input';
 import TaskTextArea from './task-text-area';
 import CalendarMonthView from './../month-view/month-view';
 import TaskDropdownSelect from './task-dropdown-select';
-import {TaskState, TaskDate, TaskTime, TaskCategory, parseDateToBuiltin, parseDateToStr} from '../../../store/tasks';
+import {TaskState, TaskDate, TaskTime, TaskCategory, parseDateToBuiltin, parseDateToStr, TaskRepetition, RepetitionType} from '../../../store/tasks';
 import {useUpdateTask} from '../../../gql-client/tasks/update';
 import {useCreateTask} from '../../../gql-client/tasks/create';
 import {useDeleteTask} from '../../../gql-client/tasks/delete';
@@ -17,6 +17,7 @@ interface Props {
     basicInfo: string | undefined;
     description: string | undefined;
     category: TaskCategory | undefined;
+    repetition: TaskRepetition | undefined;
     show: boolean;
 
     hide(): void;
@@ -32,7 +33,8 @@ function createDefaultTaskState(props: Props): TaskState {
         endTime: (props.endTime === undefined) ? undefined : props.endTime,
         basicInfo: (props.basicInfo === undefined) ? "" : props.basicInfo,
         description: (props.description === undefined) ? "" : props.description,
-        category: (props.category === undefined) ? "simple" : props.category
+        category: (props.category === undefined) ? "simple" : props.category,
+        repetition: props.repetition
     };
 }
 
@@ -116,7 +118,9 @@ function TaskWnd(props: Props) {
     const deleteTask = useDeleteTask();
     const [task, setTask] = useState(createDefaultTaskState(props));
     const [showCalendar, setShowCalendar] = useState(props.startTime === undefined || props.endTime === undefined);
+    const [showRepetitionDateCalendar, setShowRepetitionDateCalendar] = useState(false);
     const dateInputRef = useRef() as RefObject<HTMLDivElement>;
+    const repetitionDateInputRef = useRef() as RefObject<HTMLDivElement>;
 
     const timeInputStyle = {
         width: "1.75rem",
@@ -124,6 +128,35 @@ function TaskWnd(props: Props) {
     } as TaskInputStyle;
 
     const categories = ["simple", "important"];
+    const repetitionOptions = ["days", "weeks", "months", "years"];
+
+    const mapRepetitionOptionsToRepetitionType = (option: string): RepetitionType | undefined => {
+        switch(option) {
+            case "days":
+                return "daily";
+            case "weeks":
+                return "weekly";
+            case "months":
+                return "monthly";
+            case "years":
+                return "yearly";
+            default:
+                return undefined;
+        }
+    }
+
+    const mapRepetitionTypeToOptionType = (type: RepetitionType): string => {
+        switch(type) {
+            case "daily":
+                return repetitionOptions[0];
+            case "weekly":
+                return repetitionOptions[1];
+            case "monthly":
+                return repetitionOptions[2];
+            case "yearly":
+                return repetitionOptions[3];
+        }
+    }
 
     useEffect(()=>{
         window.addEventListener('keydown', hideWindowEvent);
@@ -158,6 +191,11 @@ function TaskWnd(props: Props) {
         e.stopPropagation();
     }
 
+    const toggleRepetitionDateCalendar = (e: React.MouseEvent<HTMLDivElement>) => {
+        setShowRepetitionDateCalendar(!showRepetitionDateCalendar);
+        e.stopPropagation();
+    }
+
     const hideWindow = ()=>{
         props.hide();
         hideCalendar();
@@ -165,6 +203,7 @@ function TaskWnd(props: Props) {
 
     const hideCalendar = ()=>{
         setShowCalendar(false);
+        setShowRepetitionDateCalendar(false);
     }
 
     const saveTask = ()=>{
@@ -177,24 +216,25 @@ function TaskWnd(props: Props) {
         hideWindow();
     }
 
-    const popupCalendar = ()=>{
-        if(!showCalendar) {
+    const popupCalendar = (ref: RefObject<HTMLDivElement>, isCalendarVisible: ()=>boolean, fetchDate: ()=>TaskDate|undefined, callback: (date: TaskDate)=>void)=>{
+        if(!isCalendarVisible()) {
             return (<></>);
         }
-        const el = dateInputRef.current;
+        const el = ref.current;
         if(el === null) {
             return (<></>);
         }
 
-        const date = parseDateToBuiltin(task.date);
+        const taskDate = fetchDate();
+        const date = (taskDate === undefined) ? undefined : parseDateToBuiltin(taskDate);
         if(date === undefined) {
             return (<></>);
         }
 
         return (
-            <CalendarMonthView x={el.offsetLeft} y={el.offsetTop + el.offsetHeight} day={date.getDate()} month={date.getMonth()} year={date.getFullYear()} 
+            <CalendarMonthView x={el.offsetLeft} y={el.offsetTop + el.offsetHeight} day={date.getDate()} month={date.getMonth()} year={date.getFullYear()}
                 selectDay={(date: number, month: number, year: number)=>{
-                    setTask({...task, date: {year: year, month: month, day: date}});
+                    callback({year: year, month: month, day: date});
                     hideCalendar();
                 }}
             />
@@ -234,30 +274,145 @@ function TaskWnd(props: Props) {
         return (
             <div className="task-line-container">
                 <div style={{margin: "0 0.5rem"}}><b>time:</b></div>
-                <TaskInput style={timeInputStyle} initValue={parseNumberToFixedLengthString(task.startTime.hour)} maxCharacterCount={2}
+                <TaskInput style={timeInputStyle} initValue={parseNumberToFixedLengthString(task.startTime.hour)} maxCharacterCount={2} regexAllow={'\\d+'}
                     setValue={(val: string)=>{
                         setTask({...task, startTime: setNewStartHour(task, val)});
                     }}
                 />
-                <div>:</div> <TaskInput style={timeInputStyle} initValue={parseNumberToFixedLengthString(task.startTime.minute)} maxCharacterCount={2}
+                <div>:</div> <TaskInput style={timeInputStyle} initValue={parseNumberToFixedLengthString(task.startTime.minute)} maxCharacterCount={2} regexAllow={'\\d+'}
                     setValue={(val: string)=>{
                         setTask({...task, startTime: setNewStartMinute(task, val)});
                     }}
                 />
                 <div style={{margin: "0 0.25rem"}}>-</div>
-                <TaskInput style={timeInputStyle} initValue={parseNumberToFixedLengthString(task.endTime.hour)} maxCharacterCount={2}
+                <TaskInput style={timeInputStyle} initValue={parseNumberToFixedLengthString(task.endTime.hour)} maxCharacterCount={2} regexAllow={'\\d+'}
                     setValue={(val: string)=>{
                         setTask({...task, endTime: setNewEndHour(task, val)});
                     }}
                 />
                 <div>:</div>
-                <TaskInput style={timeInputStyle} initValue={parseNumberToFixedLengthString(task.endTime.minute)} maxCharacterCount={2}
+                <TaskInput style={timeInputStyle} initValue={parseNumberToFixedLengthString(task.endTime.minute)} maxCharacterCount={2} regexAllow={'\\d+'}
                     setValue={(val: string)=>{
                         setTask({...task, endTime: setNewEndMinute(task, val)});
                     }}
                 />
                 {timeInputFullDayCheckbox}
             </div>
+        );
+    };
+
+    const repetitionCheckbox = (
+        <div className="task-line-container">
+            <div style={{margin: "0 0.5rem"}}><b>repeat event:</b></div>
+            <input type="checkbox"
+                style={{margin: "auto 0.5rem auto 1rem"}}
+                checked={task.repetition !== undefined}
+                onChange={() => {
+                    if(task.repetition !== undefined) {
+                        setTask({...task, repetition: undefined});
+                        return;
+                    }
+                    setTask({...task, repetition: {type: "daily", count: 1, endDate: undefined}});
+                }}
+            />
+        </div>
+    );
+
+    const repetitionDateCheckbox = () => {
+        if(task.repetition === undefined) {
+            return (<></>);
+        }
+        return (
+            <input type="checkbox"
+                style={{margin: "auto 0.5rem"}}
+                checked={task.repetition.endDate !== undefined}
+                onChange={() => {
+                    if(task.repetition === undefined) {
+                        return;
+                    }
+                    if(task.repetition.endDate === undefined) {
+                        setTask({...task, repetition: {...task.repetition, endDate: task.date}});
+                        return;
+                    }
+                    setTask({...task, repetition: {...task.repetition, endDate: undefined}});
+                }}
+            />
+        );
+    }
+
+    const repetitionEndDate = () => {
+        if(task.repetition === undefined) {
+            return (<></>);
+        }
+        if(task.repetition.endDate === undefined) {
+            return (
+                <>
+                    <span style={{margin: "0 0.5rem"}}>, end date: <b style={{marginLeft: "0.5rem"}}>never</b></span>
+                    {repetitionDateCheckbox()}
+                </>
+            );
+        }
+        return (
+            <>
+                <span style={{margin: "0 0.5rem"}}>, end date: </span>
+                <div ref={repetitionDateInputRef} onClick={toggleRepetitionDateCalendar} className="task-date">{parseDateToStr(task.repetition.endDate)}</div>
+                {popupCalendar(repetitionDateInputRef, 
+                    () => showRepetitionDateCalendar, 
+                    () => (task.repetition === undefined) ? undefined : task.repetition.endDate,
+                    (date: TaskDate) => {
+                        if(task.repetition === undefined) return;
+                        setTask({...task, repetition: {...task.repetition, endDate: date}});
+                    }
+                )}
+                {repetitionDateCheckbox()}
+            </>
+        );
+    };
+
+    const repetitionInput = () => {
+        if(task.repetition === undefined) {
+            return repetitionCheckbox;
+        }
+        return (
+            <>
+                {repetitionCheckbox}
+                <div className="task-line-container">
+                    <span style={{margin: "0 0.5rem"}}>repeat every </span>
+                    <span style={{margin: "0 0.5rem"}}>
+                        <TaskInput style={{width: "2rem", textAlign: "center"}} initValue={task.repetition.count.toFixed()} regexAllow={'\\d+'}
+                            setValue={(val: string)=>{
+                                if(task.repetition === undefined) {
+                                    return;
+                                }
+                                if(val === "") {
+                                    setTask({...task, repetition: {...task.repetition, count: 1}});
+                                    return;
+                                }
+                                const num = Number.parseInt(val);
+                                if(isNaN(num)) {
+                                    return;
+                                }
+                                setTask({...task, repetition: {...task.repetition, count: num}});
+                            }}
+                        />
+                    </span>
+                    <span>
+                        <TaskDropdownSelect options={repetitionOptions} initValue={mapRepetitionTypeToOptionType(task.repetition.type)}
+                            select={(val: string) => {
+                                if(task.repetition === undefined) {
+                                    return;
+                                }
+                                const type = mapRepetitionOptionsToRepetitionType(val);
+                                if(type === undefined) {
+                                    return;
+                                }
+                                setTask({...task, repetition: {...task.repetition, type: type}});
+                            }}
+                        />
+                    </span>
+                    {repetitionEndDate()}
+                </div>
+            </>
         );
     };
 
@@ -275,7 +430,9 @@ function TaskWnd(props: Props) {
                     <div style={{margin: "0 0.5rem"}}><b>date:</b></div>
                     <div ref={dateInputRef} onClick={toggleCalendar} className="task-date">{parseDateToStr(task.date)}</div>
                 </div>
-                {popupCalendar()}
+                {popupCalendar(dateInputRef, ()=>showCalendar, ()=>task.date, (date: TaskDate)=>{
+                    setTask({...task, date: date});
+                })}
                 <div className="task-line-container">
                     <TaskDropdownSelect options={categories} initValue={task.category} label={"category"} 
                         select={(val: string)=>{
@@ -286,6 +443,7 @@ function TaskWnd(props: Props) {
                         }}
                     />
                 </div>
+                {repetitionInput()}
                 <div className="task-extended-container">
                     <TaskTextArea initValue={task.description} setValue={(val: string)=>{
                         setTask({...task, description: val});

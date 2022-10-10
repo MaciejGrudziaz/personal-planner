@@ -1,6 +1,6 @@
 import React, {RefObject, useState, useEffect} from 'react';
 import {DayCellStore, CellInfo} from './../calendar';
-import {TaskDate, TaskState, TaskTime, TaskCategory} from '../../../store/tasks';
+import {TaskDate, TaskState, TaskTime, TaskCategory, TaskRepetition} from '../../../store/tasks';
 import './task.css';
 
 export enum ResizeDir {
@@ -52,9 +52,11 @@ export class Task {
     startTime: TaskTime | undefined;
     endTime: TaskTime | undefined;
 
+    taskId: string;
     basicInfo: string;
     description: string;
     category: TaskCategory;
+    repetition: TaskRepetition | undefined;
 
     minHeight: number = parseFloat(getComputedStyle(document.documentElement).fontSize);
 
@@ -72,14 +74,16 @@ export class Task {
         this.height = 0;
     }
 
-    constructor(id: string, date: Date, basicInfo: string, description: string, category: TaskCategory, startTime?: TaskTime, endTime?: TaskTime) {
-        this.id = id;
+    constructor(id: string, date: Date, basicInfo: string, description: string, category: TaskCategory, repetition?: TaskRepetition, startTime?: TaskTime, endTime?: TaskTime) {
+        this.id = `${id}_${date.getTime()}`;
+        this.taskId = id;
         this.dayOfWeek = (date.getDay() === 0) ? 6 : date.getDay() - 1;
         this.startTime = startTime;
         this.endTime = endTime;
         this.basicInfo = basicInfo;
         this.description = description;
         this.category = category;
+        this.repetition = repetition;
     }
 
     addPadding() {
@@ -181,7 +185,7 @@ export class Task {
     }
 
     toTaskState(baseDate: Date): TaskState {
-        return {id: this.id, date: this.getDate(baseDate), startTime: this.startTime, endTime: this.endTime, basicInfo: this.basicInfo, description: this.description, category: this.category};
+        return {id: this.taskId, date: this.getDate(baseDate), startTime: this.startTime, endTime: this.endTime, basicInfo: this.basicInfo, description: this.description, category: this.category, repetition: this.repetition};
     }
 }
 

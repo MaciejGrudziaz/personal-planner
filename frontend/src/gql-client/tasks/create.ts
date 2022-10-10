@@ -1,8 +1,31 @@
 import { useDispatch } from "react-redux";
-import { TaskState, updateTask } from "../../store/tasks";
+import { TaskRepetition, TaskState, updateTask } from "../../store/tasks";
 import { fetchMutation } from "../fetch";
 
 type ReturnFunc = (task: TaskState) => Promise<boolean>;
+
+export function parseTaskRepetition(repetition: TaskRepetition | undefined): string {
+    if(repetition === undefined) {
+        return "null";
+    }
+
+    const parseEndDate = (): string => {
+        if(repetition.endDate === undefined) {
+            return "null";
+        }
+        return `{
+            year: ${repetition.endDate.year},
+            month: ${repetition.endDate.month + 1},
+            day: ${repetition.endDate.day}
+        }`;
+    }
+
+    return `{
+        type: "${repetition.type}",
+        count: ${repetition.count},
+        end_date: ${parseEndDate()}
+    }`;
+}
 
 export function useCreateTask(): ReturnFunc {
     const dispatch = useDispatch();
@@ -35,7 +58,8 @@ export function useCreateTask(): ReturnFunc {
                     },
                     basic_info: "${task.basicInfo}",
                     description: "${task.description}",
-                    category: "${task.category}"
+                    category: "${task.category}",
+                    repetition: ${parseTaskRepetition(task.repetition)}
                 )`
             );
             if(!res.ok) {

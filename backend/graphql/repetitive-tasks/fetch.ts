@@ -73,9 +73,10 @@ function calcEventIterationEnd(start_date: number, end_date: number, event_begin
     if(event_end !== null && event_end < start_date) {
         return undefined;
     }
-    const diffBeforeEndDate = end_date - event_begin;
+    const validEndDate = (event_end !== null && event_end < end_date) ? event_end : end_date;
+    const diffBeforeEndDate = validEndDate - event_begin;
     const endIt = parseInt((diffBeforeEndDate / diff).toFixed());
-    return (event_begin + endIt * diff) > end_date ? endIt - 1 : endIt;
+    return ((event_begin + endIt * diff) > validEndDate) ? endIt - 1 : endIt;
 }
 
 function calcOccurences(start_date: number, end_date: number, event_begin: number, event_end: number | null, diff: number): number[] {

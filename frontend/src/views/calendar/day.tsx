@@ -148,7 +148,7 @@ function Day(props: Props) {
                 const boundingRect = el.getBoundingClientRect();
                 task.startTime = {hour: 0, minute: 0};
                 task.endTime = {hour: 1, minute: 0};
-                props.moveTask(task, new Position(e.clientX, e.clientY), boundingRect.x, e.clientY - rem, boundingRect.width, 4.0 * rem);               
+                props.moveTask(task, new Position(e.clientX, e.clientY), boundingRect.x, e.clientY - rem, boundingRect.width, 4.0 * rem);
             }}
         >
             {task.basicInfo}
