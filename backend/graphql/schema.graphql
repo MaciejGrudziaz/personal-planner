@@ -20,6 +20,13 @@ type Task {
     repetition: TaskRepetition
 }
 
+type Category {
+    id: Int!
+    name: String!
+    background_color: String!
+    border_color: String!
+}
+
 type TaskRepetition {
     type: String!
     count: Int!
@@ -81,6 +88,7 @@ type Query {
     fetchTasks(month: Int, year: Int, id: [Int]): [Task]
     fetchTodos(id: [Int]): [ToDo]
     fetchTodoGroups(id: [Int]): [ToDoGroup]
+    fetchCategories: [Category]
     config: Config
 }
 
@@ -91,6 +99,10 @@ type Mutation {
     updateSingleRepetitiveTask(id: Int!, date: InputDate!, start_time: InputTime, end_time: InputTime): Boolean!
     deleteTask(id: Int!): Boolean!
     deleteSingleRepetitiveTask(id: Int!, date: InputDate!): Boolean!
+
+    createCategory(name: String!, background_color: String!, border_color: String!): Int
+    updateCategory(id: Int!, name: String!, background_color: String!, border_color: String!): Boolean!
+    deleteCategory(id: Int, name: String): Boolean!
 
     createTodoGroup(name: String, ordinal: Int): Int
     modifyTodoGroup(id: Int!, name: String, ordinal: Int): Boolean!

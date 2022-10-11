@@ -13,6 +13,11 @@ import { createTodoGroup } from './todo-group/create';
 import { deleteTodoGroups } from './todo-group/delete';
 import { fetchTodoGroups } from './todo-group/fetch';
 import { modifyTodoGroup } from './todo-group/modify';
+import { Category, parseCategory } from './task-category/types';
+import { fetchCategories } from './task-category/fetch';
+import { createCategory } from './task-category/create';
+import { updateCategory } from './task-category/update';
+import { deleteCategory } from './task-category/delete';
 import { moveTodoGroup, TodoGroupOrdinal } from './todo-group/move';
 
 export interface Resolver {
@@ -24,7 +29,10 @@ export interface Resolver {
     updateSingleRepetitiveTask(args: any): Promise<boolean>;
     deleteTask(args: any): Promise<boolean>;
     deleteSingleRepetitiveTask(args: any): Promise<boolean>;
-    config(): Promise<Config | null>;
+    fetchCategories(): Promise<Category[] | null>;
+    createCategory(args: any): Promise<number | null>;
+    updateCategory(args: any): Promise<boolean>;
+    deleteCategory(args: any): Promise<boolean>;
     createTodoGroup(args: any): Promise<number | null>;
     modifyTodoGroup(args: any): Promise<boolean>;
     deleteTodoGroup(args: any): Promise<boolean>;
@@ -33,6 +41,7 @@ export interface Resolver {
     modifyTodo(args: any): Promise<boolean>;
     deleteTodo(args: any): Promise<boolean>;
     moveTodo(args: any): Promise<TodoPriority[] | null>;
+    config(): Promise<Config | null>;
     updateCalendarMonthViewFontSize(args: any): Promise<boolean>;
 }
 
@@ -85,8 +94,17 @@ function getResolver(db: DBClient): Resolver {
         deleteSingleRepetitiveTask: async (args: any): Promise<boolean> => {
             return await db.deleteSingleRepetitiveTask(args.id, args.date);
         },
-        config: async (): Promise<Config | null> => {
-            return await db.fetchConfig();
+        fetchCategories: async (): Promise<Category[] | null> => {
+            return await fetchCategories(db);
+        },
+        createCategory: async (args: any): Promise<number | null> => {
+            return await createCategory(db, args.name, args.background_color, args.border_color);
+        },
+        updateCategory: async (args: any): Promise<boolean> => {
+            return await updateCategory(db, {id: args.id, name: args.name, background_color: args.background_color, border_color: args.border_color});
+        },
+        deleteCategory: async (args: any): Promise<boolean> => {
+            return await deleteCategory(db, args.id, args.name);
         },
         createTodoGroup: async (args: any): Promise<number | null> => {
             return await createTodoGroup(db, args.name, args.ordinal);
@@ -111,6 +129,9 @@ function getResolver(db: DBClient): Resolver {
         },
         moveTodo: async (args: any): Promise<TodoPriority[] | null> => {
             return await moveTodo(db, args.id, args.target_id);
+        },
+        config: async (): Promise<Config | null> => {
+            return await db.fetchConfig();
         },
         updateCalendarMonthViewFontSize: async (args: any): Promise<boolean> => {
             return await db.updateConfig("calendarMonthView_fontSize", args.size);

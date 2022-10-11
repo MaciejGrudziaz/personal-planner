@@ -1,3 +1,12 @@
+CREATE TABLE task_category
+(
+    id serial,
+    name varchar(50) not null,
+    background_color char(7) not null,
+    border_color char(7) not null,
+    PRIMARY KEY(id)
+);
+
 CREATE TABLE tasks
 (
     id serial,
