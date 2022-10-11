@@ -1,7 +1,10 @@
 import React, {RefObject, useState, useEffect} from 'react';
 import {DayCellStore, CellInfo} from './../calendar';
 import {TaskDate, TaskState, TaskTime, TaskCategory, TaskRepetition} from '../../../store/tasks';
+import {Category} from "../../../store/categories";
 import './task.css';
+import {useStore} from 'react-redux';
+import {RootState} from '../../../store/store';
 
 export enum ResizeDir {
     up,
@@ -189,27 +192,27 @@ export class Task {
     }
 }
 
-export function getColor(category: TaskCategory): string {
-    switch(category) {
-        case "simple":
-            return "#e9c46a";
-        case "important":
-            return "#e76f51";
-    }
+export function getDefaultBackgroundColor(): string {
+    return "#fff";
 }
 
-export function getBorderColor(category: TaskCategory): string {
-    switch(category) {
-        case "simple":
-            return "#926F16";
-        case "important":
-            return "#621E0D";
-    }
+export function getDefaultBorderColor(): string {
+    return "#000";
 }
 
 function CalendarTask(props: Props) {
+    const [isInitialized, init] = useState(false);
     const [clickRecorded, setClickRecord] = useState(false);
     const [mouseClickStartPos, setMouseClickStartPos] = useState(undefined as Position | undefined);
+    const [categories, setCategories] = useState([] as Category[]);
+    const store = useStore();
+
+    useEffect(()=>{
+        if(isInitialized) return;
+        store.subscribe(fetchCategories);
+        fetchCategories();
+        init(true);
+    });
 
     const resetClick = () => {
         setClickRecord(false);
@@ -223,6 +226,20 @@ function CalendarTask(props: Props) {
         return Math.sqrt(x*x + y*y);
     }
 
+    const fetchCategories = () => {
+        setCategories((store.getState() as RootState).categoryState);
+    }
+
+    const getBackgroundColor = (name: string): string => {
+        const category = categories.find((val: Category) => val.name === name);
+        return (category === undefined) ? getDefaultBackgroundColor() : category.backgroundColor;
+    }
+
+    const getBorderColor = (name: string): string => {
+        const category = categories.find((val: Category) => val.name === name);
+        return (category === undefined) ? getDefaultBorderColor() : category.borderColor;
+    }
+
     return (
         <>
         <div className="bar" style={{left: props.left, top: props.top, width: props.width, zIndex: props.zIndex + 1}} 
@@ -230,7 +247,7 @@ function CalendarTask(props: Props) {
                 props.resize(new Position(event.pageX, event.pageY), ResizeDir.up);
             }}
         />
-        <div className="task" style={{top: props.top, left: props.left, width: props.width, height: props.height, borderColor: getBorderColor(props.category), backgroundColor: getColor(props.category), zIndex: props.zIndex}} 
+        <div className="task" style={{top: props.top, left: props.left, width: props.width, height: props.height, borderColor: getBorderColor(props.category), backgroundColor: getBackgroundColor(props.category), zIndex: props.zIndex}} 
             onMouseDown={(event: React.MouseEvent<HTMLDivElement>)=>{
                 setMouseClickStartPos({x: event.pageX, y: event.pageY});
             }}

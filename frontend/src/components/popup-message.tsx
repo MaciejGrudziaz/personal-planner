@@ -11,9 +11,32 @@ interface Props {
     callback1?: ()=>void;
     callback2?: ()=>void;
     callback3?: ()=>void;
+
+    hide?(): void;
 }
 
+
+
 function PopupMessage(props: Props) {
+    useEffect(()=>{
+        window.addEventListener('keydown', hideWindowEvent);
+        return ()=>{
+            window.removeEventListener('keydown', hideWindowEvent);
+        };
+    });
+
+    const hideWindowEvent = (e: globalThis.KeyboardEvent) => {
+        if(!props.show) {
+            return;
+        }
+        if(e.key !== "Escape") {
+            return;
+        }
+        if(props.hide) {
+            props.hide();
+        }
+    }
+
     const message = props.message.split("\n").map((line: string, index: number) => (
         <div key={index} style={{textAlign: "center"}}>{line}</div>
     ));
@@ -47,7 +70,13 @@ function PopupMessage(props: Props) {
                     {option(props.option3, props.callback3)}
                 </div>
             </div>
-            <div className="popup-msg-bckg-diffusion" />
+            <div className="popup-msg-bckg-diffusion" 
+                onClick={()=>{
+                    if(props.hide) {
+                        props.hide();
+                    }
+                }}
+            />
         </>
     );
 }

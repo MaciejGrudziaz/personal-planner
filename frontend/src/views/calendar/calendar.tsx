@@ -686,6 +686,10 @@ function Calendar(props: Props) {
                     option1={popupMsgInfo.option1} callback1={popupMsgInfo.callback1}
                     option2={popupMsgInfo.option2} callback2={popupMsgInfo.callback2}
                     option3={popupMsgInfo.option3} callback3={popupMsgInfo.callback3}
+                    hide={()=>{
+                        resetPopupMessageState();
+                        fetchTasks();
+                    }}
                 />
                 {daysList}
                 {tasksList}

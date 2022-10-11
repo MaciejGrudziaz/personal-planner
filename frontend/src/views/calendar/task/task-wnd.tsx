@@ -8,6 +8,9 @@ import {useUpdateTask} from '../../../gql-client/tasks/update';
 import {useCreateTask} from '../../../gql-client/tasks/create';
 import {useDeleteTask} from '../../../gql-client/tasks/delete';
 import './task-wnd.scss';
+import {useStore} from 'react-redux';
+import {Category} from '../../../store/categories';
+import {RootState} from '../../../store/store';
 
 interface Props {
     id: string | undefined;
@@ -119,6 +122,8 @@ function TaskWnd(props: Props) {
     const [task, setTask] = useState(createDefaultTaskState(props));
     const [showCalendar, setShowCalendar] = useState(props.startTime === undefined || props.endTime === undefined);
     const [showRepetitionDateCalendar, setShowRepetitionDateCalendar] = useState(false);
+    const [categories, setCategories] = useState([] as Category[]);
+    const store = useStore();
     const dateInputRef = useRef() as RefObject<HTMLDivElement>;
     const repetitionDateInputRef = useRef() as RefObject<HTMLDivElement>;
 
@@ -127,8 +132,9 @@ function TaskWnd(props: Props) {
         textAlign: "center"
     } as TaskInputStyle;
 
-    const categories = ["simple", "important"];
+    // const categories = ["simple", "important"];
     const repetitionOptions = ["days", "weeks", "months", "years"];
+    const categoriesNames = categories.map((val: Category) => val.name);
 
     const mapRepetitionOptionsToRepetitionType = (option: string): RepetitionType | undefined => {
         switch(option) {
@@ -169,11 +175,17 @@ function TaskWnd(props: Props) {
         if(!props.show) {
             hideCalendar();
         }
+        fetchCategories();
+        store.subscribe(fetchCategories);
     }, [props.show]);
 
     useEffect(()=>{
         setTask(createDefaultTaskState(props));
     }, [props.id, props.date, props.startTime, props.endTime]);
+
+    const fetchCategories = () => {
+        setCategories((store.getState() as RootState).categoryState);
+    }
 
     const hideWindowEvent = (ev: globalThis.KeyboardEvent)=>{
         if(!props.show) { return; }
@@ -434,7 +446,7 @@ function TaskWnd(props: Props) {
                     setTask({...task, date: date});
                 })}
                 <div className="task-line-container">
-                    <TaskDropdownSelect options={categories} initValue={task.category} label={"category"} 
+                    <TaskDropdownSelect options={categoriesNames} initValue={task.category} label={"category"} 
                         select={(val: string)=>{
                             if(val !== "simple" && val !== "important") {
                                 return;

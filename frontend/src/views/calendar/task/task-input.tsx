@@ -6,6 +6,9 @@ export interface TaskInputStyle {
     width?: string;
     padding?: string;
     textAlign?: Property.TextAlign;
+    height?: string;
+    maxHeight?: string;
+    lineHeight?: string;
 }
 
 interface Props {
@@ -13,7 +16,7 @@ interface Props {
     maxCharacterCount?: number;
     regexAllow?: string;
     style?: TaskInputStyle;
-    setValue(val: string): void;
+    setValue?(val: string): void;
 }
 
 function TaskInput(props: Props) {
@@ -59,12 +62,16 @@ function TaskInput(props: Props) {
                 }}
                 onBlur={()=>{
                     closeInput();
-                    props.setValue(currentValue);
+                    if(props.setValue) {
+                        props.setValue(currentValue);
+                    }
                 }}
                 onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>)=>{
                     if(e.key === "Enter") {
                         closeInput();
-                        props.setValue(currentValue);
+                        if(props.setValue) {
+                            props.setValue(currentValue);
+                        }
                     }
                     if(e.key === "Escape") {
                         e.stopPropagation();

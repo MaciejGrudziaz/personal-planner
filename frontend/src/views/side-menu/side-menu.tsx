@@ -41,7 +41,7 @@ function SideMenu() {
 
     if(!isOpened) {
         return (
-            <button className="open-btn" style={{position: "fixed", top: "1rem", right: "1rem"}}
+            <button className="open-btn" style={{position: "fixed", top: "0.5rem", right: "1rem"}}
                 onClick={()=>setOpen(true)}>&lt;&lt;</button>
         );
     }
@@ -68,7 +68,7 @@ function SideMenu() {
     };
 
     return (
-        <div className="side-menu" ref={menuRef}>
+        <div className="side-menu" style={{right: "-0.5rem"}} ref={menuRef}>
             <button className="open-btn" onClick={()=>setOpen(false)}>&gt;&gt;</button>
             <div style={{display: "flex"}} ref={headerRef}>
                 <div style={{margin: "auto", display: "flex", alignItems: "center"}}>

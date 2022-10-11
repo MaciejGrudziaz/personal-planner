@@ -1,8 +1,11 @@
 import React, {RefObject, useEffect, useState, useRef} from 'react';
-import {Position, getColor as getTaskColor, getBorderColor as getTaskBorderColor} from './task/task';
+import {getDefaultBackgroundColor, getDefaultBorderColor, Position} from './task/task';
 import {TaskState} from '../../store/tasks';
+import {Category} from '../../store/categories';
 import HourView, {CellBasicInfo} from './hour';
 import {useDeleteTask} from '../../gql-client/tasks/delete';
+import {useStore} from 'react-redux';
+import {RootState} from '../../store/store';
 import './day.scss';
 
 interface Props {
@@ -76,13 +79,16 @@ function Day(props: Props) {
     const [clickRecorded, setClickRecord] = useState(false);
     const [isInitialized, setInit] = useState(false);
     const dailyTasksRef = useRef() as RefObject<HTMLDivElement>;
-    const deleteTask = useDeleteTask();
+    const [categories, setCategories] = useState([] as Category[]);
+    const store = useStore();
 
     const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
 
     useEffect(()=>{
         if(isInitialized) return;
         if(props.updateDayRef) props.updateDayRef(dailyTasksRef);
+        store.subscribe(fetchCategories);
+        fetchCategories();
         setInit(true);
     });
 
@@ -120,8 +126,22 @@ function Day(props: Props) {
         return Math.sqrt(x*x + y*y);
     }
 
+    const fetchCategories = () => {
+        setCategories((store.getState() as RootState).categoryState);
+    }
+
+    const getBackgroundColor = (name: string): string => {
+        const category = categories.find((val: Category) => val.name === name);
+        return (category === undefined) ? getDefaultBackgroundColor() : category.backgroundColor;
+    }
+
+    const getBorderColor = (name: string): string => {
+        const category = categories.find((val: Category) => val.name === name);
+        return (category === undefined) ? getDefaultBorderColor() : category.borderColor;
+    }
+
     const dailyTasks = props.dailyTasks.map((task: TaskState) => (
-        <div key={task.id} className="day-daily-task" style={{backgroundColor: getTaskColor(task.category), borderColor: getTaskBorderColor(task.category)}}
+        <div key={task.id} className="day-daily-task" style={{backgroundColor: getBackgroundColor(task.category), borderColor: getBorderColor(task.category)}}
             onMouseDown={(e: React.MouseEvent<HTMLDivElement>) => {
                 setMouseClickStartPos(new Position(e.clientX, e.clientY));
             }}
