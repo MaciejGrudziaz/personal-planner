@@ -43,7 +43,7 @@ function PopupMessage(props: Props) {
     }
 
     const message = props.message.split("\n").map((line: string, index: number) => (
-        <div key={index} style={{textAlign: "center"}}>{line}</div>
+        <div key={index} style={{textAlign: "center", margin: "auto"}}>{line}</div>
     ));
 
     const option = (msg?: string, callback?: (props?: any)=>void, props?: any) => {

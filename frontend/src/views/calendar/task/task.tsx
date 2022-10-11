@@ -78,9 +78,9 @@ export class Task {
     }
 
     constructor(id: string, date: Date, basicInfo: string, description: string, category?: string, repetition?: TaskRepetition, startTime?: TaskTime, endTime?: TaskTime) {
-        this.id = `${id}_${date.getTime()}`;
-        this.taskId = id;
         this.dayOfWeek = (date.getDay() === 0) ? 6 : date.getDay() - 1;
+        this.id = `${id}_${this.dayOfWeek}`;
+        this.taskId = id;
         this.startTime = startTime;
         this.endTime = endTime;
         this.basicInfo = basicInfo;

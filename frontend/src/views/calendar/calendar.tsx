@@ -13,7 +13,6 @@ import {useUpdateTask, useUpdateSingleTask} from '../../gql-client/tasks/update'
 import {useDeleteTask, useDeleteSingleTask} from '../../gql-client/tasks/delete';
 import {useUpdateCalendarViewFontSize} from '../../gql-client/config/update';
 import './calendar.css';
-import {getQueriesForElement} from '@testing-library/react';
 
 interface ResizeAction {
     state: boolean;
@@ -78,7 +77,7 @@ function Calendar(props: Props) {
     const [resizeAction, setResize] = useState({state: false} as ResizeAction);
     const [startMovePos, setStartMovePos] = useState(new Position(0, 0));
     const [modifyObject, setModifyObject] = useState(undefined as string | undefined);
-    const [tasks, setTasks] = useState(new Array() as Task[]);
+    const [tasks, setTasks] = useState([] as Task[]);
     const [cells, setCells] = useState(new Map() as Map<number, DayCellStore>);
     const [pointerState, setPointerState] = useState(undefined as undefined | PointerState);
     const [calendarFont, setCalendarFont] = useState({size: 12, changed: false} as FontState);
@@ -137,39 +136,37 @@ function Calendar(props: Props) {
 
     const fetchTasks = ()=>{
         const tasksState = (store.getState() as RootState).tasksState;
-        while(tasks.length > 0) { tasks.pop(); }
-        findTasksForWeek(props.weekStartDate, tasksState).forEach((taskInfo: TaskState) => {
+        setTasks(calcOverlapping(findTasksForWeek(props.weekStartDate, tasksState).map((taskInfo: TaskState) => {
             const task = new Task(taskInfo.id, parseDateToBuiltin(taskInfo.date), taskInfo.basicInfo, taskInfo.description, taskInfo.category, taskInfo.repetition, taskInfo.startTime, taskInfo.endTime)
             task.init(cells);
-            tasks.push(task);
-        });
-        calcOverlapping();
-        setTasks([...tasks]);
+            return task;
+        })));
     }
 
-    const calcOverlapping = ()=>{
-        let retry = true;
-        while(retry) {
-            retry = false;
-            tasks.forEach((task: Task)=>{
-                if(task.calcOverlapping(tasks)) { retry = true; }
-            });
+    const calcOverlapping = (tasks: Task[]): Task[] => {
+        const overlappedTasks = tasks.map((task: Task) => {
+            const res = task.calcOverlapping(tasks);
+            return {task: task, overlapping: res};
+        });
+
+        const res = overlappedTasks.map((val: {task: Task, overlapping: boolean}) => {
+            return val.overlapping;
+        }).reduce((prev: boolean, curr: boolean) => {
+            return prev || curr;
+        }, false);
+
+        if(res === true) {
+            return calcOverlapping(overlappedTasks.map((val: {task: Task, overlapping: boolean}) => val.task));
         }
+        return overlappedTasks.map((val: {task: Task, overlapping: boolean}) => val.task)
     }
 
     const updateTasks = ()=>{
-        let needsUpdate = false;
-        tasks.forEach((task: Task)=>{
+        setTasks(calcOverlapping(tasks.map((task: Task)=>{
             const oldParams = {x: task.x, y: task.y, width: task.width, height: task.height};
             task.init(cells);
-            if(oldParams.x !== task.x || oldParams.y !== task.y || oldParams.width !== task.width || oldParams.height !== task.height) {
-                needsUpdate = true;
-            }
-        });
-        calcOverlapping();
-        if(needsUpdate) {
-            setTasks([...tasks]); 
-        }
+            return task;
+        })));
     };
 
     const updateCalendarFontSize = (diff: number)=>{
@@ -481,10 +478,13 @@ function Calendar(props: Props) {
     const grabActionHandler = (currentPos: Position)=>{
         const diff = new Position(currentPos.x - startMovePos.x, currentPos.y - startMovePos.y);
         setStartMovePos(currentPos);
-        const task = tasks.find((value: Task)=>{ return value.id === modifyObject; });
-        if(task === undefined) { return; }
-        task.move(diff);
-        setTasks([...tasks]);
+        setTasks(calcOverlapping(tasks.map((task: Task) => {
+            if(task.id !== modifyObject) {
+                return task;
+            }
+            task.move(diff);
+            return task;
+        })));
     }
 
     const updateTask = (task: TaskState) => {
@@ -515,122 +515,125 @@ function Calendar(props: Props) {
 
     const grabActionFinalizer = ()=>{
         setGrabbed(false);
-        const task = tasks.find((value: Task)=>{ return value.id === modifyObject; });
-        if(task === undefined) { return; }
-
-        const getMajorityCell = (): CellInfo | undefined =>{
-            const firstCell = findCell(new Position(task.x, task.y));
-            if(firstCell === undefined) { return undefined; }
-            const secondCell = findCell(new Position(task.x + task.width, task.y));
-            if(secondCell === undefined) { return undefined; }
-
-            if(task.x - firstCell.x < secondCell.x - task.x) {
-                return firstCell;
+        setTasks(calcOverlapping(tasks.map((task: Task) => {
+            if(task.id !== modifyObject) {
+                return task;
             }
-            return secondCell;
-        };
 
-        const cell = getMajorityCell();
-        if(cell === undefined) {
-            const cell = findCell(startMovePos);
-            if(cell !== undefined && isCellDaily(cell)) {
+            const getMajorityCell = (): CellInfo | undefined =>{
+                const firstCell = findCell(new Position(task.x, task.y));
+                if(firstCell === undefined) { return undefined; }
+                const secondCell = findCell(new Position(task.x + task.width, task.y));
+                if(secondCell === undefined) { return undefined; }
+
+                if(task.x - firstCell.x < secondCell.x - task.x) {
+                    return firstCell;
+                }
+                return secondCell;
+            };
+
+            const cell = getMajorityCell();
+            if(cell === undefined) {
+                const cell = findCell(startMovePos);
+                if(cell !== undefined && isCellDaily(cell)) {
+                    task.setDaily(cell.day);
+                    updateTask(task.toTaskState(props.weekStartDate));
+                    return task;
+                }
+                updateCellsInStore();
+                return task;
+            }
+            if(isCellDaily(cell)) {
                 task.setDaily(cell.day);
                 updateTask(task.toTaskState(props.weekStartDate));
-                setTasks([...tasks]);
-                return;
+                return task;
             }
-            updateCellsInStore();
-            return; 
-        }
-        if(isCellDaily(cell)) {
-            task.setDaily(cell.day);
+            task.setPosition(new Position(cell.x, cell.y));
+
+            const endCell = findCell(new Position(task.x, task.y + task.height - task.minHeight / 2));
+            if(endCell === undefined) {
+                updateCellsInStore();
+                return task;
+            }
+
+            if(endCell.hour === undefined || endCell.quarter === undefined
+                || cell.hour === undefined || cell.quarter === undefined) { 
+                return task; 
+            }
+
+            let endHour = endCell.hour;
+            let endQuarter = endCell.quarter + 1;
+            if(endQuarter === 4) {
+                endHour += 1;
+                endQuarter = 0;
+            }
+            task.updateTime(cell.day, cell.hour, cell.quarter, endHour, endQuarter);
             updateTask(task.toTaskState(props.weekStartDate));
-            setTasks([...tasks]);
-            return;
-        }
-
-        task.setPosition(new Position(cell.x, cell.y));
-
-        const endCell = findCell(new Position(task.x, task.y + task.height - task.minHeight / 2));
-        if(endCell === undefined) {
-            updateCellsInStore();
-            return;
-        }
-
-        if(endCell.hour === undefined || endCell.quarter === undefined
-            || cell.hour === undefined || cell.quarter === undefined) { 
-            return; 
-        }
-
-        let endHour = endCell.hour;
-        let endQuarter = endCell.quarter + 1;
-        if(endQuarter === 4) {
-            endHour += 1;
-            endQuarter = 0;
-        }
-        task.updateTime(cell.day, cell.hour, cell.quarter, endHour, endQuarter);
-        updateTask(task.toTaskState(props.weekStartDate));
-
-        calcOverlapping();
-        setTasks([...tasks]);
+            return task;
+        })));
     }
 
     const resizeActionHandler = (currentPos: Position)=>{
         const diff = new Position(currentPos.x - startMovePos.x, currentPos.y - startMovePos.y);
         setStartMovePos(currentPos);
-        const task = tasks.find((value: Task)=>{ return value.id === modifyObject; });
-        if(task === undefined) { return; }
-        if(resizeAction.direction === undefined) { return; }
-        if(resizeAction.direction === ResizeDir.up) { task.resizeUp(diff.y); }
-        else { task.resizeDown(diff.y); }
-        setTasks([...tasks]);
+        setTasks(calcOverlapping(tasks.map((task: Task) => {
+            if(task.id !== modifyObject) {
+                return task;
+            }
+            if(task === undefined) { return task; }
+            if(resizeAction.direction === undefined) { return task; }
+            if(resizeAction.direction === ResizeDir.up) { task.resizeUp(diff.y); }
+            else { task.resizeDown(diff.y); }
+            return task;
+        })));
     }
 
     const resizeActionFinalizer = ()=>{
         const dir = resizeAction.direction;
         setResize({state: false, direction: undefined});
-        const task = tasks.find((value: Task)=>{ return value.id === modifyObject; });
-        if(task === undefined) { return; }
-
-        if(dir === ResizeDir.up) {
-            const targetCell = findCell(new Position(task.x, task.y));
-            if(targetCell === undefined) { 
-                updateCellsInStore();
-                return; 
+        setTasks(calcOverlapping(tasks.map((task: Task) => {
+            if(task.id !== modifyObject) {
+                return task;
             }
-            task.resizeUp(targetCell.y - task.y);
-        } else {
-            const targetCell = findCell(new Position(task.x, task.y + task.height));
-            if(targetCell === undefined) { 
-                updateCellsInStore();
-                return; 
+            if(dir === ResizeDir.up) {
+                const targetCell = findCell(new Position(task.x, task.y));
+                if(targetCell === undefined) { 
+                    updateCellsInStore();
+                    return task;
+                }
+                task.resizeUp(targetCell.y - task.y);
+            } else {
+                const targetCell = findCell(new Position(task.x, task.y + task.height));
+                if(targetCell === undefined) { 
+                    updateCellsInStore();
+                    return task; 
+                }
+                task.resizeDown((targetCell.y + targetCell.height) - (task.y + task.height));
             }
-            task.resizeDown((targetCell.y + targetCell.height) - (task.y + task.height));
-        }
 
-        const baseCell = findCell(new Position(task.x, task.y + task.minHeight / 2));
-        const endCell = findCell(new Position(task.x, task.y + task.height - task.minHeight / 2));
-        if(baseCell === undefined || endCell === undefined) {
-            updateCellsInStore();
-            return;
-        }
+            const baseCell = findCell(new Position(task.x, task.y + task.minHeight / 2));
+            const endCell = findCell(new Position(task.x, task.y + task.height - task.minHeight / 2));
+            if(baseCell === undefined || endCell === undefined) {
+                updateCellsInStore();
+                return task;
+            }
 
-        if(baseCell.hour === undefined || baseCell.quarter === undefined
-            || endCell.hour === undefined || endCell.quarter === undefined) { 
-            return;
-        }
+            if(baseCell.hour === undefined || baseCell.quarter === undefined
+                || endCell.hour === undefined || endCell.quarter === undefined) { 
+                return task;
+            }
 
-        let endHour = endCell.hour;
-        let endQuarter = endCell.quarter + 1;
-        if(endQuarter === 4) {
-            endHour += 1;
-            endQuarter = 0;
-        }
-        task.updateTime(baseCell.day, baseCell.hour, baseCell.quarter, endHour, endQuarter);
+            let endHour = endCell.hour;
+            let endQuarter = endCell.quarter + 1;
+            if(endQuarter === 4) {
+                endHour += 1;
+                endQuarter = 0;
+            }
+            task.updateTime(baseCell.day, baseCell.hour, baseCell.quarter, endHour, endQuarter);
 
-        updateTask(task.toTaskState(props.weekStartDate));
-        calcOverlapping();
-        setTasks([...tasks]);
+            updateTask(task.toTaskState(props.weekStartDate));
+            return task;
+        })));
     }
 
     return (
