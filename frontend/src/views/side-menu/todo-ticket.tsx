@@ -26,6 +26,9 @@ function TodoTicket(props: Props) {
     const deleteTodoTicket = useDeleteTodoTicket();
     const updateTicket = useUpdateTicket();
 
+    const doneTaskBckgColor = "#adc178";
+    const standardTaskBckgColor = "#fff";
+
     useEffect(()=>{
         if(toggle && props.mousePos === undefined) {
             setIsGrabbed(false);
@@ -48,7 +51,9 @@ function TodoTicket(props: Props) {
                 top: props.mousePos.y + 1,
                 left: props.mousePos.x + 1,
                 width: "10%",
-                overflow: "hidden"
+                overflow: "hidden",
+                backgroundColor: (props.val.done) ? doneTaskBckgColor : standardTaskBckgColor,
+                border: "1px solid black"
             }}>
                 {props.val.content}
             </div>
@@ -124,7 +129,7 @@ function TodoTicket(props: Props) {
 
     return (
         <>
-            <div style={{display: "flex"}}>
+            <div style={{display: "flex", backgroundColor: (todo && todo.done) ? doneTaskBckgColor : standardTaskBckgColor, border: "1px solid black"}}>
                 <input type="checkbox"
                     style={{margin: "auto"}}
                     checked={(todo) ? todo.done : false}
