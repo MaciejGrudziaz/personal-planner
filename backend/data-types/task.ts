@@ -7,27 +7,8 @@ export interface Task {
     date: TaskDate;
     basic_info: string;
     description: string;
-    category: Category;
+    category: string | null;
     repetition: TaskRepetition | null;
-}
-
-type Category = "simple" | "important";
-
-function mapCategoryId(category: number): Category | undefined {
-    switch(category) {
-        case 0: return "simple";
-        case 1: return "important";
-    }
-    return undefined;
-}
-
-export function mapCategory(category: Category): number {
-    switch(category) {
-        case "simple":
-            return 0;
-        case "important":
-            return 1;
-    }
 }
 
 export type RepetitionType = "daily" | "weekly" | "monthly" | "yearly";
@@ -122,17 +103,11 @@ export function taskDateToString(date: TaskDate): string {
 
 export function parseTask(value: any): Task | undefined {
     const id = value["id"] as number;
-    const categoryId = value["category"] as number;
+    const category = value["category"] as string;
     const date = value["date"] as Date;
 
-    if(!areAllCorrect([check(id).isNumber, check(categoryId).isNumber, check(date).isDate])) {
+    if(!areAllCorrect([check(id).isNumber, check(category).isString.or.isNull, check(date).isDate])) {
         console.log("One of mandatory values ('id', 'category', 'date') is null or undefined");
-        return undefined;
-    }
-
-    const category = mapCategoryId(categoryId);
-    if(category === undefined) {
-        console.log(`Unrecognized category '${categoryId}'`);
         return undefined;
     }
 

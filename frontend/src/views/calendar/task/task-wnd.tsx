@@ -3,7 +3,7 @@ import TaskInput, {TaskInputStyle} from './task-input';
 import TaskTextArea from './task-text-area';
 import CalendarMonthView from './../month-view/month-view';
 import TaskDropdownSelect from './task-dropdown-select';
-import {TaskState, TaskDate, TaskTime, TaskCategory, parseDateToBuiltin, parseDateToStr, TaskRepetition, RepetitionType} from '../../../store/tasks';
+import {TaskState, TaskDate, TaskTime, parseDateToBuiltin, parseDateToStr, TaskRepetition, RepetitionType} from '../../../store/tasks';
 import {useUpdateTask} from '../../../gql-client/tasks/update';
 import {useCreateTask} from '../../../gql-client/tasks/create';
 import {useDeleteTask} from '../../../gql-client/tasks/delete';
@@ -19,7 +19,7 @@ interface Props {
     endTime: TaskTime | undefined;
     basicInfo: string | undefined;
     description: string | undefined;
-    category: TaskCategory | undefined;
+    category: string | undefined;
     repetition: TaskRepetition | undefined;
     show: boolean;
 
@@ -36,7 +36,7 @@ function createDefaultTaskState(props: Props): TaskState {
         endTime: (props.endTime === undefined) ? undefined : props.endTime,
         basicInfo: (props.basicInfo === undefined) ? "" : props.basicInfo,
         description: (props.description === undefined) ? "" : props.description,
-        category: (props.category === undefined) ? "simple" : props.category,
+        category: props.category,
         repetition: props.repetition
     };
 }
@@ -132,7 +132,6 @@ function TaskWnd(props: Props) {
         textAlign: "center"
     } as TaskInputStyle;
 
-    // const categories = ["simple", "important"];
     const repetitionOptions = ["days", "weeks", "months", "years"];
     const categoriesNames = categories.map((val: Category) => val.name);
 
@@ -220,6 +219,9 @@ function TaskWnd(props: Props) {
 
     const saveTask = ()=>{
         if(task.id === "") {
+            if(task.category === undefined && categoriesNames.length > 0) {
+                task.category = categoriesNames[0];
+            }
             createTask(task);
         } else {
             updateTask(task);
@@ -446,11 +448,8 @@ function TaskWnd(props: Props) {
                     setTask({...task, date: date});
                 })}
                 <div className="task-line-container">
-                    <TaskDropdownSelect options={categoriesNames} initValue={task.category} label={"category"} 
+                    <TaskDropdownSelect options={categoriesNames} initValue={(task.category !== undefined) ? task.category : ""} label={"category"} 
                         select={(val: string)=>{
-                            if(val !== "simple" && val !== "important") {
-                                return;
-                            }
                             setTask({...task, category: val});
                         }}
                     />

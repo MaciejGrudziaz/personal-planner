@@ -37,7 +37,10 @@ export function useUpdateTask(): ReturnFunc {
                     },
                     basic_info: "${task.basicInfo}",
                     description: "${task.description}",
-                    category: "${task.category}",
+                    ${(task.category !== undefined)
+                        ? `category: "${task.category}",`
+                        : ""
+                    }
                     repetition: ${parseTaskRepetition(task.repetition)}
                 )`
             );

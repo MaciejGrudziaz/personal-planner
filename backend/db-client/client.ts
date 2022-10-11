@@ -1,5 +1,6 @@
 import { Pool, Client, QueryConfig, QueryArrayConfig, QueryResult, PoolClient } from 'pg';
-import { Task, parseTask, taskTimeToString, taskDateToDate, optionalTaskDateToDate, mapCategory, TaskRepetition, mapRepetitionType, TaskTime, TaskDate } from '../data-types/task';
+import { Task, parseTask, taskTimeToString, taskDateToDate, optionalTaskDateToDate, TaskRepetition, mapRepetitionType, TaskTime, TaskDate } from '../data-types/task';
+import { fetchCategoryByName } from "../graphql/task-category/fetch";
 import { Config, parseConfig } from '../data-types/config';
 import { setTimeout } from 'timers/promises';
 import { TaskDate as ExcludedTaskDate } from '../graphql/repetitive-tasks/excluded-tasks';
@@ -37,8 +38,8 @@ export class DBClient {
         return this.pool.connect();
     }
 
-    async insertTask(task: Task): Promise<number | null> {
-        const query = {
+    getInsertTaskQuery(task: Task, categoryId: number): QueryConfig<any> {
+        return {
             name: "insert-task",
             text: `INSERT INTO tasks 
             (start_time, end_time, date, basic_info, description, category) 
@@ -51,14 +52,26 @@ export class DBClient {
                 taskDateToDate(task.date),
                 task.basic_info,
                 task.description,
-                mapCategory(task.category)
+                categoryId
             ],
         };
+    }
+
+    async insertTask(task: Task): Promise<number | null> {
+        if(task.category === null) {
+            return null;
+        }
 
         const client = await this.connect();
         await client.query("BEGIN");
         try {
-            const result = await client.query(query);
+            const category = await fetchCategoryByName(client, [task.category]);
+            if(category === null || category.length !== 1) {
+                await client.query("ROLLBACK");
+                return null;
+            }
+
+            const result = await client.query(this.getInsertTaskQuery(task, category[0].id));
             if(result.rows.length != 1) {
                 return null;
             }
@@ -290,7 +303,7 @@ export class DBClient {
         return false;
     }
 
-    async updateTask(task: Task): Promise<boolean> {
+    getUpdateTaskQuery(task: Task, categoryId: number): QueryConfig<any> {
         const query = {
             name: `update-task-${(task.repetition !== null) ? 'without-date' : 'with-date'}`,
             text: `UPDATE tasks
@@ -307,19 +320,30 @@ export class DBClient {
                 taskTimeToString(task.end_time),
                 task.basic_info,
                 task.description,
-                mapCategory(task.category),
+                categoryId,
                 taskDateToDate(task.date)
             ],
         };
-
         if(task.repetition !== null) {
             query.values.pop();
         }
+        return query;
+    }
 
+    async updateTask(task: Task): Promise<boolean> {
+        if(task.category === null) {
+            return false;
+        }
         const client = await this.connect();
         await client.query("BEGIN");
         try {
-            const res = await client.query(query);
+            const category = await fetchCategoryByName(client, [task.category]);
+            if(category === null || category.length !== 1) {
+                await client.query("ROLLBACK");
+                return false;
+            }
+
+            const res = await client.query(this.getUpdateTaskQuery(task, category[0].id));
             if(res.rowCount !== 1) {
                 await client.query("ROLLBACK");
                 return false

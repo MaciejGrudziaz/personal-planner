@@ -1,6 +1,6 @@
 import React, {RefObject, useState, useEffect} from 'react';
 import {DayCellStore, CellInfo} from './../calendar';
-import {TaskDate, TaskState, TaskTime, TaskCategory, TaskRepetition} from '../../../store/tasks';
+import {TaskDate, TaskState, TaskTime, TaskRepetition} from '../../../store/tasks';
 import {Category} from "../../../store/categories";
 import './task.css';
 import {useStore} from 'react-redux';
@@ -16,7 +16,7 @@ interface Props {
     left: number;
     width: number;
     height: number;
-    category: TaskCategory;
+    category: string | undefined;
     basicInfo: string;
     zIndex: number;
 
@@ -58,7 +58,7 @@ export class Task {
     taskId: string;
     basicInfo: string;
     description: string;
-    category: TaskCategory;
+    category: string | undefined;
     repetition: TaskRepetition | undefined;
 
     minHeight: number = parseFloat(getComputedStyle(document.documentElement).fontSize);
@@ -77,7 +77,7 @@ export class Task {
         this.height = 0;
     }
 
-    constructor(id: string, date: Date, basicInfo: string, description: string, category: TaskCategory, repetition?: TaskRepetition, startTime?: TaskTime, endTime?: TaskTime) {
+    constructor(id: string, date: Date, basicInfo: string, description: string, category?: string, repetition?: TaskRepetition, startTime?: TaskTime, endTime?: TaskTime) {
         this.id = `${id}_${date.getTime()}`;
         this.taskId = id;
         this.dayOfWeek = (date.getDay() === 0) ? 6 : date.getDay() - 1;
@@ -193,11 +193,11 @@ export class Task {
 }
 
 export function getDefaultBackgroundColor(): string {
-    return "#fff";
+    return "#ffffff";
 }
 
 export function getDefaultBorderColor(): string {
-    return "#000";
+    return "#000000";
 }
 
 function CalendarTask(props: Props) {
@@ -230,12 +230,12 @@ function CalendarTask(props: Props) {
         setCategories((store.getState() as RootState).categoryState);
     }
 
-    const getBackgroundColor = (name: string): string => {
+    const getBackgroundColor = (name: string | undefined): string => {
         const category = categories.find((val: Category) => val.name === name);
         return (category === undefined) ? getDefaultBackgroundColor() : category.backgroundColor;
     }
 
-    const getBorderColor = (name: string): string => {
+    const getBorderColor = (name: string | undefined): string => {
         const category = categories.find((val: Category) => val.name === name);
         return (category === undefined) ? getDefaultBorderColor() : category.borderColor;
     }

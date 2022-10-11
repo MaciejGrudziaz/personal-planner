@@ -1,15 +1,24 @@
-import React from 'react';
+import React, {useState, useEffect} from 'react';
 import './task-dropdown-select.scss';
 
 
 interface Props {
     options: string[];
-    initValue: string;
+    initValue?: string;
     label?: string;
     select?(val: string): void;
+    style?: any;
 }
 
 function TaskDropdownSelect(props: Props) {
+    const [value, setValue] = useState("");
+
+    useEffect(()=>{
+        if(props.initValue !== undefined) {
+            setValue(props.initValue);
+        }
+    }, [props.initValue]);
+
     const options = () => {
         return props.options.map((val: string, id: number) => (
             <option key={id} value={val}>{val}</option>
@@ -26,9 +35,10 @@ function TaskDropdownSelect(props: Props) {
     }
 
     return (
-        <form action="#">
+        <form style={props.style} action="#">
             {label()}
-            <select value={props.initValue} onChange={(e: React.ChangeEvent<HTMLSelectElement>)=>{
+            <select value={value} onChange={(e: React.ChangeEvent<HTMLSelectElement>)=>{
+                setValue(e.target.value);
                 if(props.select) {
                     props.select(e.target.value);
                 }

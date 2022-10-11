@@ -19,7 +19,6 @@ const getFirstDayOfTheWeek = (date: Date): Date => {
     return startDate;
 }
 
-
 function App() {
     const [weekStartDate, setWeekStartDate] = useState(getFirstDayOfTheWeek(new Date(Date.now())));
     const [isInitialized, setInit] = useState(false);

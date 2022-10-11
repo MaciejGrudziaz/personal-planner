@@ -1,21 +1,26 @@
 import React, {useEffect, useState} from 'react';
 import './popup-message.scss';
 
+export interface Option {
+    name: string;
+    callback?: (props?: any)=>void;
+    props?: any;
+}
+
 interface Props {
     show: boolean;
     message: string;
-    option1?: string;
-    option2?: string;
-    option3?: string;
-
-    callback1?: ()=>void;
-    callback2?: ()=>void;
-    callback3?: ()=>void;
-
+    component?(): JSX.Element;
+    options?: Option[];
     hide?(): void;
 }
 
-
+export interface PopupMessageInfo {
+    msg: string;
+    component?():  JSX.Element;
+    options?: Option[];
+    show: boolean;
+}
 
 function PopupMessage(props: Props) {
     useEffect(()=>{
@@ -41,17 +46,35 @@ function PopupMessage(props: Props) {
         <div key={index} style={{textAlign: "center"}}>{line}</div>
     ));
 
-    const option = (msg?: string, callback?: ()=>void) => {
+    const option = (msg?: string, callback?: (props?: any)=>void, props?: any) => {
         if(msg === undefined) {
             return (<></>);
         }
         return (
             <button className="popup-message-btn" onClick={()=>{
                 if(callback) {
-                    callback();
+                    callback(props);
                 }
             }}>{msg}</button>
         );
+    }
+
+    const renderOptions = () => {
+        if(props.options === undefined) {
+            return (<></>);
+        }
+        return props.options.map((val: Option, index: number) => (
+            <div key={index}>
+                {option(val.name, val.callback, val.props)}
+            </div>
+        ));
+    }
+
+    const renderComponent = () => {
+        if(props.component === undefined) {
+            return (<></>);
+        }
+        return props.component();
     }
 
     if(!props.show) {
@@ -63,11 +86,10 @@ function PopupMessage(props: Props) {
             <div className="popup-message">
                 <div className="popup-message-message">
                     {message}
+                    {renderComponent()}
                 </div>
                 <div className="popup-message-btn-row">
-                    {option(props.option1, props.callback1)}
-                    {option(props.option2, props.callback2)}
-                    {option(props.option3, props.callback3)}
+                    {renderOptions()}
                 </div>
             </div>
             <div className="popup-msg-bckg-diffusion" 

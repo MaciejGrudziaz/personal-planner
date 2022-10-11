@@ -6,8 +6,8 @@ import TaskWnd from './task/task-wnd';
 import {CellBasicInfo, extractDate, extractStartTime, extractEndTime} from './hour';
 import CalendarTask, {Task, Position, ResizeDir, getAbsDate} from './task/task';
 import CurrentTimePointer, {PointerState} from './current-time-pointer';
-import PopupMessage from '../../components/popup-message';
-import {TaskState, findTasksForWeek, parseDateToBuiltin, TaskDate, TaskTime, TaskCategory, TaskRepetition} from '../../store/tasks';
+import PopupMessage, {PopupMessageInfo} from '../../components/popup-message';
+import {TaskState, findTasksForWeek, parseDateToBuiltin, TaskDate, TaskTime, TaskRepetition} from '../../store/tasks';
 import {useFetchTasks} from '../../gql-client/tasks/fetch';
 import {useUpdateTask, useUpdateSingleTask} from '../../gql-client/tasks/update';
 import {useDeleteTask, useDeleteSingleTask} from '../../gql-client/tasks/delete';
@@ -62,19 +62,8 @@ interface WndTaskInfo {
     endTime: TaskTime | undefined;
     basicInfo: string | undefined;
     description: string | undefined;
-    category: TaskCategory | undefined;
+    category: string | undefined;
     repetition: TaskRepetition | undefined;
-    show: boolean;
-}
-
-interface PopupMessageInfo {
-    msg: string;
-    option1?: string;
-    option2?: string;
-    option3?: string;
-    callback1?: ()=>void;
-    callback2?: ()=>void;
-    callback3?: ()=>void;
     show: boolean;
 }
 
@@ -110,11 +99,11 @@ function Calendar(props: Props) {
             return; 
         }
 
-        fetchTasksFromApi();
-        updateCellsInStore();
-        fetchTasks();
-        store.subscribe(storeUpdate);
         init(true);
+
+        fetchTasksFromApi().then(()=>fetchTasks());
+        updateCellsInStore();
+        store.subscribe(storeUpdate);
 
         window.addEventListener('resize', updateCellsInStore);
         setTimeout(()=>updateTimePointerWithInterval(60 * 1000), 60 * 1000);
@@ -256,29 +245,33 @@ function Calendar(props: Props) {
             setPopupMsgInfo({
                 msg: "Do you really want to delete this event?",
                 show: true,
-                option1: "ok", callback1: ()=>{
-                    gqlDeleteTask(id);
-                    fetchTasks();
-                    resetPopupMessageState();
-                },
-                option2: "cancel", callback2: ()=>resetPopupMessageState()
+                options: [
+                    {name: "ok", callback: () => {
+                        gqlDeleteTask(id);
+                        fetchTasks();
+                        resetPopupMessageState();
+                    }},
+                    {name: "cancel", callback: resetPopupMessageState}
+                ]
             });
             return;
         }
         setPopupMsgInfo({
             msg: "Do you want to delete only this event or all the events?",
             show: true,
-            option1: "delete event", callback1: ()=>{
-                gqlDeleteSingleTask(id, date);
-                fetchTasks();
-                resetPopupMessageState();
-            },
-            option2: "delete all", callback2: ()=>{
-                gqlDeleteTask(id);
-                fetchTasks();
-                resetPopupMessageState();
-            },
-            option3: "cancel", callback3: ()=>resetPopupMessageState()
+            options: [
+                {name: "delete event", callback: ()=>{
+                    gqlDeleteSingleTask(id, date);
+                    fetchTasks();
+                    resetPopupMessageState();
+                }},
+                {name: "delete all", callback: ()=>{
+                    gqlDeleteTask(id);
+                    fetchTasks();
+                    resetPopupMessageState();
+                }},
+                {name: "cancel", callback: resetPopupMessageState}
+            ]
         });
     }
 
@@ -419,7 +412,7 @@ function Calendar(props: Props) {
         />
     ));
 
-    const tasksList = tasks.filter((value: Task) => !value.isDaily).map((value: Task)=>(
+    const tasksList = tasks.filter((value: Task) => !value.isDaily).map((value: Task) => (
         <CalendarTask key={value.id} top={value.y} left={value.x + value.getLeftPadding()} width={value.width - value.getLeftPadding() - value.getRightPadding()} height={value.height} basicInfo={value.basicInfo} category={value.category} zIndex={value.zIndex}
             grabbed={(position: Position)=>{
                 setStartMovePos(position); 
@@ -502,19 +495,21 @@ function Calendar(props: Props) {
         setPopupMsgInfo({
             msg: "Do you want to update only this event or all the events?",
             show: true,
-            option1: "update event", callback1: ()=>{
-                gqlUpdateSingleTask(task);
-                fetchTasks();
-                resetPopupMessageState();
-            },
-            option2: "update all", callback2: ()=>{
-                gqlUpdateTask(task).then(()=>fetchTasksFromApi().then(()=>fetchTasks()));
-                resetPopupMessageState();
-            },
-            option3: "cancel", callback3: ()=>{
-                fetchTasks();
-                resetPopupMessageState();
-            }
+            options: [
+                {name: "update event", callback: ()=>{
+                    gqlUpdateSingleTask(task);
+                    fetchTasks();
+                    resetPopupMessageState();
+                }},
+                {name: "update all", callback: ()=>{
+                    gqlUpdateTask(task).then(()=>fetchTasksFromApi().then(()=>fetchTasks()));
+                    resetPopupMessageState();
+                }},
+                {name: "cancel", callback: ()=>{
+                    fetchTasks();
+                    resetPopupMessageState();
+                }}
+            ]
         });
     }
 
@@ -642,18 +637,18 @@ function Calendar(props: Props) {
         <>
             <div className="btn-row">
                 <button type="button" className="change-week-btn" onClick={()=>{
-                    init(false);
                     props.changeWeek(calcDate(-7));
+                    init(false);
                 }}>&lt;&lt;</button>
                 <button type="button" className="change-week-btn" onClick={()=>{
-                    init(false);
                     props.changeWeek(calcDate(7));
+                    init(false);
                 }}>&gt;&gt;</button>
                 <button type="button" className="change-week-btn" onClick={()=>updateCalendarFontSize(-1)}>-</button>
                 <button type="button" className="change-week-btn" onClick={()=>updateCalendarFontSize(1)}>+</button>
                 <button type="button" className="change-week-btn" onClick={()=>{
-                    init(false);
                     props.changeWeek(new Date(Date.now()));
+                    init(false);
                 }}>today</button>
             </div>
             <div className="calendar-view" style={{fontSize: `${calendarFont.size}pt`}}
@@ -683,9 +678,7 @@ function Calendar(props: Props) {
                     save={() => forceRefresh()}
                 />
                 <PopupMessage show={popupMsgInfo.show} message={popupMsgInfo.msg}
-                    option1={popupMsgInfo.option1} callback1={popupMsgInfo.callback1}
-                    option2={popupMsgInfo.option2} callback2={popupMsgInfo.callback2}
-                    option3={popupMsgInfo.option3} callback3={popupMsgInfo.callback3}
+                    options={popupMsgInfo.options}
                     hide={()=>{
                         resetPopupMessageState();
                         fetchTasks();

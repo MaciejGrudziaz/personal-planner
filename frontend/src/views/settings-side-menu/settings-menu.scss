@@ -3,7 +3,7 @@
 .category-row {
     margin: 0 1rem;
     display: grid;
-    grid-template-columns: 40% 30% 30%;
+    grid-template-columns: 35% 30% 30% 5%;
     grid-template-rows: 4rem;
     line-height: 4rem;
 }
@@ -21,6 +21,17 @@
 .category-border-select {
     grid-column: 3;
     text-align: center;
+}
+
+.category-delete-btn-column {
+    grid-column: 4;
+    display: flex;
+}
+
+.category-delete-btn {
+    width: 1.5rem;
+    height: 1.5rem;
+    margin: auto;
 }
 
 .add-category-btn {

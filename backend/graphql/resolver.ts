@@ -13,10 +13,10 @@ import { createTodoGroup } from './todo-group/create';
 import { deleteTodoGroups } from './todo-group/delete';
 import { fetchTodoGroups } from './todo-group/fetch';
 import { modifyTodoGroup } from './todo-group/modify';
-import { Category, parseCategory } from './task-category/types';
+import { Category } from './task-category/types';
 import { fetchCategories } from './task-category/fetch';
 import { createCategory } from './task-category/create';
-import { updateCategory } from './task-category/update';
+import { updateCategory, changeCategory } from './task-category/update';
 import { deleteCategory } from './task-category/delete';
 import { moveTodoGroup, TodoGroupOrdinal } from './todo-group/move';
 
@@ -32,6 +32,7 @@ export interface Resolver {
     fetchCategories(): Promise<Category[] | null>;
     createCategory(args: any): Promise<number | null>;
     updateCategory(args: any): Promise<boolean>;
+    changeCategory(args: any): Promise<boolean>;
     deleteCategory(args: any): Promise<boolean>;
     createTodoGroup(args: any): Promise<number | null>;
     modifyTodoGroup(args: any): Promise<boolean>;
@@ -102,6 +103,9 @@ function getResolver(db: DBClient): Resolver {
         },
         updateCategory: async (args: any): Promise<boolean> => {
             return await updateCategory(db, {id: args.id, name: args.name, background_color: args.background_color, border_color: args.border_color});
+        },
+        changeCategory: async (args: any): Promise<boolean> => {
+            return await changeCategory(db, args.src_category, args.dest_category);
         },
         deleteCategory: async (args: any): Promise<boolean> => {
             return await deleteCategory(db, args.id, args.name);

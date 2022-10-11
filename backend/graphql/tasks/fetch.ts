@@ -25,7 +25,13 @@ function singleMonthQuery(month: number, year: number): QueryConfig {
     const upper = `${(month === 12) ? year + 1 : year}-${(month === 12) ? 1 : month + 1}-01`;
     return {
         name: "select-tasks-by-month",
-        text: "SELECT * FROM tasks WHERE date >= $1 AND date < $2",
+        text: `
+            SELECT t.id, t.date, t.start_time, t.end_time, t.basic_info, t.description, c.name AS category
+            FROM tasks t
+            LEFT JOIN task_category c
+                ON c.id = t.category
+            WHERE date >= $1 AND date < $2
+        `,
         values: [lower, upper],
     };
 }
@@ -35,7 +41,13 @@ function singleYearQuery(year: number): QueryConfig {
     const upper = `${year + 1}-01-01`;
     return {
         name: "select-tasks-by-year",
-        text: "SELECT * FROM tasks WHERE date >= $1 AND date < $2",
+        text: `
+            SELECT t.id, t.date, t.start_time, t.end_time, t.basic_info, t.description, c.name AS category
+            FROM tasks t
+            LEFT JOIN task_category c
+                ON c.id = t.category
+            WHERE date >= $1 AND date < $2
+        `,
         values: [lower, upper]
     };
 }
@@ -43,7 +55,13 @@ function singleYearQuery(year: number): QueryConfig {
 function idQuery(id: number[]): QueryConfig {
     return {
         name: "select-task-by-id",
-        text: "SELECT * FROM tasks WHERE id = ANY ($1)",
+        text: `
+            SELECT t.id, t.date, t.start_time, t.end_time, t.basic_info, t.description, c.name AS category
+            FROM tasks t
+            LEFT JOIN task_category c
+                ON c.id = t.category
+            WHERE t.id = ANY ($1)
+        `,
         values: [id]
     };
 }

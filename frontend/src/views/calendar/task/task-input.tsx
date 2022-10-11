@@ -6,6 +6,7 @@ export interface TaskInputStyle {
     width?: string;
     padding?: string;
     textAlign?: Property.TextAlign;
+    fontWeight?: string;
     height?: string;
     maxHeight?: string;
     lineHeight?: string;

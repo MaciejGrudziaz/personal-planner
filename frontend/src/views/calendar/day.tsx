@@ -130,12 +130,12 @@ function Day(props: Props) {
         setCategories((store.getState() as RootState).categoryState);
     }
 
-    const getBackgroundColor = (name: string): string => {
+    const getBackgroundColor = (name: string | undefined): string => {
         const category = categories.find((val: Category) => val.name === name);
         return (category === undefined) ? getDefaultBackgroundColor() : category.backgroundColor;
     }
 
-    const getBorderColor = (name: string): string => {
+    const getBorderColor = (name: string | undefined): string => {
         const category = categories.find((val: Category) => val.name === name);
         return (category === undefined) ? getDefaultBorderColor() : category.borderColor;
     }

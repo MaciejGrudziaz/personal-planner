@@ -23,8 +23,6 @@ export function parseDateToBuiltin(date: TaskDate): Date {
     return new Date(date.year, date.month, date.day);
 }
 
-export type TaskCategory = "simple" | "important";
-
 export interface TaskRepetition {
     type: RepetitionType;
     count: number;
@@ -40,7 +38,7 @@ export interface TaskState {
     endTime: TaskTime | undefined;
     basicInfo: string;
     description: string;
-    category: TaskCategory;
+    category: string | undefined;
     repetition: TaskRepetition | undefined;
 }
 
@@ -74,7 +72,7 @@ export function findTasksForWeek(date: Date, state: TaskState[]): TaskState[] {
         taskStartDate.setUTCMinutes(startMinute);
         taskStartDate.setUTCSeconds(0);
         taskStartDate.setUTCMilliseconds(0);
-        return taskStartDate >= startDate && taskStartDate <= endDate;
+        return (taskStartDate >= startDate && taskStartDate <= endDate);
     });
 }
 
@@ -110,19 +108,38 @@ export const tasksSlice = createSlice({
                 return val.id !== task.id || val.date.year !== task.date.year || val.date.month !== task.date.month || val.date.day !== task.date.day;
             }).concat(task);
         },
-        deleteTask: (state, action: PayloadAction<string>) => {
-            const taskId = action.payload;
-            return state.filter((task: TaskState) => task.id !== taskId);
+        deleteTask: (state, action: PayloadAction<{id?: string, category?: string}>) => {
+            const taskId = action.payload.id;
+            const category = action.payload.category;
+            return state.filter((task: TaskState) => {
+                if(taskId !== undefined) {
+                    return task.id !== taskId;
+                }
+                if(category !== undefined) {
+                    return task.category !== category;
+                }
+                return true;
+            });
         },
         deleteSingleTask: (state, action: PayloadAction<{id: string, date: TaskDate}>) => {
             const taskId = action.payload.id;
             const taskDate = action.payload.date;
             return state.filter((task: TaskState) => task.id !== taskId || task.date.year !== taskDate.year || task.date.month !== taskDate.month || task.date.day !== taskDate.day);
+        },
+        changeCategory: (state, action: PayloadAction<{src: string, dest: string}>) => {
+            const src = action.payload.src;
+            const dest = action.payload.dest;
+            return state.map((task: TaskState) => {
+                if(task.category === src) {
+                    return {...task, category: dest};
+                }
+                return task;
+            });
         }
     }
 })
 
-export const { setTasks, updateTask, updateSingleTask, deleteTask, deleteSingleTask } = tasksSlice.actions;
+export const { setTasks, updateTask, updateSingleTask, deleteTask, deleteSingleTask, changeCategory } = tasksSlice.actions;
 
 export default tasksSlice.reducer;
 

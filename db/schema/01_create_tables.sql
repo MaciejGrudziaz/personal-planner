@@ -1,7 +1,7 @@
 CREATE TABLE task_category
 (
     id serial,
-    name varchar(50) not null,
+    name varchar(50) not null unique,
     background_color char(7) not null,
     border_color char(7) not null,
     PRIMARY KEY(id)
@@ -15,8 +15,9 @@ CREATE TABLE tasks
     date date not null,
     basic_info varchar(50),
     description varchar(250),
-    category int not null,
-    PRIMARY KEY(id)
+    category integer,
+    PRIMARY KEY(id),
+    FOREIGN KEY(category) REFERENCES task_category(id) ON DELETE CASCADE
 );
 
 -- repetitive_tasks.type:

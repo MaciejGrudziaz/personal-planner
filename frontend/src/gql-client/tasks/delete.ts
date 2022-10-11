@@ -15,7 +15,7 @@ export function useDeleteTask(): ReturnFuncAll {
             }
             const result = await res.json();
             if(result["data"]["deleteTask"] === true) {
-                dispatch(deleteTask(id));
+                dispatch(deleteTask({id: id}));
                 return true;
             }
             return false;
