@@ -83,11 +83,15 @@ export function optionalTaskDateFromDate(date: Date | null): TaskDate | null {
 }
 
 export function taskDateFromDate(date: Date): TaskDate {
-    return {year: date.getFullYear(), month: date.getMonth() + 1, day: date.getDate()};
+    return {year: date.getUTCFullYear(), month: date.getUTCMonth() + 1, day: date.getUTCDate()};
 }
 
 export function taskDateToDate(date: TaskDate): Date {
-    return new Date(date.year, date.month - 1, date.day);
+    const builtin = new Date();
+    builtin.setUTCFullYear(date.year);
+    builtin.setUTCMonth(date.month - 1);
+    builtin.setUTCDate(date.day);
+    return builtin;
 }
 
 export function optionalTaskDateToDate(date: TaskDate | null): Date | null {
