@@ -4,8 +4,10 @@ import {RootState} from '../../store/store';
 import {TodoGroup as TodoGroupState, TodoTicket as TodoTicketState, sortGroups} from '../../store/todos';
 import {useFetchTodoGroups} from '../../gql-client/todos/fetch';
 import { useCreateTodoGroup } from '../../gql-client/todos/create';
+import { useDeleteTodoGroup } from '../../gql-client/todos/delete';
 import TodoGroup from './todo-group';
 import FloatingTextInput from './floating-text-input';
+import PopupMessage, { PopupMessageInfo } from '../../components/popup-message';
 import './side-menu.scss';
 
 function SideMenu() {
@@ -13,10 +15,12 @@ function SideMenu() {
     const [isInitialized, setInit] = useState(false);
     const [todoGroups, setTodoGroups] = useState([] as TodoGroupState[]);
     const [showGroupInput, setShowGroupInput] = useState(false);
+    const [popupMsgInfo, setPopupMsgInfo] = useState({msg: "", show: false} as PopupMessageInfo);
     const menuRef = useRef() as RefObject<HTMLDivElement>;
     const headerRef = useRef() as RefObject<HTMLDivElement>;
     const fetchTodos = useFetchTodoGroups();
     const createTodoGroup = useCreateTodoGroup();
+    const deleteTodoGroup = useDeleteTodoGroup();
     const store = useStore();
 
     useEffect(()=>{
@@ -31,12 +35,28 @@ function SideMenu() {
         setInit(true);
     });
 
+    const resetPopupMessageState = () => {
+        setPopupMsgInfo({msg: "", show: false});
+    };
+
     const fetchTodosFromStore = () => {
         setTodoGroups(sortGroups((store.getState() as RootState).todosState.content));
     };
 
     const groups = ()=> todoGroups.map((todo: TodoGroupState)=>(
-        <TodoGroup key={todo.ordinal} val={todo} />
+        <TodoGroup key={todo.ordinal} val={todo} 
+            deleteGroup={(id: string) => {
+                setPopupMsgInfo({msg: "Do you want to delete the full todo group?", show: true,
+                    options: [
+                        {name: "ok", callback: () => { 
+                            deleteTodoGroup(id);
+                            resetPopupMessageState();
+                        }},
+                        {name: "cancel", callback: resetPopupMessageState}
+                    ]
+                });
+            }}
+        />
     ));
 
     if(!isOpened) {
@@ -68,6 +88,7 @@ function SideMenu() {
     };
 
     return (
+        <>
         <div className="side-menu" style={{right: "-0.5rem"}} ref={menuRef}>
             <button className="open-btn" onClick={()=>setOpen(false)}>&gt;&gt;</button>
             <div style={{display: "flex"}} ref={headerRef}>
@@ -79,6 +100,13 @@ function SideMenu() {
             {groups()}
             {groupFloatingInput()}
         </div>
+        <PopupMessage
+            message={popupMsgInfo.msg}
+            show={popupMsgInfo.show}
+            options={popupMsgInfo.options}
+            hide={resetPopupMessageState}
+        />
+        </>
     );
 }
 

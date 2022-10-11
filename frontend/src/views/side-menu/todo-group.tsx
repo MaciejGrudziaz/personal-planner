@@ -2,7 +2,6 @@ import React, {RefObject, useEffect, useState, useRef} from 'react';
 import { TodoGroup as TodoGroupState, TodoTicket as TodoTicketState, sortTickets } from '../../store/todos';
 import { useMoveTicket, useMoveTodoGroup, useRenameTodoGroup } from '../../gql-client/todos/update';
 import { useCreateTodoTicket } from '../../gql-client/todos/create';
-import { useDeleteTodoGroup } from '../../gql-client/todos/delete';
 import TodoTicket from './todo-ticket';
 import FloatingTextInput from './floating-text-input';
 import EditMenu from '../popup-menu/edit-menu';
@@ -12,6 +11,7 @@ import './todo-group.scss';
 interface Props {
     val: TodoGroupState;
     mousePos?: Position;
+    deleteGroup?(id: string): void;
 }
 
 function TodoGroup(props: Props) {
@@ -27,7 +27,6 @@ function TodoGroup(props: Props) {
     const moveTicket = useMoveTicket();
     const createTicket = useCreateTodoTicket();
     const renameTodoGroup = useRenameTodoGroup();
-    const deleteTodoGroup = useDeleteTodoGroup();
     const moveTodoGroup = useMoveTodoGroup();
 
     useEffect(()=>{
@@ -132,7 +131,9 @@ function TodoGroup(props: Props) {
                     setTextEdit(true);
                 }}
                 delete={()=>{
-                    deleteTodoGroup(props.val.id);
+                    if(props.deleteGroup) {
+                        props.deleteGroup(props.val.id);
+                    }
                 }}
             />
         );
@@ -168,7 +169,11 @@ function TodoGroup(props: Props) {
                     >+</button>
                     {ticketFloatingInput()}
                     <button type="button" style={{marginLeft: "auto", marginRight: "0.5rem", width: "1.5rem", height: "1.5rem"}}
-                        onClick={() => deleteTodoGroup(props.val.id)}
+                        onClick={() => {
+                            if(props.deleteGroup) {
+                                props.deleteGroup(props.val.id);
+                            }
+                        }}
                     >x</button>
                 </div>
                 {tickets()}
