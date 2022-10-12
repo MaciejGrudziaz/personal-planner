@@ -94,6 +94,18 @@ export function taskDateToDate(date: TaskDate): Date {
     return builtin;
 }
 
+export function localDateToUTC(date: Date): Date {
+    const utcDate = new Date();
+    utcDate.setUTCFullYear(date.getFullYear());
+    utcDate.setUTCMonth(date.getMonth());
+    utcDate.setUTCDate(date.getDate());
+    utcDate.setUTCHours(0);
+    utcDate.setUTCMinutes(0);
+    utcDate.setUTCSeconds(0);
+    utcDate.setUTCMilliseconds(0);
+    return utcDate;
+}
+
 export function optionalTaskDateToDate(date: TaskDate | null): Date | null {
     if(date === null) {
         return null;
@@ -133,7 +145,7 @@ export function parseTask(value: any): Task | undefined {
         id: id,
         start_time: (start_time) ? taskTimeFromString(start_time) : null,
         end_time: (end_time) ? taskTimeFromString(end_time) : null,
-        date: taskDateFromDate(date),
+        date: taskDateFromDate(localDateToUTC(date)),
         basic_info: (basic_info) ? basic_info : "",
         description: (description) ? description : "",
         category: category,

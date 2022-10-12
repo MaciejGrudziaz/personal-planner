@@ -1,5 +1,5 @@
 import { DBClient } from "../../db-client/client";
-import { TaskTime, taskTimeFromString } from "../../data-types/task";
+import { TaskTime, taskTimeFromString, localDateToUTC } from "../../data-types/task";
 import { areAllCorrect, check } from "../../utils/type-checking";
 
 export interface TaskDateTime {
@@ -21,7 +21,7 @@ function parseTaskDateTime(val: any): TaskDateTime | undefined {
 
     return {
         id: id,
-        date: date,
+        date: localDateToUTC(date),
         startTime: (startTime !== null) ? taskTimeFromString(startTime) : null,
         endTime: (endTime !== null) ? taskTimeFromString(endTime) : null
     };

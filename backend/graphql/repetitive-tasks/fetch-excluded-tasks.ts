@@ -1,5 +1,6 @@
 import { DBClient } from "../../db-client/client";
 import { areAllCorrect, check } from "../../utils/type-checking";
+import { localDateToUTC } from "../../data-types/task";
 
 export interface TaskDate {
     id: number
@@ -12,7 +13,7 @@ function parseTaskDate(val: any): TaskDate | undefined {
     if(!areAllCorrect([check(id).isNumber, check(date).isDate])) {
         return undefined;
     }
-    return {id: id, date: date};
+    return {id: id, date: localDateToUTC(date)};
 }
 
 export default async function fetchExcludedRepetitiveTasks(db: DBClient, ids: number[]): Promise<TaskDate[] | null> {

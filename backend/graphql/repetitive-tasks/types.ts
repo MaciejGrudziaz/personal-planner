@@ -1,5 +1,5 @@
 import {areAllCorrect, check} from "../../utils/type-checking";
-import {mapRepetitionTypeId, RepetitionType} from "../../data-types/task";
+import {mapRepetitionTypeId, RepetitionType, localDateToUTC} from "../../data-types/task";
 
 export interface RepetitiveTask {
     id: number;
@@ -27,6 +27,12 @@ export function parseRepetitiveTask(val: any): RepetitiveTask | undefined {
         return undefined;
     }
 
-    return { id: id, type: mappedType, count: count, start_date: start_date, end_date: end_date };
+    return { 
+        id: id,
+        type: mappedType,
+        count: count,
+        start_date: localDateToUTC(start_date),
+        end_date: (end_date === null) ? null : localDateToUTC(end_date)
+    };
 }
 

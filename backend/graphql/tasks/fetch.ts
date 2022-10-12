@@ -89,6 +89,7 @@ function getStartDate(year: number, month?: number): Date {
 }
 
 function getEndDate(year: number, month?: number): Date {
+    const msInDay = 1000 * 60 * 60 * 24;
     const date = new Date();
     date.setUTCFullYear((month) ? year : year + 1);
     date.setUTCMonth((month) ? month : 0);
@@ -97,7 +98,7 @@ function getEndDate(year: number, month?: number): Date {
     date.setUTCMinutes(0);
     date.setUTCSeconds(0);
     date.setUTCMilliseconds(0);
-    return date;
+    return new Date(date.getTime() - msInDay);
 }
 
 async function fetchTasksInDateRange(db: DBClient, year: number, month?: number): Promise<Task[] | null> {

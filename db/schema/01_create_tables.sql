@@ -25,6 +25,7 @@ CREATE TABLE tasks
 --   1 - every <n> weeks
 --   2 - same date every <n> months
 --   3 - same date every <n> years
+--   4 - every n-th day of the week (count is the binary representation of the day, for e.g. 1 - evey sunday, 4 - every friday, 124 - every monday to friday
 -- repetitive_tasks.count = <n>
 
 CREATE TABLE repetitive_tasks

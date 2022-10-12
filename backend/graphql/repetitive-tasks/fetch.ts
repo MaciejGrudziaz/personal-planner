@@ -1,6 +1,6 @@
 import { DBClient } from "../../db-client/client";
 import { RepetitiveTask, parseRepetitiveTask } from "./types";
-import { RepetitionType, TaskTime } from "../../data-types/task";
+import { RepetitionType, TaskTime, localDateToUTC, taskDateToDate } from "../../data-types/task";
 import fetchExcludedRepetitiveTasks, { TaskDate } from "./fetch-excluded-tasks";
 import fetchUpdatedRepetitiveTasks, { TaskDateTime } from "./fetch-updated-tasks";
 
@@ -99,9 +99,9 @@ function getDateNumericRepresentation(date: Date, repetition_type: RepetitionTyp
         case "weekly":
             return date.getTime();
         case "monthly":
-            return date.getFullYear() * 12 + date.getMonth();
+            return date.getUTCFullYear() * 12 + date.getUTCMonth();
         case "yearly":
-            return date.getFullYear();
+            return date.getUTCFullYear();
     }
 }
 
@@ -119,16 +119,16 @@ function getRepetitionTypeDiff(repetition_type: RepetitionType): number {
     }
 }
 
-function getUTCDate(year: number, month: number, day: number): Date {
-    const date = new Date();
-    date.setUTCFullYear(year);
-    date.setUTCMonth(month, day);
-    date.setUTCHours(0);
-    date.setUTCMinutes(0);
-    date.setUTCSeconds(0);
-    date.setUTCMilliseconds(0);
-    return date;
-}
+// function getUTCDate(year: number, month: number, day: number): Date {
+//     const date = new Date();
+//     date.setUTCFullYear(year);
+//     date.setUTCMonth(month, day);
+//     date.setUTCHours(0);
+//     date.setUTCMinutes(0);
+//     date.setUTCSeconds(0);
+//     date.setUTCMilliseconds(0);
+//     return date;
+// }
 
 function parseNumericDateToBuiltin(task: RepetitiveTask, numeric: number): Date {
     switch(task.type) {
@@ -139,9 +139,9 @@ function parseNumericDateToBuiltin(task: RepetitiveTask, numeric: number): Date 
         case "monthly":
             const year = parseInt((numeric / 12).toFixed());
             const month = numeric - (year * 12);
-            return getUTCDate(year, month, task.start_date.getDate());
+            return taskDateToDate({year: year, month: month + 1, day: task.start_date.getUTCDate()});
         case "yearly":
-            return getUTCDate(numeric, task.start_date.getMonth(), task.start_date.getDate());
+            return taskDateToDate({year: numeric, month: task.start_date.getUTCMonth() + 1, day: task.start_date.getUTCDate()});
     }
 }
 
