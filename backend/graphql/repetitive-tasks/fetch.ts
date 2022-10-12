@@ -39,10 +39,11 @@ export async function fetchRepetitiveTasks(db: DBClient, start_date: Date, end_d
         return updateTasks(db,
             filterExcludedTasks(db,
                 calcRepetitiveTasksDatesForDateRange(start_date, end_date, 
-                    res.rows
+                    expandRepetitiveTasks(res.rows
                         .map((val: any) => parseRepetitiveTask(val))
                         .filter((val: RepetitiveTask | undefined) => val !== undefined)
                         .map((val: RepetitiveTask | undefined) => val!)
+                    )
                 )
             )
         );
@@ -102,6 +103,8 @@ function getDateNumericRepresentation(date: Date, repetition_type: RepetitionTyp
             return date.getUTCFullYear() * 12 + date.getUTCMonth();
         case "yearly":
             return date.getUTCFullYear();
+        case "day-of-week":
+            return date.getTime();
     }
 }
 
@@ -116,6 +119,8 @@ function getRepetitionTypeDiff(repetition_type: RepetitionType): number {
             return 1;
         case "yearly":
             return 1;
+        case "day-of-week":
+            return msInDay * 7;
     }
 }
 
@@ -133,8 +138,8 @@ function getRepetitionTypeDiff(repetition_type: RepetitionType): number {
 function parseNumericDateToBuiltin(task: RepetitiveTask, numeric: number): Date {
     switch(task.type) {
         case "daily":
-            return new Date(numeric);
         case "weekly":
+        case "day-of-week":
             return new Date(numeric);
         case "monthly":
             const year = parseInt((numeric / 12).toFixed());
@@ -145,6 +150,51 @@ function parseNumericDateToBuiltin(task: RepetitiveTask, numeric: number): Date 
     }
 }
 
+export function expandRepetitiveTasks(tasks: RepetitiveTask[]): RepetitiveTask[] {
+    return tasks.filter((task: RepetitiveTask) => task.type !== "day-of-week")
+        .concat(...tasks
+            .filter((task: RepetitiveTask) => task.type === "day-of-week")
+            .map((task: RepetitiveTask) => expandDayOfTheWeekRepetitiveTask(task))
+        );
+}
+
+function getDayOfTheWeek(date: Date): number {
+    const day = date.getDay();
+    return (day === 0) ? 6 : day - 1;
+}
+
+export function expandDayOfTheWeekRepetitiveTask(task: RepetitiveTask): RepetitiveTask[] {
+    if(task.type !== "day-of-week") {
+        return [];
+    }
+    const week = new Array(7) as Date[];
+    const startDay = getDayOfTheWeek(task.start_date);
+    const startDate = task.start_date;
+    week[startDay] = startDate;
+    const msInDay = 1000 * 60 * 60 * 24;
+
+
+    for(let i = 0; i < startDay; i++) {
+        week[i] = new Date(startDate.getTime() + (7 - startDay + i) * msInDay);
+    }
+    for(let i = 0; i < 6 - startDay; i++) {
+        week[startDay + i + 1] = new Date(startDate.getTime() + (i + 1) * msInDay);
+    }
+
+    const days = [] as boolean[];
+    let count = task.count;
+    for(let i = 0; i < 7; i++) {
+        days.push(count % 2 === 1);
+        count = count >> 1;
+    }
+
+    return days.map((val: boolean, index: number) => val ? index : -1)
+        .filter((id: number) => id >= 0)
+        .map((id: number) => {
+            return {...task, start_date: week[id]};
+        });
+}
+
 export function calcRepetitiveTasksDatesForDateRange(start_date: Date, end_date: Date, tasks: RepetitiveTask[]): TaskRepetitonSummary[] {
     const result = [] as TaskRepetitonSummary[];
     tasks.forEach((val: RepetitiveTask) => {
@@ -152,7 +202,9 @@ export function calcRepetitiveTasksDatesForDateRange(start_date: Date, end_date:
         const endDate = getDateNumericRepresentation(end_date, val.type);
         const eventBegin = getDateNumericRepresentation(val.start_date, val.type);
         const eventEnd = (val.end_date === null) ? null : getDateNumericRepresentation(val.end_date, val.type);
-        calcOccurences(startDate, endDate, eventBegin, eventEnd, val.count * getRepetitionTypeDiff(val.type)).forEach((numericDate: number) => {
+        const count = (val.type === "day-of-week") ? 1 : val.count;
+
+        calcOccurences(startDate, endDate, eventBegin, eventEnd, count * getRepetitionTypeDiff(val.type)).forEach((numericDate: number) => {
             result.push({id: val.id, date: parseNumericDateToBuiltin(val, numericDate), type: val.type, count: val.count, end_date: val.end_date});
         });
     });

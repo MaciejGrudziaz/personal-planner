@@ -11,7 +11,7 @@ export interface Task {
     repetition: TaskRepetition | null;
 }
 
-export type RepetitionType = "daily" | "weekly" | "monthly" | "yearly";
+export type RepetitionType = "daily" | "weekly" | "monthly" | "yearly" | "day-of-week";
 
 export interface TaskRepetition {
     type: RepetitionType;
@@ -25,6 +25,7 @@ export function mapRepetitionTypeId(type: number): RepetitionType | undefined {
         case 1: return "weekly";
         case 2: return "monthly";
         case 3: return "yearly";
+        case 4: return "day-of-week";
     }
     return undefined;
 }
@@ -35,6 +36,7 @@ export function mapRepetitionType(type: RepetitionType): number {
         case "weekly": return 1;
         case "monthly": return 2;
         case "yearly": return 3;
+        case "day-of-week": return 4;
     }
 }
 

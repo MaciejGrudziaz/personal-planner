@@ -29,7 +29,7 @@ export interface TaskRepetition {
     endDate: TaskDate | undefined;
 }
 
-export type RepetitionType = "daily" | "weekly" | "monthly" | "yearly" | "day-of-the-week";
+export type RepetitionType = "daily" | "weekly" | "monthly" | "yearly" | "day-of-week";
 
 export interface TaskState {
     id: string;

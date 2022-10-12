@@ -27,7 +27,7 @@ export function parseRepetitiveTask(val: any): RepetitiveTask | undefined {
         return undefined;
     }
 
-    return { 
+    return {
         id: id,
         type: mappedType,
         count: count,

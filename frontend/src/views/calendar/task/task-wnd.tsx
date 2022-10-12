@@ -146,7 +146,7 @@ function TaskWnd(props: Props) {
             case "years":
                 return "yearly";
             case "day of the week":
-                return "day-of-the-week";
+                return "day-of-week";
             default:
                 return undefined;
         }
@@ -162,7 +162,7 @@ function TaskWnd(props: Props) {
                 return repetitionOptions[2];
             case "yearly":
                 return repetitionOptions[3];
-            case "day-of-the-week":
+            case "day-of-week":
                 return repetitionOptions[4];
         }
     }
@@ -419,7 +419,7 @@ function TaskWnd(props: Props) {
             return (<></>);
         }
 
-        if(task.repetition.type === "day-of-the-week") {
+        if(task.repetition.type === "day-of-week") {
             return repetitionCountDayOfTheWeekInput();
         }
 
@@ -465,7 +465,7 @@ function TaskWnd(props: Props) {
                                 if(type === undefined) {
                                     return;
                                 }
-                                const count = (type === "day-of-the-week") ? 0 : 1;
+                                const count = (type === "day-of-week") ? 0 : 1;
                                 setTask({...task, repetition: {...task.repetition, type: type, count: count}});
                             }}
                         />

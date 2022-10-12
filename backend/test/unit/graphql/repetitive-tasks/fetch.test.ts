@@ -1,6 +1,6 @@
 import { DBClient } from "../../../../db-client/client";
 import { RepetitiveTask } from "../../../../graphql/repetitive-tasks/types";
-import { fetchRepetitiveTasks, calcRepetitiveTasksDatesForDateRange, TaskRepetitonSummary } from "../../../../graphql/repetitive-tasks/fetch";
+import { fetchRepetitiveTasks, calcRepetitiveTasksDatesForDateRange, TaskRepetitonSummary, expandDayOfTheWeekRepetitiveTask } from "../../../../graphql/repetitive-tasks/fetch";
 import { QueryConfig, PoolClient } from "pg";
 
 interface QueryRow {
@@ -192,7 +192,28 @@ test("graphql::repetitive-tasks::fetch::calcRepetitiveTasksDatesForDateRange-mon
     ])
 });
 
-test("graphql::repetitive-tasks-tasks::fetch::calcRepetitiveTasksDatesForDateRange-yearly", () => {
+test("graphql::repetitive-tasks::fetch::calcRepetitiveTasksDatesForDateRange-day-of-week", () => {
+    const startDate = new Date("2022-01-01");
+    const endDate = new Date("2022-02-01");
+    const repetitiveTasks = [
+        {id: 0, type: "day-of-week", count: 66, start_date: new Date("2021-05-17"), end_date: null},
+        {id: 1, type: "day-of-week", count: 50, start_date: new Date("2020-09-23"), end_date: new Date("2022-01-19")},
+    ] as RepetitiveTask[];
+    const tasks = calcRepetitiveTasksDatesForDateRange(startDate, endDate, repetitiveTasks);
+    expect(tasks.length).toEqual(8);
+    expect(tasks).toEqual([
+        { count: 66, date: new Date("2022-01-03"), end_date: null, id: 0, type: "day-of-week" },
+        { count: 66, date: new Date("2022-01-10"), end_date: null, id: 0, type: "day-of-week" },
+        { count: 66, date: new Date("2022-01-17"), end_date: null, id: 0, type: "day-of-week" },
+        { count: 66, date: new Date("2022-01-24"), end_date: null, id: 0, type: "day-of-week" },
+        { count: 66, date: new Date("2022-01-31"), end_date: null, id: 0, type: "day-of-week" },
+        { count: 50, date: new Date("2022-01-05"), end_date: new Date("2022-01-19"), id: 1, type: "day-of-week" },
+        { count: 50, date: new Date("2022-01-12"), end_date: new Date("2022-01-19"), id: 1, type: "day-of-week" },
+        { count: 50, date: new Date("2022-01-19"), end_date: new Date("2022-01-19"), id: 1, type: "day-of-week" }
+    ])
+});
+
+test("graphql::repetitive-tasks::fetch::calcRepetitiveTasksDatesForDateRange-yearly", () => {
     const startDate = new Date("2022-01-01");
     const endDate = new Date("2025-12-01");
     const repetitiveTasks = [
@@ -207,4 +228,26 @@ test("graphql::repetitive-tasks-tasks::fetch::calcRepetitiveTasksDatesForDateRan
     ]);
 });
 
+test("graphql::repetitive-tasks::expandDayOfTheWeekRepetitiveTask", () => {
+    const result = expandDayOfTheWeekRepetitiveTask({id: 0, type: "day-of-week", count: 31, start_date: new Date("2022-10-13"), end_date: null});
+    expect(result.length).toEqual(5);
+    expect(result).toEqual([
+        {id: 0, type: "day-of-week", count: 31, start_date: new Date("2022-10-17"), end_date: null},
+        {id: 0, type: "day-of-week", count: 31, start_date: new Date("2022-10-18"), end_date: null},
+        {id: 0, type: "day-of-week", count: 31, start_date: new Date("2022-10-19"), end_date: null},
+        {id: 0, type: "day-of-week", count: 31, start_date: new Date("2022-10-13"), end_date: null},
+        {id: 0, type: "day-of-week", count: 31, start_date: new Date("2022-10-14"), end_date: null},
+    ]);
+});
+
+test("graphql::repetitive-tasks::expandDayOfTheWeekRepetitiveTask-not-day-of-week", () => {
+    const result = expandDayOfTheWeekRepetitiveTask({id: 0, type: "daily", count: 31, start_date: new Date("2022-10-13"), end_date: null});
+    expect(result.length).toEqual(0);
+    expect(result).toEqual([]);
+});
+
+
+test("graphql::repetitive-tasks::expandDayOfTheWeekRepetitiveTask-not-day-of-week", () => {
+    const result = expandDayOfTheWeekRepetitiveTask({id: 0, type: "daily", count: 31, start_date: new Date("2022-10-13"), end_date: null});
+})
 

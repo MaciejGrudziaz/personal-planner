@@ -82,12 +82,13 @@ test("graphql::repetitive-tasks::types::parsingRepetitionTypes", () => {
         {id: 123, type: 2, count: 1, start_date: new Date("2022-01-01"), end_date: null},
         {id: 123, type: 3, count: 1, start_date: new Date("2022-01-01"), end_date: null},
         {id: 123, type: 4, count: 1, start_date: new Date("2022-01-01"), end_date: null},
+        {id: 123, type: 5, count: 1, start_date: new Date("2022-01-01"), end_date: null},
         {id: 123, type: -1, count: 1, start_date: new Date("2022-01-01"), end_date: null}
     ];
 
     const parsedTasks = tasks.map((val: any) => parseRepetitiveTask(val));
 
-    expect(parsedTasks.length).toEqual(6);
+    expect(parsedTasks.length).toEqual(7);
     expect(parsedTasks[0]).toBeDefined();
     expect(parsedTasks[0]!.type).toEqual("daily");
     expect(parsedTasks[1]).toBeDefined();
@@ -96,8 +97,10 @@ test("graphql::repetitive-tasks::types::parsingRepetitionTypes", () => {
     expect(parsedTasks[2]!.type).toEqual("monthly");
     expect(parsedTasks[3]).toBeDefined();
     expect(parsedTasks[3]!.type).toEqual("yearly");
-    expect(parsedTasks[4]).toBeUndefined();
+    expect(parsedTasks[4]).toBeDefined();
+    expect(parsedTasks[4]!.type).toEqual("day-of-week");
     expect(parsedTasks[5]).toBeUndefined();
+    expect(parsedTasks[6]).toBeUndefined();
 });
 
 test("graphql::repetitive-tasks::types::parsingWithWrongDataTypeField", () => {
