@@ -97,12 +97,11 @@ function Calendar(props: Props) {
             }
             return; 
         }
-
         init(true);
 
-        fetchTasksFromApi().then(()=>fetchTasks());
-        updateCellsInStore();
         store.subscribe(storeUpdate);
+        updateCellsInStore();
+        fetchTasksFromApi();
 
         window.addEventListener('resize', updateCellsInStore);
         setTimeout(()=>updateTimePointerWithInterval(60 * 1000), 60 * 1000);

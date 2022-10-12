@@ -132,7 +132,7 @@ function TaskWnd(props: Props) {
         textAlign: "center"
     } as TaskInputStyle;
 
-    const repetitionOptions = ["days", "weeks", "months", "years"];
+    const repetitionOptions = ["days", "weeks", "months", "years", "day of the week"];
     const categoriesNames = categories.map((val: Category) => val.name);
 
     const mapRepetitionOptionsToRepetitionType = (option: string): RepetitionType | undefined => {
@@ -145,6 +145,8 @@ function TaskWnd(props: Props) {
                 return "monthly";
             case "years":
                 return "yearly";
+            case "day of the week":
+                return "day-of-the-week";
             default:
                 return undefined;
         }
@@ -160,6 +162,8 @@ function TaskWnd(props: Props) {
                 return repetitionOptions[2];
             case "yearly":
                 return repetitionOptions[3];
+            case "day-of-the-week":
+                return repetitionOptions[4];
         }
     }
 
@@ -383,6 +387,62 @@ function TaskWnd(props: Props) {
         );
     };
 
+    const repetitionCountDayOfTheWeekInput = () => {
+        const isChecked = (index: number) => {
+            if(task.repetition === undefined) {
+                return false;
+            }
+            return (task.repetition.count >> index) % 2 === 1;
+        }
+
+        const days = ["mon","tue","wed","thu","fri","sat","sun"].map((day: string, index: number) => (
+            <div key={index} className="task-repetition-input-day"
+                style={{backgroundColor: (isChecked(index)) ? "#00bbf9" : undefined}}
+                onClick={()=>{
+                    if(task.repetition === undefined) {
+                        return;
+                    }
+                    const mask = 1 << index;
+                    setTask({...task, repetition: {...task.repetition, count: task.repetition.count ^ mask}});
+                }}
+            >{day}</div>
+        ));
+        return (
+            <div className="task-repetition-day-of-the-week-container">
+                {days}
+            </div>
+        );
+    };
+
+    const repetitionCountInput = () => {
+        if(task.repetition === undefined) {
+            return (<></>);
+        }
+
+        if(task.repetition.type === "day-of-the-week") {
+            return repetitionCountDayOfTheWeekInput();
+        }
+
+        return (
+            <TaskInput style={{width: "2rem", textAlign: "center"}} initValue={task.repetition.count.toFixed()} regexAllow={'\\d+'}
+                setValue={(val: string)=>{
+                    if(task.repetition === undefined) {
+                        return;
+                    }
+                    if(val === "") {
+                        setTask({...task, repetition: {...task.repetition, count: 1}});
+                        return;
+                    }
+                    const num = Number.parseInt(val);
+                    if(isNaN(num)) {
+                        return;
+                    }
+                    setTask({...task, repetition: {...task.repetition, count: num}});
+                }}
+            />
+        );
+    }
+
     const repetitionInput = () => {
         if(task.repetition === undefined) {
             return repetitionCheckbox;
@@ -393,22 +453,7 @@ function TaskWnd(props: Props) {
                 <div className="task-line-container">
                     <span style={{margin: "0 0.5rem"}}>repeat every </span>
                     <span style={{margin: "0 0.5rem"}}>
-                        <TaskInput style={{width: "2rem", textAlign: "center"}} initValue={task.repetition.count.toFixed()} regexAllow={'\\d+'}
-                            setValue={(val: string)=>{
-                                if(task.repetition === undefined) {
-                                    return;
-                                }
-                                if(val === "") {
-                                    setTask({...task, repetition: {...task.repetition, count: 1}});
-                                    return;
-                                }
-                                const num = Number.parseInt(val);
-                                if(isNaN(num)) {
-                                    return;
-                                }
-                                setTask({...task, repetition: {...task.repetition, count: num}});
-                            }}
-                        />
+                        {repetitionCountInput()}
                     </span>
                     <span>
                         <TaskDropdownSelect options={repetitionOptions} initValue={mapRepetitionTypeToOptionType(task.repetition.type)}
@@ -420,7 +465,8 @@ function TaskWnd(props: Props) {
                                 if(type === undefined) {
                                     return;
                                 }
-                                setTask({...task, repetition: {...task.repetition, type: type}});
+                                const count = (type === "day-of-the-week") ? 0 : 1;
+                                setTask({...task, repetition: {...task.repetition, type: type, count: count}});
                             }}
                         />
                     </span>

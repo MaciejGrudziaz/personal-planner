@@ -55,3 +55,22 @@
     background-color: #ddd;
 }
 
+.task-repetition-day-of-the-week-container {
+    display: flex;
+    font-size: 0.75rem;
+}
+
+.task-repetition-input-day {
+    width: 1.75rem;
+    height: 1.75rem;
+    border: 1px solid black;
+    text-align: center;
+    line-height: 1.75rem;
+    user-select: none;
+    cursor: pointer;
+}
+
+.task-repetition-input-day:hover {
+    background-color: #00bbf9;
+}
+
