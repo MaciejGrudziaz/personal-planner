@@ -91,6 +91,10 @@ export function taskDateToDate(date: TaskDate): Date {
     builtin.setUTCFullYear(date.year);
     builtin.setUTCMonth(date.month - 1);
     builtin.setUTCDate(date.day);
+    builtin.setUTCHours(0);
+    builtin.setUTCMinutes(0);
+    builtin.setUTCSeconds(0);
+    builtin.setUTCMilliseconds(0);
     return builtin;
 }
 

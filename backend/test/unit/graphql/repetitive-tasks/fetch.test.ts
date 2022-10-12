@@ -177,7 +177,7 @@ test("graphql::repetitive-tasks::fetch::calcRepetitiveTasksDatesForDateRange-mon
         {id: 2, type: "monthly", count: 7, start_date: new Date("2022-01-12"), end_date: null}
     ] as RepetitiveTask[];
     const tasks = calcRepetitiveTasksDatesForDateRange(startDate, endDate, repetitiveTasks);
-    expect(tasks.length).toEqual(12);
+    expect(tasks.length).toEqual(10);
     expect(tasks).toEqual([
         { id: 0, date: new Date("2022-02-17"), type: "monthly", count: 3, end_date: null },
         { id: 0, date: new Date("2022-05-17"), type: "monthly", count: 3, end_date: null },
@@ -187,8 +187,6 @@ test("graphql::repetitive-tasks::fetch::calcRepetitiveTasksDatesForDateRange-mon
         { id: 1, date: new Date("2022-03-23"), type: "monthly", count: 2, end_date: new Date("2022-08-12") },
         { id: 1, date: new Date("2022-05-23"), type: "monthly", count: 2, end_date: new Date("2022-08-12") },
         { id: 1, date: new Date("2022-07-23"), type: "monthly", count: 2, end_date: new Date("2022-08-12") },
-        { id: 1, date: new Date("2022-09-23"), type: "monthly", count: 2, end_date: new Date("2022-08-12") },
-        { id: 1, date: new Date("2022-11-23"), type: "monthly", count: 2, end_date: new Date("2022-08-12") },
         { id: 2, date: new Date("2022-01-12"), type: "monthly", count: 7, end_date: null },
         { id: 2, date: new Date("2022-08-12"), type: "monthly", count: 7, end_date: null }
     ])

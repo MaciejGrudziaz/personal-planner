@@ -13,7 +13,7 @@ class MockClient {
             return {
                 rows: [{
                     id: 0,
-                    category: 0,
+                    category: "simple",
                     date: new Date("2022-01-01"),
                     start_time: "12:00",
                     end_time: "14:00",
@@ -37,7 +37,7 @@ class MockClient {
             return {
                 rows: [{
                     id: 123,
-                    category: 0,
+                    category: "simple",
                     date: new Date("2022-01-01"),
                     start_time: "12:00",
                     end_time: "14:00",
