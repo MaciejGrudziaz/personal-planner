@@ -69,46 +69,10 @@ describe("graphql::repetitive-tasks::fetch::fetchRepetitiveTasks", () => {
         fetchTasks(createDBClient(), 2022, 1).then((tasks: Task[] | null) => {
             expect(tasks).toBeDefined();
             expect(tasks!).toEqual([
-                {
-                  id: 0,
-                  start_time: { hour: 12, minute: 0 },
-                  end_time: { hour: 14, minute: 0 },
-                  date: { year: 2022, month: 1, day: 1 },
-                  basic_info: 'repetitive task',
-                  description: 'description',
-                  category: 'simple',
-                  repetition: null
-                },
-                {
-                  id: 123,
-                  start_time: { hour: 12, minute: 0 },
-                  end_time: { hour: 14, minute: 0 },
-                  date: { year: 2022, month: 1, day: 1 },
-                  basic_info: 'repetitive task',
-                  description: 'repetitive task description',
-                  category: 'simple',
-                  repetition: { type: 'daily', count: 12, end_date: null }
-                },
-                {
-                  id: 123,
-                  start_time: { hour: 12, minute: 0 },
-                  end_time: { hour: 14, minute: 0 },
-                  date: { year: 2022, month: 1, day: 13 },
-                  basic_info: 'repetitive task',
-                  description: 'repetitive task description',
-                  category: 'simple',
-                  repetition: { type: 'daily', count: 12, end_date: null }
-                },
-                {
-                  id: 123,
-                  start_time: { hour: 12, minute: 0 },
-                  end_time: { hour: 14, minute: 0 },
-                  date: { year: 2022, month: 1, day: 25 },
-                  basic_info: 'repetitive task',
-                  description: 'repetitive task description',
-                  category: 'simple',
-                  repetition: { type: 'daily', count: 12, end_date: null }
-                }
+                { id: 0, start_time: { hour: 12, minute: 0 }, end_time: { hour: 14, minute: 0 }, date: { year: 2022, month: 1, day: 1 }, basic_info: 'repetitive task', description: 'description', category: 'simple', repetition: null },
+                { id: 123, start_time: { hour: 12, minute: 0 }, end_time: { hour: 14, minute: 0 }, date: { year: 2022, month: 1, day: 1 }, basic_info: 'repetitive task', description: 'repetitive task description', category: 'simple', repetition: { type: 'daily', count: 12, end_date: null } },
+                { id: 123, start_time: { hour: 12, minute: 0 }, end_time: { hour: 14, minute: 0 }, date: { year: 2022, month: 1, day: 13 }, basic_info: 'repetitive task', description: 'repetitive task description', category: 'simple', repetition: { type: 'daily', count: 12, end_date: null } },
+                { id: 123, start_time: { hour: 12, minute: 0 }, end_time: { hour: 14, minute: 0 }, date: { year: 2022, month: 1, day: 25 }, basic_info: 'repetitive task', description: 'repetitive task description', category: 'simple', repetition: { type: 'daily', count: 12, end_date: null } }
             ]);
         });
     });

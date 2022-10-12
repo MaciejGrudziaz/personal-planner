@@ -124,17 +124,6 @@ function getRepetitionTypeDiff(repetition_type: RepetitionType): number {
     }
 }
 
-// function getUTCDate(year: number, month: number, day: number): Date {
-//     const date = new Date();
-//     date.setUTCFullYear(year);
-//     date.setUTCMonth(month, day);
-//     date.setUTCHours(0);
-//     date.setUTCMinutes(0);
-//     date.setUTCSeconds(0);
-//     date.setUTCMilliseconds(0);
-//     return date;
-// }
-
 function parseNumericDateToBuiltin(task: RepetitiveTask, numeric: number): Date {
     switch(task.type) {
         case "daily":
@@ -167,12 +156,11 @@ export function expandDayOfTheWeekRepetitiveTask(task: RepetitiveTask): Repetiti
     if(task.type !== "day-of-week") {
         return [];
     }
-    const week = new Array(7) as Date[];
+    const msInDay = 1000 * 60 * 60 * 24;
     const startDay = getDayOfTheWeek(task.start_date);
     const startDate = task.start_date;
+    const week = new Array(7) as Date[];
     week[startDay] = startDate;
-    const msInDay = 1000 * 60 * 60 * 24;
-
 
     for(let i = 0; i < startDay; i++) {
         week[i] = new Date(startDate.getTime() + (7 - startDay + i) * msInDay);
@@ -181,18 +169,8 @@ export function expandDayOfTheWeekRepetitiveTask(task: RepetitiveTask): Repetiti
         week[startDay + i + 1] = new Date(startDate.getTime() + (i + 1) * msInDay);
     }
 
-    const days = [] as boolean[];
-    let count = task.count;
-    for(let i = 0; i < 7; i++) {
-        days.push(count % 2 === 1);
-        count = count >> 1;
-    }
-
-    return days.map((val: boolean, index: number) => val ? index : -1)
-        .filter((id: number) => id >= 0)
-        .map((id: number) => {
-            return {...task, start_date: week[id]};
-        });
+    let count = task.count << 1;
+    return Array.from(Array(7).keys()).filter((id: number) => (count >>= 1) % 2 == 1 ).map((id: number) => { return {...task, start_date: week[id]}; });
 }
 
 export function calcRepetitiveTasksDatesForDateRange(start_date: Date, end_date: Date, tasks: RepetitiveTask[]): TaskRepetitonSummary[] {

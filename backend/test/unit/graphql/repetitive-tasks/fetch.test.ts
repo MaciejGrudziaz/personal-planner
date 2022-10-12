@@ -71,52 +71,12 @@ describe("graphql::repetitive-tasks::fetch::fetchRepetitiveTasks", () => {
 
         fetchRepetitiveTasks(new DBClient({user: "user", password: "pass", database: "db"}), new Date("2022-01-01"), new Date("2022-02-01")).then((tasks: TaskRepetitonSummary[] | null) => {
             expect(tasks).toEqual([
-               {
-                 id: 123,
-                 date: new Date("2022-01-01"),
-                 type: 'daily',
-                 count: 4,
-                 start_time: {hour: 14, minute: 0},
-                 end_time: {hour: 16, minute: 0},
-                 end_date: null
-               },
-               {
-                 id: 123,
-                 date: new Date("2022-01-09"),
-                 type: 'daily',
-                 count: 4,
-                 end_date: null
-               },
-               {
-                 id: 123,
-                 date: new Date("2022-01-13"),
-                 type: 'daily',
-                 count: 4,
-                 end_date: null
-               },
-               {
-                 id: 123,
-                 date: new Date("2022-01-17"),
-                 type: 'daily',
-                 count: 4,
-                 end_date: null
-               },
-               {
-                 id: 123,
-                 date: new Date("2022-01-21"),
-                 type: 'daily',
-                 count: 4,
-                 start_time: null,
-                 end_time: null,
-                 end_date: null
-               },
-               {
-                 id: 123,
-                 date: new Date("2022-01-29"),
-                 type: 'daily',
-                 count: 4,
-                 end_date: null
-               }
+               { id: 123, date: new Date("2022-01-01"), type: 'daily', count: 4, start_time: {hour: 14, minute: 0}, end_time: {hour: 16, minute: 0}, end_date: null },
+               { id: 123, date: new Date("2022-01-09"), type: 'daily', count: 4, end_date: null },
+               { id: 123, date: new Date("2022-01-13"), type: 'daily', count: 4, end_date: null },
+               { id: 123, date: new Date("2022-01-17"), type: 'daily', count: 4, end_date: null },
+               { id: 123, date: new Date("2022-01-21"), type: 'daily', count: 4, start_time: null, end_time: null, end_date: null },
+               { id: 123, date: new Date("2022-01-29"), type: 'daily', count: 4, end_date: null }
             ]);
         });
     });
