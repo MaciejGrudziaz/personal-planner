@@ -49,6 +49,7 @@ CREATE TABLE changed_repetitive_tasks
 (
     id integer,
     date date not null,
+    description varchar(250),
     start_time time,
     end_time time,
     PRIMARY KEY(id, date),

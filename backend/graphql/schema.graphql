@@ -96,7 +96,7 @@ type Query {
 type Mutation {
     createTask(start_time: InputTime, end_time: InputTime, date: InputDate!, basic_info: String, description: String, category: String, repetition: InputTaskRepetition): Int
     updateTask(id: Int!, start_time: InputTime, end_time: InputTime, date: InputDate!, basic_info: String, description: String, category: String, repetition: InputTaskRepetition): Boolean!
-    updateSingleRepetitiveTask(id: Int!, date: InputDate!, start_time: InputTime, end_time: InputTime): Boolean!
+    updateSingleRepetitiveTask(id: Int!, date: InputDate!, description: String, start_time: InputTime, end_time: InputTime): Boolean!
     deleteTask(id: Int!): Boolean!
     deleteSingleRepetitiveTask(id: Int!, date: InputDate!): Boolean!
 

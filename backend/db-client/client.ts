@@ -218,20 +218,22 @@ export class DBClient {
         return false;
     }
 
-    async updateSingleRepetitiveTaskTime(id: number, date: TaskDate, startTime: TaskTime | null, endTime: TaskTime | null): Promise<boolean> {
+    async updateSingleRepetitiveTask(id: number, date: TaskDate, description: string | null, startTime: TaskTime | null, endTime: TaskTime | null): Promise<boolean> {
         const updateSingleRepetitiveTaskTimeQuery = {
             name: "update-single-repetitive-task-time-query",
             text: `
                 UPDATE changed_repetitive_tasks
                 SET start_time = $3,
-                    end_time = $4
+                    end_time = $4,
+                    description = $5
                 WHERE id = $1 AND date = $2
             `,
             values: [
                 id,
                 taskDateToDate(date),
                 (startTime === null || endTime === null) ? null : taskTimeToString(startTime),
-                (startTime === null || endTime === null) ? null : taskTimeToString(endTime)
+                (startTime === null || endTime === null) ? null : taskTimeToString(endTime),
+                description
             ]
         };
 
@@ -239,7 +241,7 @@ export class DBClient {
         try {
             const result = await client.query(updateSingleRepetitiveTaskTimeQuery);
             if(result.rowCount !== 1) {
-                return this.insertSingleRepetitiveTaskTime(id, date, startTime, endTime);
+                return this.insertSingleRepetitiveTask(id, date, description, startTime, endTime);
             }
             return true;
         } catch(err: any) {
@@ -250,20 +252,21 @@ export class DBClient {
         return false;
     }
 
-    async insertSingleRepetitiveTaskTime(id: number, date: TaskDate, startTime: TaskTime | null, endTime: TaskTime | null): Promise<boolean> {
+    async insertSingleRepetitiveTask(id: number, date: TaskDate, description: string | null, startTime: TaskTime | null, endTime: TaskTime | null): Promise<boolean> {
         const insertSingleRepetitiveTaskTimeQuery = {
             name: "insert-single-repetitive-task-time-query",
             text: `
                 INSERT INTO changed_repetitive_tasks
-                (id, date, start_time, end_time)
+                (id, date, start_time, end_time, description)
                 VALUES
-                ($1, $2,   $3,         $4)
+                ($1, $2,   $3,         $4,       $5)
             `,
             values: [
                 id,
                 taskDateToDate(date),
                 (startTime === null || endTime === null) ? null : taskTimeToString(startTime),
-                (startTime === null || endTime === null) ? null : taskTimeToString(endTime)
+                (startTime === null || endTime === null) ? null : taskTimeToString(endTime),
+                description
             ]
         };
 

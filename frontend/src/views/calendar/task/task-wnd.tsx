@@ -24,7 +24,7 @@ interface Props {
     show: boolean;
 
     hide(): void;
-    save(): void;
+    save(task: TaskState): void;
 }
 
 function createDefaultTaskState(props: Props): TaskState {
@@ -226,11 +226,8 @@ function TaskWnd(props: Props) {
             if(task.category === undefined && categoriesNames.length > 0) {
                 task.category = categoriesNames[0];
             }
-            createTask(task);
-        } else {
-            updateTask(task);
         }
-        props.save();
+        props.save(task);
         hideWindow();
     }
 

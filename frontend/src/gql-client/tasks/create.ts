@@ -57,7 +57,7 @@ export function useCreateTask(): ReturnFunc {
                         day: ${task.date.day}
                     },
                     basic_info: "${task.basicInfo}",
-                    description: "${task.description}",
+                    description: "${task.description.replaceAll("\n", "\\n")}",
                     ${(task.category !== undefined)
                         ? `category: "${task.category}",`
                         : ""

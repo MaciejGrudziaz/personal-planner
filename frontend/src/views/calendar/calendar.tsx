@@ -9,6 +9,7 @@ import CurrentTimePointer, {PointerState} from './current-time-pointer';
 import PopupMessage, {PopupMessageInfo} from '../../components/popup-message';
 import {TaskState, findTasksForWeek, parseDateToBuiltin, TaskDate, TaskTime, TaskRepetition} from '../../store/tasks';
 import {useFetchTasks} from '../../gql-client/tasks/fetch';
+import {useCreateTask} from '../../gql-client/tasks/create';
 import {useUpdateTask, useUpdateSingleTask} from '../../gql-client/tasks/update';
 import {useDeleteTask, useDeleteSingleTask} from '../../gql-client/tasks/delete';
 import {useUpdateCalendarViewFontSize} from '../../gql-client/config/update';
@@ -69,6 +70,7 @@ interface WndTaskInfo {
 function Calendar(props: Props) {
     const gqlFetchTasks = useFetchTasks();
     const gqlUpdateTask = useUpdateTask();
+    const gqlCreateTask = useCreateTask();
     const gqlUpdateSingleTask = useUpdateSingleTask();
     const gqlDeleteTask = useDeleteTask();
     const gqlDeleteSingleTask = useDeleteSingleTask();
@@ -100,7 +102,6 @@ function Calendar(props: Props) {
         init(true);
 
         store.subscribe(storeUpdate);
-        updateCellsInStore();
         fetchTasksFromApi();
 
         window.addEventListener('resize', updateCellsInStore);
@@ -111,7 +112,8 @@ function Calendar(props: Props) {
         init(false);
     }
 
-    const storeUpdate = ()=>{
+    const storeUpdate = () => {
+        updateCellsInStore();
         fetchTasks();
         updateConfig();
     }
@@ -512,6 +514,14 @@ function Calendar(props: Props) {
         });
     }
 
+    const saveTask = (task: TaskState) => {
+        if(task.id === "") {
+            gqlCreateTask(task);
+            return;
+        }
+        updateTask(task);
+    }
+
     const grabActionFinalizer = ()=>{
         setGrabbed(false);
         setTasks(calcOverlapping(tasks.map((task: Task) => {
@@ -677,7 +687,7 @@ function Calendar(props: Props) {
                     repetition={wndTaskInfo.repetition}
                     show={wndTaskInfo.show}
                     hide={hideTaskWnd}
-                    save={() => forceRefresh()}
+                    save={saveTask}
                 />
                 <PopupMessage show={popupMsgInfo.show} message={popupMsgInfo.msg}
                     options={popupMsgInfo.options}

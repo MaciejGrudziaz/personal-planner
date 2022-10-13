@@ -82,9 +82,10 @@ function getResolver(db: DBClient): Resolver {
             });
         },
         updateSingleRepetitiveTask: async (args: any): Promise<boolean> => {
-            return await db.updateSingleRepetitiveTaskTime(
+            return await db.updateSingleRepetitiveTask(
                 args.id,
                 args.date,
+                (args.description === undefined) ? null : args.description,
                 (args.start_time === undefined) ? null : args.start_time,
                 (args.end_time === undefined) ? null : args.end_time
             )

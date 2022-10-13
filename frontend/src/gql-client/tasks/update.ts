@@ -36,7 +36,7 @@ export function useUpdateTask(): ReturnFunc {
                         day: ${task.date.day}
                     },
                     basic_info: "${task.basicInfo}",
-                    description: "${task.description}",
+                    description: "${task.description.replaceAll("\n", "\\n")}",
                     ${(task.category !== undefined)
                         ? `category: "${task.category}",`
                         : ""
@@ -71,6 +71,7 @@ export function useUpdateSingleTask(): ReturnFunc {
                         month: ${task.date.month + 1}
                         day: ${task.date.day}
                     },
+                    description: "${task.description.replaceAll("\n", "\\n")}",
                     ${(task.startTime !== undefined)
                         ? `
                             start_time: {

@@ -2,7 +2,7 @@ import { DBClient } from "../../db-client/client";
 import { RepetitiveTask, parseRepetitiveTask } from "./types";
 import { RepetitionType, TaskTime, localDateToUTC, taskDateToDate } from "../../data-types/task";
 import fetchExcludedRepetitiveTasks, { TaskDate } from "./fetch-excluded-tasks";
-import fetchUpdatedRepetitiveTasks, { TaskDateTime } from "./fetch-updated-tasks";
+import fetchUpdatedRepetitiveTasks, { UpdatedRepetitiveTask } from "./fetch-updated-tasks";
 
 export interface TaskRepetitonSummary {
     id: number;
@@ -10,6 +10,7 @@ export interface TaskRepetitonSummary {
     end_date: Date | null;
     start_time?: TaskTime | null;
     end_time?: TaskTime | null;
+    description?: string;
     type: RepetitionType;
     count: number;
 }
@@ -216,11 +217,15 @@ async function updateTasks(db: DBClient, tasksPromise: Promise<TaskRepetitonSumm
         return null;
     }
     return tasks.map((task: TaskRepetitonSummary) => {
-        const updatedTask = updatedTasks.find((val: TaskDateTime) => val.id === task.id && val.date.getTime() === task.date.getTime());
+        const updatedTask = updatedTasks.find((val: UpdatedRepetitiveTask) => val.id === task.id && val.date.getTime() === task.date.getTime());
         if(updatedTask === undefined) {
             return task;
         }
-        return {...task, start_time: updatedTask.startTime, end_time: updatedTask.endTime};
+        return {...task,
+            start_time: updatedTask.startTime,
+            end_time: updatedTask.endTime,
+            description: (updatedTask.description !== null) ? updatedTask.description : undefined
+        };
     });
 }
 
