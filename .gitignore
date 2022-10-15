@@ -7,3 +7,5 @@ build/
 # tests
 frontend-redux/
 
+db/backup/
+

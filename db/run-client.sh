@@ -1,4 +1,5 @@
 #!/bin/bash
+source ./.env
 
-docker run -it --rm --network host postgres psql -h localhost -U mg -d personalplanner
+docker run -it --rm --network host -e PGPASSWORD=$DB_PASS postgres psql -h $DB_HOST -U $DB_USER -d personalplanner
 
