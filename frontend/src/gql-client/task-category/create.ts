@@ -9,7 +9,8 @@ export function useCreateCategory(): ReturnFunc {
 
     return async (category: Category): Promise<boolean> => {
         try {
-            const res = await fetchMutation("http://localhost:8080/", `
+            const env = process.env;
+            const res = await fetchMutation(`http://${env.REACT_APP_BACKEND_HOST}:8080/`, `
                 createCategory(
                     name: "${category.name}",
                     background_color: "${category.backgroundColor}",

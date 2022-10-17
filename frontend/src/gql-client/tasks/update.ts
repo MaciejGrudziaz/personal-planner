@@ -9,7 +9,8 @@ export function useUpdateTask(): ReturnFunc {
     const dispatch = useDispatch();
     return async (task: TaskState): Promise<boolean> => {
         try {
-            const res = await fetchMutation("http://localhost:8080/",
+            const env = process.env;
+            const res = await fetchMutation(`http://${env.REACT_APP_BACKEND_HOST}:8080/`,
                 `updateTask(
                     id: ${task.id},
                     ${(task.startTime !== undefined)
@@ -63,7 +64,8 @@ export function useUpdateSingleTask(): ReturnFunc {
     const dispatch = useDispatch();
     return async (task: TaskState): Promise<boolean> => {
         try {
-            const res = await fetchMutation("http://localhost:8080/",
+            const env = process.env;
+            const res = await fetchMutation(`http://${env.REACT_APP_BACKEND_HOST}:8080/`,
                 `updateSingleRepetitiveTask(
                     id: ${task.id},
                     date: {

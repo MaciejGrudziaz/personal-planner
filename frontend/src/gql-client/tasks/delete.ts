@@ -9,7 +9,8 @@ export function useDeleteTask(): ReturnFuncAll {
     const dispatch = useDispatch();
     return async (id: string): Promise<boolean> => {
         try {
-            const res = await fetchMutation("http://localhost:8080/", `deleteTask(id: ${id})`);
+            const env = process.env;
+            const res = await fetchMutation(`http://${env.REACT_APP_BACKEND_HOST}:8080/`, `deleteTask(id: ${id})`);
             if(!res.ok) {
                 return false;
             }
@@ -30,7 +31,8 @@ export function useDeleteSingleTask(): ReturnFuncSingle {
     const dispatch = useDispatch();
     return async (id: string, date: TaskDate): Promise<boolean> => {
         try {
-            const res = await fetchMutation("http://localhost:8080/", `deleteSingleRepetitiveTask(
+            const env = process.env;
+            const res = await fetchMutation(`http://${env.REACT_APP_BACKEND_HOST}:8080/`, `deleteSingleRepetitiveTask(
                 id: ${id}, 
                 date: {
                     year: ${date.year}

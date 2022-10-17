@@ -3,6 +3,7 @@ RUN apk add --update --no-cache nodejs npm && mkdir /usr/local/share/frontend
 COPY public /usr/local/share/frontend/public
 COPY src /usr/local/share/frontend/src
 COPY *.json /usr/local/share/frontend/
+COPY .env.production /usr/local/share/frontend/
 RUN cd /usr/local/share/frontend && npm install && npm run build
 
 FROM nginx:stable-alpine

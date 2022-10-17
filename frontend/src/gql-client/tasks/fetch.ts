@@ -32,7 +32,8 @@ async function fetchTasks(args: Args): Promise<TaskState[] | null> {
         return null;
     }
     try {
-        const res = await fetchQuery("http://localhost:8080/", 
+        const env = process.env;
+        const res = await fetchQuery(`http://${env.REACT_APP_BACKEND_HOST}:8080/`, 
             `fetchTasks(${fetchArgs}) { 
                 id 
                 start_time { hour minute }

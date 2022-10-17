@@ -8,7 +8,8 @@ export function useDeleteTodoTicket(): ReturnFunc {
     const dispatch = useDispatch();
     return async (id: string): Promise<boolean> => {
         try {
-            const res = await fetchMutation("http://localhost:8080/", `deleteTodo(id: [${id}])`);
+            const env = process.env;
+            const res = await fetchMutation(`http://${env.REACT_APP_BACKEND_HOST}:8080/`, `deleteTodo(id: [${id}])`);
             if(!res.ok) {
                 return false;
             }
@@ -29,7 +30,8 @@ export function useDeleteTodoGroup(): ReturnFunc {
     const dispatch = useDispatch();
     return async (id: string): Promise<boolean> => {
         try {
-            const res = await fetchMutation("http://localhost:8080/", `deleteTodoGroup(id: [${id}])`);
+            const env = process.env;
+            const res = await fetchMutation(`http://${env.REACT_APP_BACKEND_HOST}:8080/`, `deleteTodoGroup(id: [${id}])`);
             if(!res.ok) {
                 return false;
             }

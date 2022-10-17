@@ -17,7 +17,8 @@ export function useUpdateTicket(): TodoTicketUpdateReturnFunc {
             return true;
         }
         try {
-            const res = await fetchMutation("http://localhost:8080/", 
+            const env = process.env;
+            const res = await fetchMutation(`http://${env.REACT_APP_BACKEND_HOST}:8080/`, 
                 `modifyTodo(
                     id: ${id}, 
                     ${(content !== undefined) ? `content: "${content}",` : ""}
@@ -48,7 +49,8 @@ export function useMoveTicket(): TodoMoveReturnFunc {
     const dispatch = useDispatch();
     return async (id: string, target_id: string): Promise<boolean> => {
         try {
-            const res = await fetchMutation("http://localhost:8080/", `moveTodo(id: ${id}, target_id: ${target_id}) { id priority }`);
+            const env = process.env;
+            const res = await fetchMutation(`http://${env.REACT_APP_BACKEND_HOST}:8080/`, `moveTodo(id: ${id}, target_id: ${target_id}) { id priority }`);
             if(!res.ok) {
                 return false;
             }
@@ -73,7 +75,8 @@ export function useRenameTodoGroup(): TodoGroupRenameReturnFunc {
             return true;
         }
         try {
-            const res = await fetchMutation("http://localhost:8080/", `modifyTodoGroup(id: ${id}, name: "${name}")`);
+            const env = process.env;
+            const res = await fetchMutation(`http://${env.REACT_APP_BACKEND_HOST}:8080/`, `modifyTodoGroup(id: ${id}, name: "${name}")`);
             if(!res.ok) {
                 return false;
             }
@@ -93,7 +96,8 @@ export function useMoveTodoGroup(): TodoGroupMoveReturnFunc {
     const dispatch = useDispatch();
     return async (id: string, dir: MoveDirection): Promise<boolean> => {
         try {
-            const res = await fetchMutation("http://localhost:8080/",
+            const env = process.env;
+            const res = await fetchMutation(`http://${env.REACT_APP_BACKEND_HOST}:8080/`,
                 `moveTodoGroup(id: ${id},
                     ${(dir === "up")
                         ? "up: true"

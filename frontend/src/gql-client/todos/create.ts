@@ -9,7 +9,8 @@ export function useCreateTodoTicket(): TodoTicketReturnFunc {
     const dispatch = useDispatch();
     return async (ticket: TodoTicket, groupId: string): Promise<boolean> => {
         try {
-            const res = await fetchMutation("http://localhost:8080/",
+            const env = process.env;
+            const res = await fetchMutation(`http://${env.REACT_APP_BACKEND_HOST}:8080/`,
                 `createTodo(
                     group_id: ${groupId},
                     priority: ${ticket.priority},
@@ -37,7 +38,8 @@ export function useCreateTodoGroup(): TodoGroupReturnFunc {
     const dispatch = useDispatch();
     return async (name: string, ordinal: number): Promise<boolean> => {
         try {
-            const res = await fetchMutation("http://localhost:8080/",
+            const env = process.env;
+            const res = await fetchMutation(`http://${env.REACT_APP_BACKEND_HOST}:8080/`,
                 `createTodoGroup(
                     name: "${name}",
                     ordinal: ${ordinal}

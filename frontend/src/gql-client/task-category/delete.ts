@@ -10,7 +10,8 @@ export function useDeleteCategory(): ReturnFunc {
 
     return async (id: string, name?: string): Promise<boolean> => {
         try {
-            const res = await fetchMutation("http://localhost:8080/", `deleteCategory(id: ${id})`)
+            const env = process.env;
+            const res = await fetchMutation(`http://${env.REACT_APP_BACKEND_HOST}:8080/`, `deleteCategory(id: ${id})`)
             if(!res.ok) {
                 return false;
             }

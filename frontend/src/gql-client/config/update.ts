@@ -14,7 +14,8 @@ export function useUpdateCalendarViewFontSize(): ReturnFunc {
     return async (args: Args): Promise<boolean> => {
         try {
             const methodName = "updateCalendarMonthViewFontSize";
-            const res = await fetchMutation("http://localhost:8080/", `${methodName}(size: ${args.size})`);
+            const env = process.env;
+            const res = await fetchMutation(`http://${env.REACT_APP_BACKEND_HOST}:8080/`, `${methodName}(size: ${args.size})`);
             if(!res.ok) {
                 return false;
             }

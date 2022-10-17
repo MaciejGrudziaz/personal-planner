@@ -11,7 +11,8 @@ export function useUpdateCategory(): ReturnFunc {
 
     return async (category: Category): Promise<boolean> => {
         try {
-            const res = await fetchMutation("http://localhost:8080/", `
+            const env = process.env;
+            const res = await fetchMutation(`http://${env.REACT_APP_BACKEND_HOST}:8080/`, `
                 updateCategory(
                     id: ${category.id},
                     name: "${category.name}",
@@ -40,7 +41,8 @@ export function useChangeCategory(): ChangeCategoryReturnFunc {
 
     return async (src: string, dest: string): Promise<boolean> => {
         try {
-            const res = await fetchMutation("http://localhost:8080", `changeCategory(src_category: "${src}", dest_category: "${dest}")`);
+            const env = process.env;
+            const res = await fetchMutation(`http://${env.REACT_APP_BACKEND_HOST}:8080/`, `changeCategory(src_category: "${src}", dest_category: "${dest}")`);
             if(!res.ok) {
                 return false;
             }

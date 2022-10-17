@@ -8,8 +8,9 @@ export function useFetchConfig(): ReturnFunc {
     const dispatch = useDispatch();
 
     return async (): Promise<boolean> => {
+        const env = process.env;
         try {
-            const res = await fetchQuery("http://localhost:8080/",
+            const res = await fetchQuery(`http://${env.REACT_APP_BACKEND_HOST}:8080/`,
                 `config {
                     calendarMonthView {
                         fontSize
