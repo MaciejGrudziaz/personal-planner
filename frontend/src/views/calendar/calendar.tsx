@@ -688,6 +688,7 @@ function Calendar(props: Props) {
                     show={wndTaskInfo.show}
                     hide={hideTaskWnd}
                     save={saveTask}
+                    delete={deleteTask}
                 />
                 <PopupMessage show={popupMsgInfo.show} message={popupMsgInfo.msg}
                     options={popupMsgInfo.options}

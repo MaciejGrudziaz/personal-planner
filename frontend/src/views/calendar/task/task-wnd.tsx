@@ -4,9 +4,6 @@ import TaskTextArea from './task-text-area';
 import CalendarMonthView from './../month-view/month-view';
 import TaskDropdownSelect from './task-dropdown-select';
 import {TaskState, TaskDate, TaskTime, parseDateToBuiltin, parseDateToStr, TaskRepetition, RepetitionType} from '../../../store/tasks';
-import {useUpdateTask} from '../../../gql-client/tasks/update';
-import {useCreateTask} from '../../../gql-client/tasks/create';
-import {useDeleteTask} from '../../../gql-client/tasks/delete';
 import './task-wnd.scss';
 import {useStore} from 'react-redux';
 import {Category} from '../../../store/categories';
@@ -25,6 +22,7 @@ interface Props {
 
     hide(): void;
     save(task: TaskState): void;
+    delete(id: string, date: TaskDate, isRepetitive: boolean): void;
 }
 
 function createDefaultTaskState(props: Props): TaskState {
@@ -116,9 +114,6 @@ function setNewEndMinute(task: TaskState, val: string): TaskTime | undefined {
 }
 
 function TaskWnd(props: Props) {
-    const updateTask = useUpdateTask();
-    const createTask = useCreateTask();
-    const deleteTask = useDeleteTask();
     const [task, setTask] = useState(createDefaultTaskState(props));
     const [showCalendar, setShowCalendar] = useState(props.startTime === undefined || props.endTime === undefined);
     const [showRepetitionDateCalendar, setShowRepetitionDateCalendar] = useState(false);
@@ -511,7 +506,7 @@ function TaskWnd(props: Props) {
                     }>save</button>
                     <button className="task-action-btn" onClick={hideWindow}>cancel</button>
                     <button className="task-action-btn" onClick={() => {
-                        deleteTask(task.id);
+                        props.delete(task.id, task.date, task.repetition !== undefined);
                         hideWindow();
                     }}>delete</button>
                 </div>

@@ -6,7 +6,7 @@ import loadGraphQLSchema from './graphql/schema';
 const app = express();
 app.use(cors());
 
-loadGraphQLSchema({user: "mg", password: "1234", database: "personalplanner"}, "graphql/schema.graphql").then((schema: Options | undefined) => {
+loadGraphQLSchema({user: "user", password: "1234", database: "personalplanner"}, "graphql/schema.graphql").then((schema: Options | undefined) => {
     if(schema === undefined) {
         console.error("Error encountered while initializing GraphQL schema, exiting process...");
         process.exit(1);

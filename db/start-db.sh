@@ -1,4 +1,6 @@
-# !/bin/bash
+#!/bin/sh
 
-docker start personal-planner-db
+CONTAINER_NAME=${CONTAINER_NAME:-personal-planner-db}
+
+docker start ${CONTAINER_NAME}
 

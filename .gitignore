@@ -7,5 +7,9 @@ build/
 # tests
 frontend-redux/
 
-db/backup/
+# backup test data
+db/backup/data/
+
+# python
+__pycache__/
 
