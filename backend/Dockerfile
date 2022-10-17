@@ -15,4 +15,5 @@ COPY --from=build /usr/local/share/backend/graphql/schema.graphql /usr/local/sha
 COPY ecosystem.config.js /usr/local/share/backend/
 WORKDIR /usr/local/share/backend
 RUN npm install && npm install -g pm2
+ENTRYPOINT pm2-runtime start ecosystem.config.js
 

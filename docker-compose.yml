@@ -1,0 +1,24 @@
+version: "3"
+
+services:
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+  db:
+    build: ./db
+    restart: unless-stopped
+    network_mode: "host"
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASS}
+      - POSTGRES_DB=${DB_NAME}
+
+  backend:
+    build: ./backend
+    depends_on: 
+      - "db"
+    restart: unless-stopped
+    network_mode: "host"
+
