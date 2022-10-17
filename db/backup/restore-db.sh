@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 source ./.env
 
 BACKUP_FILE=${BACKUP_FILE:-backup.sql}

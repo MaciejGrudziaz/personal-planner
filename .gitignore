@@ -16,3 +16,6 @@ __pycache__/
 # react
 frontend/build/
 
+# production configuration files
+.env
+
