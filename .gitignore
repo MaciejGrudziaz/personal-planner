@@ -13,3 +13,6 @@ db/backup/data/
 # python
 __pycache__/
 
+# react
+frontend/build/
+
