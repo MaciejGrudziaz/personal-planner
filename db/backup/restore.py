@@ -118,12 +118,12 @@ if __name__ == "__main__":
     result = subprocess.run(["../stop-db.sh"], env=env_dict, capture_output=True)
     if result.returncode != 0:
         print("Error occured while running script 'stop-db.sh'")
-        print(result.stdout)
+        print(result.stderr.decode("utf-8"))
         exit(1)
     result = subprocess.run(["../start-db.sh"], env=env_dict, capture_output=True)
     if result.returncode != 0:
         print("Error occured while running script 'start-db.sh'")
-        print(result.stdout)
+        print(result.stderr.decode("utf-8"))
         exit(1)
 
     result = subprocess.run(["./restore-db.sh"], env=env_dict)
